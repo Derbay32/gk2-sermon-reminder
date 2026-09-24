@@ -1,0 +1,64 @@
+# .NET / MSBuild output
+[Bb]in/
+[Oo]bj/
+/artifacts/
+/dist/
+*.nupkg
+*.snupkg
+
+# Local NuGet package cache (keep project files and lock files tracked)
+/packages/
+
+# Test and coverage output
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE and user-specific settings
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+
+# BepInEx runtime at the repository root (not plugin source or reference DLLs)
+/BepInEx/
+/doorstop_libs/
+/doorstop_config.ini
+/.doorstop_version
+/winhttp.dll
+/version.dll
+/libdoorstop.so
+/libdoorstop.dylib
+/run_bepinex.sh
+/run_bepinex_macos.sh
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS-generated files
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Isolated agent worktrees; keep other agent configuration trackable
+/.agents/worktrees/
+
+# Only architecture decision records belong in repository docs
+/docs/*
+!/docs/adr/
+
+# Coding Agents
+/.pi
+/.agents
