@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using BepInEx;
 using GK2.Framework;
+using GK2.SermonReminder.Beacon;
 using GK2.SermonReminder.Hud;
 using GK2.SermonReminder.Localization;
+using GK2.SermonReminder.Settings;
 using GK2.SermonReminder.State;
 using HarmonyLib;
 using UnityEngine;
@@ -23,6 +25,11 @@ namespace GK2.SermonReminder
 
         private void Awake()
         {
+            // Persist each configuration change immediately. The framework shares one
+            // ConfigFile per plugin, so this is set before any mod registration binds
+            // its settings.
+            Config.SaveOnConfigSet = true;
+
             mod = new SermonReminderMod();
             FrameworkApi.RegisterMod(mod, Config);
         }
@@ -40,10 +47,15 @@ namespace GK2.SermonReminder
     {
         internal static SermonReminderMod Active { get; private set; }
 
+        // Stable opaque config identity and default for the one beacon toggle.
+        private const string BeaconSection = "Beacon";
+        private const string BeaconKey = "EnabledChurchBeacon";
+
         private readonly IReadOnlyList<Gk2ModDependency> dependencies;
         private readonly SermonStateReader reader = new SermonStateReader();
         private readonly SermonHudAdapter hud = new SermonHudAdapter();
         private readonly NativeCheckSprite checkSprite = new NativeCheckSprite();
+        private readonly ChurchBeacon beacon = new ChurchBeacon();
 
         private Gk2ModMetadata metadata;
         private string metadataLanguage;
@@ -56,6 +68,16 @@ namespace GK2.SermonReminder
         private bool ready;
         private GameSave activeSave;
 
+        // The mod's own registered beacon toggle descriptor, captured during
+        // registration. Null while registration failed, which fails the beacon
+        // closed (disabled) rather than falling back to a silent default-on.
+        private IGk2Setting beaconToggle;
+
+        // Snapshot of the persisted beacon toggle for the current load. Established
+        // exactly once on actual load readiness and immutable for that load; runtime
+        // changes only affect the next load.
+        private bool beaconEnabledForLoad;
+
         // Independently deduplicated diagnostic channels: state read, native HUD
         // binding, and the icon module. Each holds its own last-logged episode so
         // the healthy channels never clear or toggle another channel, and each is
@@ -63,6 +85,7 @@ namespace GK2.SermonReminder
         private string lastStateDiagnostic;
         private string lastHudDiagnostic;
         private string lastIconDiagnostic;
+        private string lastBeaconDiagnostic;
         private SermonDisplayState loggedDisplay;
         private bool hasLoggedDisplay;
 
@@ -77,6 +100,7 @@ namespace GK2.SermonReminder
             // display name is refreshed against the live native language below.
             metadata = BuildMetadata();
             metadataLanguage = SermonReminderLocalization.CurrentLanguageId;
+            beaconEnabledForLoad = false;
         }
 
         /// <summary>
@@ -147,6 +171,96 @@ namespace GK2.SermonReminder
             {
                 // A registration failure would fault the mod; keep registration safe.
             }
+
+            RegisterBeaconSetting(context);
+        }
+
+        /// <summary>
+        /// Register the one beacon toggle and localize its presentation. A failure is
+        /// contained: the beacon then fails closed (disabled) for every load instead of
+        /// silently defaulting on, while the corner presentation keeps working.
+        /// </summary>
+        private void RegisterBeaconSetting(Gk2ModContext context)
+        {
+            try
+            {
+                Gk2Settings settings = context?.Settings;
+                if (settings == null)
+                {
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: settings unavailable");
+                    return;
+                }
+
+                HashSet<IGk2Setting> before = SnapshotItems(settings);
+
+                settings.AddToggle(BeaconSection, BeaconKey, true, string.Empty, string.Empty, 0);
+
+                IGk2Setting registered = FindNewlyAdded(settings, before);
+                if (registered == null)
+                {
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: registration produced no descriptor");
+                    return;
+                }
+
+                var localized = new BeaconSettingDescriptor(
+                    registered,
+                    () => SermonReminderLocalization.Get(SermonReminderLocalization.SettingsGroupTitleKey));
+
+                if (BeaconSettingLocalization.TryReplaceOwnDescriptor(
+                        settings, registered, localized, out string failure))
+                {
+                    beaconToggle = localized;
+                }
+                else
+                {
+                    // Keep the exact framework descriptor (stable key and value) so
+                    // the toggle still works; report the localization swap failure.
+                    beaconToggle = registered;
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: localization swap failed (" + failure + ")");
+                }
+            }
+            catch (Exception ex)
+            {
+                beaconToggle = null;
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + ex.GetType().Name);
+            }
+        }
+
+        private static HashSet<IGk2Setting> SnapshotItems(Gk2Settings settings)
+        {
+            var snapshot = new HashSet<IGk2Setting>();
+            try
+            {
+                foreach (IGk2Setting item in settings.Items)
+                {
+                    if (item != null) snapshot.Add(item);
+                }
+            }
+            catch (Exception)
+            {
+                // An unreadable list yields an empty snapshot; the added-descriptor
+                // lookup still resolves against the post-registration list.
+            }
+
+            return snapshot;
+        }
+
+        private static IGk2Setting FindNewlyAdded(Gk2Settings settings, HashSet<IGk2Setting> before)
+        {
+            try
+            {
+                foreach (IGk2Setting item in settings.Items)
+                {
+                    if (item != null && !before.Contains(item))
+                        return item;
+                }
+            }
+            catch (Exception)
+            {
+                // Fall through to a null result, reported by the caller.
+            }
+
+            return null;
         }
 
         public override void OnEnable()
@@ -202,6 +316,7 @@ namespace GK2.SermonReminder
                 }
 
                 activeSave = save;
+                beaconEnabledForLoad = ReadBeaconEnabledSnapshot();
                 ready = true;
                 ResetDiagnostics();
                 log.Info("GKSR_READY");
@@ -225,6 +340,36 @@ namespace GK2.SermonReminder
 
         internal void HandleReturnedToMenu() => ResetReadinessSafely();
 
+        /// <summary>
+        /// Read the persisted beacon toggle once for this load. A missing registration
+        /// or a failed read is contained and fails the beacon closed (disabled) for the
+        /// load, never a silent default-on.
+        /// </summary>
+        private bool ReadBeaconEnabledSnapshot()
+        {
+            try
+            {
+                IGk2Setting toggle = beaconToggle;
+                if (toggle == null)
+                {
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: toggle unavailable; beacon disabled for this load");
+                    return false;
+                }
+
+                object value = toggle.Value;
+                if (value is bool enabled) return enabled;
+
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: unexpected value type; beacon disabled for this load");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: read failed (" + ex.GetType().Name
+                    + "); beacon disabled for this load");
+                return false;
+            }
+        }
+
         internal void Tick()
         {
             if (!enabled)
@@ -240,18 +385,33 @@ namespace GK2.SermonReminder
             }
             catch (Exception ex)
             {
-                // A failure this broad is not attributable to the icon module, so
-                // it tears down the display and drops the sprite we own.
-                hud.Teardown();
+                // Independent cleanup containment: a corner-module failure must not
+                // skip beacon cleanup, and a beacon cleanup failure must not skip the
+                // corner cleanup, so each is contained before the other is attempted.
+                SafeResetBeacon();
+                try { hud.Teardown(); }
+                catch (Exception) { }
                 ResetEligibility();
                 LogStateDiagnostic("tick:" + ex.GetType().Name, "GKSR_TICK_FAILED: " + ex.GetType().Name);
             }
+        }
+
+        /// <summary>
+        /// Reset the owned beacon and clear its diagnostic channel, contained so a
+        /// beacon failure can never reach or skip the corner work.
+        /// </summary>
+        private void SafeResetBeacon()
+        {
+            try { beacon.Reset(); }
+            catch (Exception) { }
+            ClearBeaconDiagnostic();
         }
 
         private void TickCore()
         {
             if (!ready || activeSave == null)
             {
+                SafeResetBeacon();
                 hud.Teardown();
                 ResetEligibility();
                 return;
@@ -260,6 +420,7 @@ namespace GK2.SermonReminder
             GameSave current = TryGetCurrentSave();
             if (current == null)
             {
+                SafeResetBeacon();
                 hud.Teardown();
                 ResetEligibility();
                 return;
@@ -270,6 +431,7 @@ namespace GK2.SermonReminder
                 // The active save changed without a proper readiness transition.
                 // Hide and wait for OnGameStarted rather than reuse stale data.
                 ResetReadiness();
+                SafeResetBeacon();
                 hud.Teardown();
                 ResetEligibility();
                 LogStateDiagnostic("save-reference-changed",
@@ -282,12 +444,18 @@ namespace GK2.SermonReminder
             {
                 // No assumed business state: fail closed, hide and drop the owned
                 // resources so a fault can never reuse the previous judgement.
+                SafeResetBeacon();
                 hud.Teardown();
                 ResetEligibility();
                 LogStateDiagnostic("unreadable:" + snapshot.Failure,
                     "GKSR_STATE_UNREADABLE: " + snapshot.Failure);
                 return;
             }
+
+            // The beacon advances before any corner/Done work, so on the first
+            // LateUpdate after consumption a false eligibility clears it independently
+            // of the corner text and the Done icon being Pending or Failed.
+            UpdateBeacon(activeSave, snapshot);
 
             SermonDisplayState state = snapshot.Display;
             string text = snapshot.GatesSatisfied ? ResolveText(state, snapshot.Delta) : string.Empty;
@@ -415,6 +583,58 @@ namespace GK2.SermonReminder
             ClearHudDiagnostic();
         }
 
+        /// <summary>
+        /// Advance the owned beacon for this tick. Eligibility is derived from the fresh
+        /// per-tick snapshot: the load-snapshot toggle, a readable state, satisfied
+        /// gates, and the Ready display state (sermon day with the opportunity intact).
+        /// Failure is contained so it can never propagate into the corner work.
+        /// </summary>
+        private void UpdateBeacon(GameSave save, SermonStateSnapshot snapshot)
+        {
+            bool eligible = beaconEnabledForLoad
+                && snapshot.Readable
+                && snapshot.GatesSatisfied
+                && snapshot.Display == SermonDisplayState.Ready;
+
+            BeaconUpdateResult result;
+            try
+            {
+                result = beacon.Update(save, eligible);
+            }
+            catch (Exception ex)
+            {
+                // Defensive net: beacon.Update already contains recoverable errors.
+                SafeResetBeacon();
+                LogBeaconDiagnostic("beacon-tick:" + ex.GetType().Name,
+                    "GKSR_BEACON_FAILED: tick " + ex.GetType().Name);
+                return;
+            }
+
+            switch (result.Status)
+            {
+                case BeaconStatus.Healthy:
+                    // The only point where the beacon episode is complete.
+                    ClearBeaconDiagnostic();
+                    break;
+
+                case BeaconStatus.Failed:
+                    // Preserved across retries until a complete Draw or a reset boundary.
+                    LogBeaconDiagnostic(
+                        "beacon-failed:" + result.Failure + ":" + (beacon.LastFailure ?? "unknown"),
+                        "GKSR_BEACON_FAILED: stage=" + result.Failure
+                            + " reason=" + (beacon.LastFailure ?? "unknown"));
+                    break;
+
+                default:
+                    // Inactive is a true not-eligible boundary; Pending only occurs while
+                    // otherwise eligible (HUD/camera not live), so a Pending hold keeps
+                    // the episode and only an actual eligibility loss clears it.
+                    if (!eligible || result.Status == BeaconStatus.Inactive)
+                        ClearBeaconDiagnostic();
+                    break;
+            }
+        }
+
         internal void Shutdown()
         {
             enabled = false;
@@ -514,6 +734,7 @@ namespace GK2.SermonReminder
         {
             ResetReadiness();
             ResetDiagnostics();
+            SafeResetBeacon();
             try { hud.Teardown(); }
             catch (Exception) { }
             ResetEligibility();
@@ -523,6 +744,29 @@ namespace GK2.SermonReminder
         {
             ready = false;
             activeSave = null;
+            beaconEnabledForLoad = false;
+        }
+
+        /// <summary>
+        /// One bounded diagnostic per distinct beacon failure episode, on its own
+        /// channel. It is preserved across retries and Pending holds and cleared only
+        /// on a Healthy complete Draw or at a true eligibility / load reset boundary.
+        /// </summary>
+        private void LogBeaconDiagnostic(string key, string message)
+        {
+            if (string.Equals(lastBeaconDiagnostic, key, StringComparison.Ordinal)) return;
+            lastBeaconDiagnostic = key;
+            try { log?.Warning(message); }
+            catch (Exception) { }
+        }
+
+        private void ClearBeaconDiagnostic() => lastBeaconDiagnostic = null;
+
+        /// <summary>Contained logger call for the newly added beacon paths.</summary>
+        private void SafeLogError(string message)
+        {
+            try { log?.Error(message); }
+            catch (Exception) { }
         }
 
         /// <summary>
@@ -591,6 +835,7 @@ namespace GK2.SermonReminder
             lastStateDiagnostic = null;
             lastHudDiagnostic = null;
             lastIconDiagnostic = null;
+            lastBeaconDiagnostic = null;
             hasLoggedDisplay = false;
         }
 

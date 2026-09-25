@@ -19,6 +19,8 @@ namespace GK2.SermonReminder.Localization
         internal const string CountdownOneKey = "gksr.hud.sermonCountdown.one";
         internal const string CountdownOtherKey = "gksr.hud.sermonCountdown.other";
         internal const string SettingsGroupTitleKey = "gksr.settings.group.title";
+        internal const string SettingsBeaconLabelKey = "gksr.settings.beacon.label";
+        internal const string SettingsBeaconDescriptionKey = "gksr.settings.beacon.description";
 
         private const string English = "en";
         private const string Chinese = "zh_cn";
