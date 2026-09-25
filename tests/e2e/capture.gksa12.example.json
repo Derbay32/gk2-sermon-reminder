@@ -1,0 +1,145 @@
+{
+  "kind": "gksa12-e2e-capture-example",
+  "captureVersion": 1,
+  "_note": [
+    "SCHEMA EXAMPLE ONLY — THIS FILE IS NOT EVIDENCE.",
+    "Its kind is deliberately not 'gksa12-e2e-capture', so tests/e2e/verify.py",
+    "rejects it during capture shape validation as an unsupported schema. Do not",
+    "treat this file as a passing capture; the validator never generates a capture",
+    "and never marks a scenario passed.",
+    "This file exists so the negative check can prove that an unexecuted example",
+    "is rejected instead of silently accepted.",
+    "All scenario ids below refer to scenarios declared in tests/e2e/gksa12.json.",
+    "The beacon reuses the native UIMagnifyingGlassWidget as an independent owned",
+    "instance under the native HUD; the faith icon comes from the native static",
+    "item definition; native slot dimensions, pointer style, camera projection,",
+    "edge insets and indoor/outdoor door routing to gd_church_player_pray are",
+    "preserved.",
+    "Geometry is asserted as observed-vs-observed equality",
+    "(beacon.slotWidthPx == native.slotWidthPx etc.), never against a guessed",
+    "constant, so no fixed pixel size or PathID777 literal appears here.",
+    "REPLACE every placeholder with real Proton-run results; never mark an",
+    "unexecuted scenario as passed."
+  ],
+  "environment": {
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "proton.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "bepinex.version": "5.4.23.5",
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "plugin.version": "REPLACE",
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.loaded": true,
+    "resolution.width": 1920,
+    "resolution.height": 1080,
+    "uiScale": 1.0,
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "evidenceFiles": {
+      "screenshots/beacon-eligible-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/beacon-off-corner-text-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/beacon-slot-native-compare.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "game.sermonWeekday": 2
+  },
+  "observations": {
+    "beacon-eligible-sermon-day-unconsumed": {
+      "save.absoluteDay": 8,
+      "save.dayOfWeek": 2,
+      "save.sermonWeekday": 2,
+      "save.daysInWeek": 6,
+      "save.isSermonDay": true,
+      "save.churchUnlocked": true,
+      "save.tutorialCompleted": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 1,
+      "settings.beacon.enabled": true,
+      "beacon.enabled": true,
+      "beacon.underNativeHud": true,
+      "hud.visible": true,
+      "hud.textKey": "gksr.hud.sermonReminder"
+    },
+    "beacon-off-keeps-corner-text": {
+      "save.sermonWeekday": 2,
+      "save.isSermonDay": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 1,
+      "settings.beacon.enabled": false,
+      "beacon.enabled": false,
+      "hud.visible": true,
+      "hud.textKey": "gksr.hud.sermonReminder",
+      "hud.text": "布道日！",
+      "language.active": "zh_cn"
+    },
+    "beacon-slot-and-pointer-match-native": {
+      "save.sermonWeekday": 2,
+      "beacon.enabled": true,
+      "beacon.slotWidthPx": 40,
+      "beacon.slotHeightPx": 36,
+      "native.slotWidthPx": 40,
+      "native.slotHeightPx": 36,
+      "beacon.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID",
+      "native.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID"
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "beacon-eligible-sermon-day-unconsumed",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/beacon-eligible-zh.png"
+      },
+      "measurement": {
+        "values": {
+          "beacon.slotWidthPx": 40,
+          "beacon.slotHeightPx": 36
+        },
+        "operatorObservation": "REPLACE with the observed run note; never mark an unexecuted scenario as passed."
+      },
+      "notes": "REPLACE with the observed run notes."
+    },
+    {
+      "scenarioId": "beacon-off-keeps-corner-text",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/beacon-off-corner-text-zh.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE: beacon hidden while corner reminder text stays visible."
+      },
+      "notes": "REPLACE with the observed run notes."
+    },
+    {
+      "scenarioId": "beacon-slot-and-pointer-match-native",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/beacon-slot-native-compare.png"
+      },
+      "measurement": {
+        "values": {
+          "beacon.slotWidthPx": 40,
+          "beacon.slotHeightPx": 36,
+          "native.slotWidthPx": 40,
+          "native.slotHeightPx": 36
+        },
+        "operatorObservation": "REPLACE: owned slot equals the native slot measured in the same scene."
+      },
+      "notes": "REPLACE with the observed run notes."
+    }
+  ]
+}

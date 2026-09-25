@@ -1,0 +1,2344 @@
+{
+  "manifestVersion": 1,
+  "kind": "gksa12-e2e-manifest",
+  "ticket": "GKSA-12",
+  "title": "可配置教堂信标：真实游戏 E2E 场景清单",
+  "status": "requirements-not-results",
+  "notes": [
+    "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
+    "本票交付布道日当天指向教堂的信仰图标信标，以及主菜单 Mods 页面中的信标开关。",
+    "信标资格与 GKSA-11 一致：存档加载完成、两个解锁门槛均 Completed、当天为布道日、当日布道机会尚未消费（原生 sermon_ready >= 1）。",
+    "解锁门槛为两个精确任务 ID 均为 Completed：19_base_ceremony_church 与 19_base_ceremony_sermon。",
+    "信标开关默认开启；关闭信标只停用信标，不停用角落文字。",
+    "全局设置在同一游戏安装内共用；修改后自动保存；读取旧存档不回滚设置。",
+    "修改设置后再次载入存档即生效，无需重启游戏。",
+    "钥匙盘与手柄均可修改信标开关。",
+    "信标复用原生方向标记的独立显示实例（原生 UIMagnifyingGlassWidget），不改写原生任务标记。",
+    "信标图标取自原生静态物品定义；不将原生资源复制进发行包。",
+    "信标保留原生图标槽尺寸与箭头样式；实测值必须与同一场景观察到的原生槽位/来源实测值相等，不得与猜测常量比较。",
+    "信标沿用原生屏幕投影与边缘定位规则，并在目标进入镜头后移除边缘箭头。",
+    "室内外门路由沿用原生选择，最终目标为教堂布道场景点 gd_church_player_pray。",
+    "原生 Sprite PathID777 属于历史标识，不是当前构建身份；本清单不写死该值。",
+    "原生绘制刷新会改写 Sprite 与尺寸；本清单要求在反复进出镜头的多次转换后仍保持信仰图标与原生槽位尺寸，而不是只在生成时检查一次。",
+    "原生任务共存要求：原有任务图标、追踪集合、交互事件与优先级均不变。",
+    "开始布道消耗机会后，信标在消耗后的首次 LateUpdate 内清除（允许与消耗同帧），且不移除 Done 角落文字。",
+    "读档、切档、退出与 HUD 重建后只允许存在一个自有信标实例；旧订阅与旧引用必须清理，不得出现重复回调。",
+    "目标点、图标或信标组件不可用时，只停用依赖该资源的信标；保留 Ready 文字与可读业务状态；恢复后自动重新判定，无需读档或重启。",
+    "完整信标故障通知与恢复联动属于 GKSA-14/GKSA-15，本票不实现，因此本清单不要求原生故障消息观察。",
+    "本清单的资格字段与 GKSA-11 的角落文字、解锁门槛、日期模型语义保持一致，便于两个清单交叉核对。",
+    "视觉类场景均要求真实游戏截图，并附实测数值或操作者明确观察记录；仅有布尔断言不能满足。",
+    "几何类断言采用“模组实测值 equalsObservation 原生实测值”的观察对观察比较；不使用 measuredRatio 的固定 20:18 常量，因为信标槽位尺寸必须匹配观察到的原生槽位。",
+    "同一份 capture 只有一个 environment；不同分辨率或 UI 缩放的验证属于各自独立的 capture 运行。",
+    "本清单使用扁平点号观察键；capture 的 environment 与 observations 同样使用扁平点号键，不嵌套。",
+    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
+    "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
+    "检测到与已确认语义冲突的实机证据时必须停止受影响工作并返回决策，不得放宽本清单的期望。"
+  ],
+  "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
+  "specRefs": [
+    "GKSA-1",
+    "GKSA-3",
+    "GKSA-4",
+    "GKSA-6",
+    "GKSA-9",
+    "GKSA-11",
+    "GKSA-12"
+  ],
+  "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
+  "beaconSource": {
+    "displayInstance": "原生 UIMagnifyingGlassWidget 的独立自有实例，位于原生 HUD 之下，不登记进原生任务追踪集合。",
+    "iconSource": "原生静态物品定义提供的信仰图标；不在运行时请求新的 Addressables GUID，也不复制原生资源进发行包。",
+    "slotStyle": "保留原生图标槽尺寸与箭头样式；尺寸以观察到的原生槽位实测值为基准。",
+    "projection": "沿用原生屏幕投影与边缘定位规则。",
+    "routeFinalTargetId": "gd_church_player_pray",
+    "historicalPathIdNote": "原生 Sprite PathID777 属于历史标识，不是当前构建身份；本清单不写死该值，也不将其作为断言依据。"
+  },
+  "settingsSource": {
+    "entry": "GK2 Mod Framework 主菜单 Mods 页面中的模组设置页。",
+    "beaconDefault": true,
+    "scope": "同一游戏安装内全局共用；不按存档分别保存。",
+    "persistence": "修改后自动保存；重启后沿用；读取旧存档不回滚。",
+    "applyTiming": "修改后再次载入存档即生效，无需重启游戏。",
+    "note": "关闭信标只停用信标，不停用角落文字。"
+  },
+  "finalText": {
+    "gksr.hud.sermonReminder": {
+      "zh-CN": "布道日！",
+      "en": "Sermon Day!"
+    },
+    "gksr.hud.sermonDone": {
+      "zh-CN": "已完成本周布道！",
+      "en": "This week’s sermon is complete!"
+    },
+    "gksr.hud.sermonCountdown.one": {
+      "zh-CN": "明天是布道日！",
+      "en": "Sermon Day is Tomorrow!"
+    },
+    "gksr.hud.sermonCountdown.other": {
+      "zh-CN": "距离下一次布道日还有{days}天。",
+      "en": "{days} days before the Sermon Day."
+    },
+    "gksr.settings.group.title": {
+      "zh-CN": "GK2布道提醒",
+      "en": "GK2 Sermon Reminder"
+    },
+    "gksr.settings.beacon.label": {
+      "zh-CN": "开启教堂信标提醒",
+      "en": "Enable church beacon"
+    },
+    "gksr.settings.beacon.description": {
+      "zh-CN": "在布道日来临、且当日未布道时，设置一个永远追踪到教堂的信标点，默认值为开启。",
+      "en": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default."
+    }
+  },
+  "languageMapping": {
+    "catalogLabelToRawGameLanguageId": {
+      "zh-CN": "zh_cn",
+      "en": "en"
+    },
+    "knownRawGameLanguageIds": [
+      "zh_cn",
+      "en"
+    ],
+    "note": "观察字段 language.active 记录游戏原始语言标识（例如 zh_cn、en、fr）；文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+  },
+  "observationVocabulary": {
+    "save.churchUnlocked": "bool: 任务 19_base_ceremony_church 是否 Completed",
+    "save.tutorialCompleted": "bool: 任务 19_base_ceremony_sermon 是否 Completed",
+    "save.loadedOlderSave": "bool: 本次载入的存档保存时间是否早于当前全局设置修改时间",
+    "save.isSermonDay": "bool: 当前游戏日是否为布道日",
+    "save.absoluteDay": "int: 绝对游戏日 EnvironmentData.Day，从 1 开始的正整数",
+    "save.dayOfWeek": "int: 星期编号，等于 ((absoluteDay - 1) % daysInWeek) + 1",
+    "save.sermonWeekday": "int: 观察到的布道日星期编号，必须等于环境字段 game.sermonWeekday；绝不写死",
+    "save.daysInWeek": "int: EnvironmentData.DAYS_IN_WEEK 常量值，Build25509347 为 6",
+    "state.readable": "bool: 必要业务状态是否可可靠读取",
+    "state.sermonReadyValue": "number: 原生 playerData.GetRes(\"sermon_ready\") 的实际数值；>=1 为机会未消费",
+    "state.staleNativeReadyFlag": "bool: 非布道日上是否仍残留原生 ready 标志",
+    "state.readException": "bool: 原生读取是否抛出异常（不可读）",
+    "state.missingPlayerOrSave": "bool: 是否缺失原生玩家或存档（不可读）",
+    "state.nativeProgressModified": "bool: 是否修改了原生任务进度",
+    "state.progressWriteCount": "int: 模组对原生进度写入的调用次数（必须为 0）",
+    "state.ownPersistenceWritten": "bool: 模组是否写入自有持久化状态",
+    "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定（必须为 false）",
+    "inventory.itemShortage": "bool: 当前存档是否存在物品/材料短缺（不得影响信标资格）",
+    "settings.beacon.defaultEnabled": "bool: 首次使用且无已保存配置时信标开关的默认值（必须为 true）",
+    "settings.beacon.enabled": "bool: 信标开关当前的持久化值",
+    "settings.beacon.toggledByKeyboard": "bool: 是否使用键鼠成功修改了信标开关",
+    "settings.beacon.toggledByGamepad": "bool: 是否使用手柄成功修改了信标开关",
+    "settings.beacon.autoSavedOnToggle": "bool: 修改开关后是否自动保存",
+    "settings.beacon.persistedAfterToggle": "bool: 修改后重新打开设置页面是否读到新值",
+    "settings.beacon.appliedOnNextLoad": "bool: 修改后再载入存档时是否按新设置判定",
+    "settings.beacon.appliedWithoutRestart": "bool: 应用新设置是否发生在未重启游戏的前提下",
+    "settings.beacon.survivedRestart": "bool: 重启游戏后是否保留已保存的开关设置",
+    "settings.beacon.survivedOldSaveLoad": "bool: 读取旧存档后是否未回滚全局开关设置",
+    "settings.pageCount": "int: 主菜单 Mods 下本模组设置页面的注册数量（必须为 1，不重复注册）",
+    "settings.groupTitleText": "string: 设置页面标题的当前显示文本",
+    "settings.beacon.labelText": "string: 信标开关名称的当前显示文本",
+    "settings.beacon.descriptionText": "string: 信标开关说明的当前显示文本",
+    "input.activeMethod": "string: 本场景实际使用的输入方式（keyboard、gamepad）",
+    "beacon.enabled": "bool: 信标当前是否实际显示",
+    "beacon.instanceCount": "int: 当前自有信标显示实例数量（健康状态必须为 1）",
+    "beacon.underNativeHud": "bool: 自有信标实例是否位于原生 HUD 之下",
+    "beacon.independentDisplayInstance": "bool: 是否复用独立的原生方向标记显示实例",
+    "beacon.usesNativeMagnifyingGlassWidget": "bool: 是否复用原生 UIMagnifyingGlassWidget",
+    "beacon.iconFromNativeStaticItemDefinition": "bool: 信仰图标是否取自原生静态物品定义",
+    "beacon.iconSourceCopiedIntoDistribution": "bool: 是否将原生图标资源复制进仓库/发行包（必须为 false）",
+    "beacon.substituteIconOrFakeMarkerUsed": "bool: 是否使用替代图标或假任务标记（必须为 false）",
+    "beacon.slotWidthPx": "number: 实测自有信标图标槽宽度",
+    "beacon.slotHeightPx": "number: 实测自有信标图标槽高度",
+    "beacon.slotWidthPxAfterTransitions": "number: 反复进出镜头转换后实测的自有槽宽度",
+    "beacon.slotHeightPxAfterTransitions": "number: 反复进出镜头转换后实测的自有槽高度",
+    "beacon.pointerSpriteId": "string: 自有信标箭头实际使用的 Sprite/样式标识",
+    "beacon.pointerSpriteIdAfterTransitions": "string: 反复进出镜头转换后自有箭头实际使用的 Sprite/样式标识",
+    "beacon.projectedScreenX": "number: 自有信标按原生投影得到的屏幕 X 坐标",
+    "beacon.projectedScreenY": "number: 自有信标按原生投影得到的屏幕 Y 坐标",
+    "beacon.edgeInsetPx": "number: 目标在镜头外时自有箭头距屏幕边缘的内缩距离",
+    "beacon.edgeClampMatchesNativeRule": "bool: 边缘定位是否沿用原生规则",
+    "beacon.edgeArrowVisibleWhenTargetOffscreen": "bool: 目标在镜头外时是否显示边缘方向箭头",
+    "beacon.edgeArrowRemovedWhenTargetOnscreen": "bool: 目标进入镜头后边缘箭头是否移除",
+    "beacon.iconPlacedAtTargetWhenOnscreen": "bool: 目标在镜头内时图标是否定位到引导目标",
+    "beacon.routeKind": "string: 当前路由类型（outdoor、indoor-door）",
+    "beacon.routeEntryId": "string: 当前引导路由选择的途中入口标识",
+    "beacon.finalTargetId": "string: 当前引导的最终目标标识，必须为 gd_church_player_pray",
+    "beacon.routeUpdatedAfterTransition": "bool: 室内外移动或传送后是否更新了引导目标",
+    "beacon.followsNativeHudVisibility": "bool: 信标是否继承原生 HUD 可见性",
+    "beacon.independentMenuBlacklist": "bool: 是否新增了独立菜单隐藏名单（必须为 false）",
+    "beacon.mapOnlyMark": "bool: 是否只在/仅在地图添加标记（必须为 false）",
+    "beacon.visibleWhenNativeHintVisible": "bool: 原生提示可见时信标是否可见",
+    "beacon.visibleWhenNativeHintHidden": "bool: 原生提示隐藏时信标是否隐藏",
+    "beacon.drawRefreshCount": "int: 观察期间原生绘制刷新次数",
+    "beacon.offscreenOnscreenTransitionCount": "int: 观察期间进出镜头的转换次数",
+    "beacon.iconIdentityAfterTransitions": "string: 多次绘制刷新与进出镜头后自有图标实际使用的来源标识",
+    "beacon.pointerSpriteIdAfterRefresh": "string: 多次绘制刷新后自有箭头实际使用的 Sprite/样式标识",
+    "beacon.iconStillMatchesNativeAfterDrawRefresh": "bool: 绘制刷新后自有图标是否仍为原生信仰图标",
+    "beacon.uiScaleFollowsNative": "bool: 信标槽位/箭头是否随原生画布缩放",
+    "beacon.edgeWithinBounds": "bool: 边缘箭头内缩是否保持在屏幕边界内且未裁切",
+    "beacon.oldInstanceDestroyed": "bool: 重建/切档/退出时是否销毁了旧自有实例",
+    "beacon.oldSubscriptionsCleared": "bool: 旧订阅与旧引用是否已清理",
+    "beacon.duplicateCallbackCount": "int: 重复回调次数（必须为 0）",
+    "beacon.instanceCountAfterExit": "int: 退出存档后残留的自有信标实例数量（必须为 0）",
+    "beacon.hudRebuilt": "bool: 是否触发了原生 HUD 重建",
+    "beacon.staleTargetFromPreviousSave": "bool: 切档后是否残留上一存档的引导目标（必须为 false）",
+    "beacon.targetAvailable": "bool: 教堂目标点当前是否可用",
+    "beacon.iconAvailable": "bool: 原生信仰图标当前是否可用",
+    "beacon.componentAvailable": "bool: 信标组件当前是否可用",
+    "beacon.recoveryTargetAvailable": "bool: 恢复判定时教堂目标点是否已可用",
+    "beacon.recoveredEnabled": "bool: 故障解除后信标是否自动恢复显示",
+    "beacon.recoveryWithoutReload": "bool: 恢复是否发生在未重新读档或重启的前提下",
+    "beacon.registersFakeTask": "bool: 是否登记了假任务（必须为 false）",
+    "beacon.modifiesSharedPrefab": "bool: 是否修改了共享预制体（必须为 false）",
+    "beacon.writesNativeTrackingCollection": "bool: 是否将信标写入原生任务追踪集合（必须为 false）",
+    "beacon.addsCompetingPriority": "bool: 是否增加抢占原任务标记的优先级（必须为 false）",
+    "quests.markerCountBefore": "int: 观察前原生任务标记数量",
+    "quests.markerCountAfter": "int: 观察后原生任务标记数量",
+    "quests.trackingCollectionUnchanged": "bool: 原生任务追踪集合是否未被修改",
+    "quests.interactionEventsUnchanged": "bool: 原生任务交互事件是否未变",
+    "quests.priorityUnchanged": "bool: 原生任务标记优先级是否未变",
+    "quests.markerPriority": "int: 观察到的原生任务标记优先级",
+    "quests.markerPriorityReference": "int: 对照的原生任务标记优先级基线",
+    "hud.visible": "bool: 角落文字当前是否可见",
+    "hud.text": "string: 角落文字当前显示的完整内容",
+    "hud.textKey": "string: 当前选用的文案键",
+    "hud.countdownDays": "int: 非布道日倒计时显示的整数天数",
+    "hud.nonSermonCountdownShown": "bool: 当前是否显示非布道日倒计时",
+    "hud.instanceCount": "int: 模组自有的角落显示实例数量",
+    "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
+    "timing.consumptionFrame": "int: 观察到开始布道消耗机会的帧号",
+    "timing.firstLateUpdateFrameAfterConsumption": "int: 消耗后第一个 LateUpdate 所在的帧号（可与消耗同帧）",
+    "timing.beaconClearedFrame": "int: 首次观察到信标已清除的帧号",
+    "timing.framesUntilBeaconCleared": "int: 从消耗帧到信标清除帧的差值，允许 0..1",
+    "timing.animationEndFrame": "int: 动画/奖励结束的帧号",
+    "language.active": "string: 游戏原始语言标识，例如 zh_cn、en、fr；不使用目录标签 zh-CN",
+    "native.slotWidthPx": "number: 同一场景观察到的原生方向标记图标槽宽度（对照实测值）",
+    "native.slotHeightPx": "number: 同一场景观察到的原生方向标记图标槽高度（对照实测值）",
+    "native.pointerSpriteId": "string: 同一场景观察到的原生方向标记箭头使用的 Sprite/样式标识（对照实测值）",
+    "native.projectedScreenX": "number: 同一场景观察到的原生方向标记屏幕投影 X 坐标（对照实测值）",
+    "native.projectedScreenY": "number: 同一场景观察到的原生方向标记屏幕投影 Y 坐标（对照实测值）",
+    "native.edgeInsetPx": "number: 同一场景观察到的原生方向标记边缘内缩距离（对照实测值）",
+    "native.routeEntryId": "string: 同一场景观察到的原生门路由选择的途中入口标识（对照实测值）",
+    "native.iconIdentity": "string: 反复进出镜头后用以核对自有图标仍为原生信仰图标的原生图标来源标识"
+  },
+  "validation": {
+    "supportedCaptureVersions": [
+      1
+    ],
+    "requireLoadEvidenceLog": true,
+    "measurementObservationPaths": [
+      "beacon.slotWidthPx",
+      "beacon.slotHeightPx",
+      "beacon.projectedScreenX",
+      "beacon.projectedScreenY",
+      "beacon.edgeInsetPx",
+      "native.slotWidthPx",
+      "native.slotHeightPx",
+      "native.projectedScreenX",
+      "native.projectedScreenY",
+      "native.edgeInsetPx"
+    ],
+    "requiredEnvironmentPaths": [
+      {
+        "path": "game.sermonWeekday",
+        "type": "weekday-int"
+      },
+      {
+        "path": "game.name",
+        "type": "string"
+      },
+      {
+        "path": "game.version",
+        "type": "string"
+      },
+      {
+        "path": "game.buildId",
+        "type": "string"
+      },
+      {
+        "path": "game.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "proton.version",
+        "type": "string"
+      },
+      {
+        "path": "proton.buildId",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.version",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "framework.name",
+        "type": "string"
+      },
+      {
+        "path": "framework.version",
+        "type": "string"
+      },
+      {
+        "path": "framework.commit",
+        "type": "string"
+      },
+      {
+        "path": "plugin.version",
+        "type": "string"
+      },
+      {
+        "path": "plugin.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "plugin.loaded",
+        "type": "boolean",
+        "equals": true
+      },
+      {
+        "path": "resolution.width",
+        "type": "positive-int"
+      },
+      {
+        "path": "resolution.height",
+        "type": "positive-int"
+      },
+      {
+        "path": "uiScale",
+        "type": "positive-number"
+      },
+      {
+        "path": "inputDevices",
+        "type": "nonempty-string-array"
+      },
+      {
+        "path": "os",
+        "type": "string"
+      },
+      {
+        "path": "capturedAt",
+        "type": "timestamp"
+      },
+      {
+        "path": "build.sourceCommit",
+        "type": "git-commit"
+      },
+      {
+        "path": "build.command",
+        "type": "string"
+      },
+      {
+        "path": "build.sdkVersion",
+        "type": "string"
+      },
+      {
+        "path": "build.artifactSha256",
+        "type": "sha256"
+      }
+    ],
+    "buildPluginHashConsistency": [
+      [
+        "build.artifactSha256",
+        "plugin.sha256"
+      ]
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "beacon-default-enabled-first-run",
+      "title": "首次使用且无已保存配置时信标开关默认开启",
+      "category": "config",
+      "prerequisites": [
+        "同一游戏安装内尚无本模组已保存的设置。",
+        "完整加载模组并进入主菜单。"
+      ],
+      "steps": [
+        "进入主菜单 Mods 中的本模组设置页面。",
+        "记录信标开关的默认值与设置页面注册数量。",
+        "载入一个满足信标资格的存档，观察信标是否显示。"
+      ],
+      "expect": [
+        {
+          "observation": "settings.beacon.defaultEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.pageCount",
+          "equals": 1
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-toggle-keyboard-mouse",
+      "title": "使用键鼠可修改信标开关并自动保存",
+      "category": "config",
+      "prerequisites": [
+        "已在主菜单进入本模组设置页面。",
+        "信标开关当前为开启。"
+      ],
+      "steps": [
+        "使用键鼠把信标开关改为关闭。",
+        "确认修改后自动保存，并重新打开设置页面读取新值。",
+        "再次使用键鼠把开关改回开启并确认自动保存。"
+      ],
+      "expect": [
+        {
+          "observation": "input.activeMethod",
+          "equals": "keyboard"
+        },
+        {
+          "observation": "settings.beacon.toggledByKeyboard",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.autoSavedOnToggle",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.persistedAfterToggle",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-toggle-gamepad",
+      "title": "使用手柄可修改信标开关并自动保存",
+      "category": "config",
+      "prerequisites": [
+        "已在主菜单进入本模组设置页面。",
+        "信标开关当前为开启。",
+        "手柄可用且已连接。"
+      ],
+      "steps": [
+        "使用手柄导航到信标开关并改为关闭。",
+        "确认修改后自动保存，并重新打开设置页面读取新值。",
+        "再次使用手柄把开关改回开启并确认自动保存。"
+      ],
+      "expect": [
+        {
+          "observation": "input.activeMethod",
+          "equals": "gamepad"
+        },
+        {
+          "observation": "settings.beacon.toggledByGamepad",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.autoSavedOnToggle",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.persistedAfterToggle",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-settings-page-single-registration",
+      "title": "设置页面只注册一次且不重复注册",
+      "category": "config",
+      "prerequisites": [
+        "完整加载模组并进入主菜单。",
+        "弹窗票与信标票共用同一模组设置页面。"
+      ],
+      "steps": [
+        "反复进出主菜单 Mods 页面三次。",
+        "统计本模组设置页面的注册数量。"
+      ],
+      "expect": [
+        {
+          "observation": "settings.pageCount",
+          "equals": 1
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-off-keeps-corner-text",
+      "title": "关闭信标只停用信标并保留角落文字",
+      "category": "config",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "已在主菜单把信标开关改为关闭。"
+      ],
+      "steps": [
+        "关闭信标开关后载入满足角落文字条件的存档。",
+        "观察信标是否显示，以及角落文字是否仍可见。",
+        "记录角落文字键与文本。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-setting-apply-next-load-no-restart",
+      "title": "修改设置后再次载入存档即生效且无需重启",
+      "category": "config",
+      "prerequisites": [
+        "存在满足信标资格的存档。",
+        "游戏进程保持运行，未重启。"
+      ],
+      "steps": [
+        "在开启状态下载入存档并确认信标显示。",
+        "返回主菜单把信标开关改为关闭。",
+        "不重启游戏再次载入同一存档，观察信标是否按新设置停用。"
+      ],
+      "expect": [
+        {
+          "observation": "settings.beacon.appliedOnNextLoad",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.appliedWithoutRestart",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.targetAvailable",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-setting-persists-restart",
+      "title": "重启游戏后保留已保存的信标设置",
+      "category": "config",
+      "prerequisites": [
+        "已把信标开关改为关闭并确认自动保存。"
+      ],
+      "steps": [
+        "正常退出游戏进程。",
+        "重新启动游戏并进入本模组设置页面。",
+        "载入满足信标资格的存档，观察信标是否仍按关闭设置停用。"
+      ],
+      "expect": [
+        {
+          "observation": "settings.beacon.survivedRestart",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-setting-survives-old-save-load",
+      "title": "读取旧存档不回滚当前全局信标设置",
+      "category": "config",
+      "prerequisites": [
+        "存在一份保存时间早于当前设置修改时间的旧存档。",
+        "已把信标开关改为关闭。"
+      ],
+      "steps": [
+        "载入保存时间早于设置修改的旧存档。",
+        "确认全局开关保持为修改后的值，且信标按该值停用。"
+      ],
+      "expect": [
+        {
+          "observation": "save.loadedOlderSave",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.survivedOldSaveLoad",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-gate-church-incomplete",
+      "title": "教堂开启任务未完成时不显示信标",
+      "category": "eligibility",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 不是 Completed。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录两个门槛任务的完成状态与信标显示情况。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": false
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-gate-tutorial-incomplete",
+      "title": "首次布道教学任务未完成时不显示信标",
+      "category": "eligibility",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 为 Completed。",
+        "当前存档中任务 19_base_ceremony_sermon 不是 Completed。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录两个门槛任务的完成状态与信标显示情况。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": false
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-eligible-sermon-day-unconsumed",
+      "title": "布道日机会尚未消费时按开关显示信标",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录绝对日、星期编号与布道日星期编号 T。",
+        "观察信标是否显示以及角落文字状态。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-hidden-nonsermon-day",
+      "title": "非布道日不显示信标而保留倒计时文字",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为非布道日。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "确认当前星期编号不等于布道日星期编号。",
+        "观察信标是否显示以及倒计时文字是否保留。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "notEqualsObservation": "save.sermonWeekday"
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonCountdown.other"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-hidden-opportunity-consumed",
+      "title": "当日布道机会已消费后不显示信标而保留 Done 文字",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录原生 sermon_ready 数值与角落文字状态。",
+        "观察信标是否已停用。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-hidden-offday-stale-ready",
+      "title": "非布道日残留原生 ready 标志时不显示信标与 Ready",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "刚跨过布道日进入非布道日，原生 ready 标志仍 >= 1。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "跨过布道日进入非布道日。",
+        "记录星期编号、绝对日与原生 ready 数值。",
+        "观察信标与角落文字是否回到非布道日倒计时。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "notEqualsObservation": "save.sermonWeekday"
+        },
+        {
+          "observation": "state.staleNativeReadyFlag",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-hidden-unreadable-state",
+      "title": "必要状态不可读时停用信标且不沿用旧判定",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生状态读取抛出异常。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "注入原生状态读取异常。",
+        "观察信标是否停用，以及角落文字是否隐藏。"
+      ],
+      "expect": [
+        {
+          "observation": "state.readException",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-item-shortage-still-eligible",
+      "title": "物品或材料不足不影响符合条件的信标",
+      "category": "eligibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "当前存档存在物品或材料短缺。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "准备一个物品/材料不足但满足布道资格的存档。",
+        "载入该存档并等待加载完成。",
+        "观察信标是否仍按资格显示。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "inventory.itemShortage",
+          "equals": true
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-native-instance-and-icon-source",
+      "title": "复用原生 UIMagnifyingGlassWidget 独立实例并使用原生静态信仰图标",
+      "category": "native-reuse",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待信标显示。",
+        "确认自有信标位于原生 HUD 下且为独立显示实例。",
+        "确认图标来源为原生静态物品定义且未复制进发行包。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.usesNativeMagnifyingGlassWidget",
+          "equals": true
+        },
+        {
+          "observation": "beacon.independentDisplayInstance",
+          "equals": true
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        },
+        {
+          "observation": "beacon.iconFromNativeStaticItemDefinition",
+          "equals": true
+        },
+        {
+          "observation": "beacon.iconSourceCopiedIntoDistribution",
+          "equals": false
+        },
+        {
+          "observation": "beacon.mapOnlyMark",
+          "equals": false
+        },
+        {
+          "observation": "beacon.independentMenuBlacklist",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-slot-and-pointer-match-native",
+      "title": "信标图标槽尺寸与箭头样式与原生来源一致",
+      "category": "native-reuse",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可在同一场景记录原生方向标记的槽位与箭头来源实测值。"
+      ],
+      "steps": [
+        "在同一场景同时记录原生方向标记与自有信标的槽宽、槽高与箭头来源标识。",
+        "确认自有信标的槽宽、槽高与箭头来源与原生实测值相等。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.slotWidthPx",
+          "equalsObservation": "native.slotWidthPx"
+        },
+        {
+          "observation": "beacon.slotHeightPx",
+          "equalsObservation": "native.slotHeightPx"
+        },
+        {
+          "observation": "beacon.pointerSpriteId",
+          "equalsObservation": "native.pointerSpriteId"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-camera-projection-and-edge-insets",
+      "title": "信标沿用原生屏幕投影与边缘内缩规则",
+      "category": "native-reuse",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "目标点位于镜头外，可同时记录原生与自有投影坐标。"
+      ],
+      "steps": [
+        "在同一场景记录原生方向标记与自有信标的屏幕投影坐标与边缘内缩距离。",
+        "确认自有投影坐标与原生实测值相等，且边缘内缩沿用原生规则。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.projectedScreenX",
+          "equalsObservation": "native.projectedScreenX"
+        },
+        {
+          "observation": "beacon.projectedScreenY",
+          "equalsObservation": "native.projectedScreenY"
+        },
+        {
+          "observation": "beacon.edgeInsetPx",
+          "equalsObservation": "native.edgeInsetPx"
+        },
+        {
+          "observation": "beacon.edgeClampMatchesNativeRule",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-offscreen-edge-arrow",
+      "title": "目标在镜头外时按原生规则显示边缘方向箭头",
+      "category": "native-reuse",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "目标点位于镜头外。"
+      ],
+      "steps": [
+        "将目标保持在镜头外并观察边缘方向箭头。",
+        "记录自有箭头内缩距离并与原生实测值比较。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.edgeArrowVisibleWhenTargetOffscreen",
+          "equals": true
+        },
+        {
+          "observation": "beacon.edgeInsetPx",
+          "equalsObservation": "native.edgeInsetPx"
+        },
+        {
+          "observation": "beacon.edgeClampMatchesNativeRule",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-onscreen-icon-arrow-removed",
+      "title": "目标进入镜头后移除边缘箭头并把图标定位到目标",
+      "category": "native-reuse",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可使目标进入镜头。"
+      ],
+      "steps": [
+        "让目标进入镜头。",
+        "确认边缘箭头已移除、图标定位到引导目标。",
+        "记录自有投影坐标并与原生实测值比较。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.edgeArrowRemovedWhenTargetOnscreen",
+          "equals": true
+        },
+        {
+          "observation": "beacon.iconPlacedAtTargetWhenOnscreen",
+          "equals": true
+        },
+        {
+          "observation": "beacon.projectedScreenX",
+          "equalsObservation": "native.projectedScreenX"
+        },
+        {
+          "observation": "beacon.projectedScreenY",
+          "equalsObservation": "native.projectedScreenY"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-routing-outdoor-final-target",
+      "title": "室外引导沿用原生路由并把最终目标设为教堂布道场景点",
+      "category": "routing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "玩家位于教堂之外的室外区域。"
+      ],
+      "steps": [
+        "在室外观察信标路由入口。",
+        "记录路由类型、途中入口标识与最终目标标识。",
+        "确认途中入口与原生选择一致，最终目标为 gd_church_player_pray。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.routeKind",
+          "equals": "outdoor"
+        },
+        {
+          "observation": "beacon.routeEntryId",
+          "equalsObservation": "native.routeEntryId"
+        },
+        {
+          "observation": "beacon.finalTargetId",
+          "equals": "gd_church_player_pray"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-routing-indoor-entry-final-target",
+      "title": "室内引导沿用原生门路由选择途中入口",
+      "category": "routing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "玩家位于需要经过门路由才能到达教堂的室内区域。"
+      ],
+      "steps": [
+        "在室内观察信标路由入口。",
+        "记录路由类型、途中入口标识与最终目标标识。",
+        "确认途中入口与原生门路由选择一致。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.routeKind",
+          "equals": "indoor-door"
+        },
+        {
+          "observation": "beacon.routeEntryId",
+          "equalsObservation": "native.routeEntryId"
+        },
+        {
+          "observation": "beacon.finalTargetId",
+          "equals": "gd_church_player_pray"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-routing-updates-after-transition",
+      "title": "室内外移动或传送后更新引导目标",
+      "category": "routing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可在室内外之间移动或使用传送。"
+      ],
+      "steps": [
+        "记录移动前的路由入口。",
+        "在室内外之间移动或传送。",
+        "确认路由入口已按新位置更新且最终目标保持为 gd_church_player_pray。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.routeUpdatedAfterTransition",
+          "equals": true
+        },
+        {
+          "observation": "beacon.routeEntryId",
+          "equalsObservation": "native.routeEntryId"
+        },
+        {
+          "observation": "beacon.finalTargetId",
+          "equals": "gd_church_player_pray"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-follows-native-hud-visibility",
+      "title": "信标继承原生 HUD 显隐且不新增独立菜单名单或地图专用标记",
+      "category": "visibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可在背包、菜单与过场中观察原生提示层显隐。"
+      ],
+      "steps": [
+        "在正常可操作画面观察信标可见性。",
+        "打开背包或菜单使原生提示层隐藏，观察信标是否随之隐藏。",
+        "确认未新增独立菜单隐藏名单或地图专用标记。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.followsNativeHudVisibility",
+          "equals": true
+        },
+        {
+          "observation": "beacon.independentMenuBlacklist",
+          "equals": false
+        },
+        {
+          "observation": "beacon.mapOnlyMark",
+          "equals": false
+        },
+        {
+          "observation": "beacon.visibleWhenNativeHintVisible",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleWhenNativeHintHidden",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-native-draw-preserves-icon-and-slot",
+      "title": "原生绘制刷新与反复进出镜头后仍保持信仰图标与原生槽位尺寸",
+      "category": "native-draw",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可使目标反复进出镜头并触发原生绘制刷新。"
+      ],
+      "steps": [
+        "使目标反复进出镜头至少两次并触发原生绘制刷新。",
+        "记录绘制刷新次数与进出镜头转换次数。",
+        "记录刷新后的图标来源、箭头来源与槽位尺寸，并与原生实测值比较。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.drawRefreshCount",
+          "integerGreaterThan": 0
+        },
+        {
+          "observation": "beacon.offscreenOnscreenTransitionCount",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "beacon.iconStillMatchesNativeAfterDrawRefresh",
+          "equals": true
+        },
+        {
+          "observation": "beacon.iconIdentityAfterTransitions",
+          "equalsObservation": "native.iconIdentity"
+        },
+        {
+          "observation": "beacon.slotWidthPxAfterTransitions",
+          "equalsObservation": "native.slotWidthPx"
+        },
+        {
+          "observation": "beacon.slotHeightPxAfterTransitions",
+          "equalsObservation": "native.slotHeightPx"
+        },
+        {
+          "observation": "beacon.pointerSpriteIdAfterTransitions",
+          "equalsObservation": "native.pointerSpriteId"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-quest-coexistence-unchanged",
+      "title": "原生任务图标、追踪集合、交互事件与优先级均不变",
+      "category": "coexistence",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "存档中存在进行中的被追踪任务。"
+      ],
+      "steps": [
+        "记录加载前原生任务标记数量与优先级基线。",
+        "载入存档并使信标显示，同时保持任务追踪开启。",
+        "确认任务标记数量、追踪集合、交互事件与优先级均未改变。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "quests.markerCountBefore",
+          "equalsObservation": "quests.markerCountAfter"
+        },
+        {
+          "observation": "quests.trackingCollectionUnchanged",
+          "equals": true
+        },
+        {
+          "observation": "quests.interactionEventsUnchanged",
+          "equals": true
+        },
+        {
+          "observation": "quests.priorityUnchanged",
+          "equals": true
+        },
+        {
+          "observation": "quests.markerPriority",
+          "equalsObservation": "quests.markerPriorityReference"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-no-fake-task-shared-prefab",
+      "title": "不登记假任务、不修改共享预制体且不写入原生追踪集合",
+      "category": "coexistence",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。"
+      ],
+      "steps": [
+        "使信标显示并观察追踪集合与共享预制体。",
+        "确认没有登记假任务、没有增加抢占优先级、没有修改原生进度。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.registersFakeTask",
+          "equals": false
+        },
+        {
+          "observation": "beacon.modifiesSharedPrefab",
+          "equals": false
+        },
+        {
+          "observation": "beacon.writesNativeTrackingCollection",
+          "equals": false
+        },
+        {
+          "observation": "beacon.addsCompetingPriority",
+          "equals": false
+        },
+        {
+          "observation": "state.nativeProgressModified",
+          "equals": false
+        },
+        {
+          "observation": "state.progressWriteCount",
+          "equals": 0
+        },
+        {
+          "observation": "state.ownPersistenceWritten",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-cleared-first-lateupdate-after-consumption",
+      "title": "开始布道消耗机会后在消耗后第一个 LateUpdate 内清除信标且保留 Done 文字",
+      "category": "timing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生 sermon_ready >= 1（Ready 状态，信标显示）。",
+        "可记录帧号与动画/奖励结束帧。"
+      ],
+      "steps": [
+        "记录开始布道消耗机会的帧号 timing.consumptionFrame。",
+        "记录消耗后第一个 LateUpdate 帧号与信标清除帧号。",
+        "确认信标清除发生在消耗后第一个 LateUpdate（允许同帧）。",
+        "确认 Done 角落文字在信标清除后仍然可见。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "timing.consumptionFrame",
+          "integerGreaterThan": -1
+        },
+        {
+          "observation": "timing.firstLateUpdateFrameAfterConsumption",
+          "integerGreaterThan": -1
+        },
+        {
+          "observation": "timing.beaconClearedFrame",
+          "integerGreaterThan": -1
+        },
+        {
+          "observation": "timing.beaconClearedFrame",
+          "equalsObservation": "timing.firstLateUpdateFrameAfterConsumption"
+        },
+        {
+          "observation": "timing.framesUntilBeaconCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "observation": "timing.animationEndFrame",
+          "greaterThanObservation": "timing.beaconClearedFrame"
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-single-owned-instance",
+      "title": "单次载入只存在一个自有信标实例且无重复回调",
+      "category": "lifecycle",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "统计自有信标实例数量与重复回调次数。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "beacon.duplicateCallbackCount",
+          "equals": 0
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-switch-save-clears-old-instance",
+      "title": "切换存档后清理旧实例与旧订阅且不残留旧目标",
+      "category": "lifecycle",
+      "prerequisites": [
+        "存在两个满足信标资格的存档。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "在第一个存档中使信标显示。",
+        "切换到第二个存档。",
+        "确认旧实例与旧订阅已清理，且无上一存档的残留目标。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.staleTargetFromPreviousSave",
+          "equals": false
+        },
+        {
+          "observation": "beacon.oldInstanceDestroyed",
+          "equals": true
+        },
+        {
+          "observation": "beacon.oldSubscriptionsCleared",
+          "equals": true
+        },
+        {
+          "observation": "beacon.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "beacon.duplicateCallbackCount",
+          "equals": 0
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-exit-save-clears-instance",
+      "title": "退出存档后不残留自有信标实例与显示资源",
+      "category": "lifecycle",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且信标已显示。"
+      ],
+      "steps": [
+        "在信标显示状态下退出存档返回主菜单。",
+        "统计退出后残留的自有信标实例与角落显示资源。"
+      ],
+      "expect": [
+        {
+          "observation": "beacon.instanceCountAfterExit",
+          "equals": 0
+        },
+        {
+          "observation": "beacon.oldInstanceDestroyed",
+          "equals": true
+        },
+        {
+          "observation": "beacon.oldSubscriptionsCleared",
+          "equals": true
+        },
+        {
+          "observation": "hud.instanceCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.trackedResourcesReleased",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-hud-rebuild-single-instance",
+      "title": "HUD 重建后只保留一个自有信标实例且旧引用已清理",
+      "category": "lifecycle",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且信标已显示。",
+        "可触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。"
+      ],
+      "steps": [
+        "触发原生 HUD 重建。",
+        "等待重建完成并确认信标重新显示。",
+        "统计重建后的自有实例数量、重复回调次数与旧订阅清理情况。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.hudRebuilt",
+          "equals": true
+        },
+        {
+          "observation": "beacon.oldInstanceDestroyed",
+          "equals": true
+        },
+        {
+          "observation": "beacon.oldSubscriptionsCleared",
+          "equals": true
+        },
+        {
+          "observation": "beacon.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "beacon.duplicateCallbackCount",
+          "equals": 0
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-repeated-load-recovery",
+      "title": "反复读档后仍只保留一个自有实例并正确恢复显示",
+      "category": "lifecycle",
+      "prerequisites": [
+        "存在满足信标资格的存档。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "连续三次载入同一存档。",
+        "每次等待加载完成后统计实例数量与重复回调次数。",
+        "确认最终只保留一个实例且信标正常显示。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "beacon.duplicateCallbackCount",
+          "equals": 0
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-missing-target-suppresses-only-beacon",
+      "title": "目标点不可用时只停用信标并保留 Ready 文字与业务状态",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使教堂目标点不可用。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "注入教堂目标点不可用。",
+        "观察信标是否停用，以及角落 Ready 文字是否仍正常显示。",
+        "确认业务状态仍可读且不沿用旧判定。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.targetAvailable",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-missing-icon-suppresses-only-beacon",
+      "title": "原生信仰图标不可用时只停用信标且不使用替代图或假任务",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使原生信仰图标不可用。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "注入原生信仰图标不可用。",
+        "观察信标是否停用，以及角落 Ready 文字是否仍正常显示。",
+        "确认未使用替代图标或假任务标记。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.iconAvailable",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "beacon.substituteIconOrFakeMarkerUsed",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-missing-component-suppresses-only-beacon",
+      "title": "信标组件不可用时只停用信标并保留其他提醒",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使信标组件不可用。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "注入信标组件不可用。",
+        "观察信标是否停用，以及角落 Ready 文字是否仍正常显示。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.componentAvailable",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabled",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-fault-recovers-without-reload",
+      "title": "资源恢复后无需读档或重启自动重新显示信标",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控注入并随后解除目标点不可用故障。",
+        "信标开关为开启。"
+      ],
+      "steps": [
+        "注入目标点不可用并确认信标停用。",
+        "解除故障，不重新读档也不重启游戏。",
+        "确认信标自动重新显示且仍位于原生 HUD 下。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.recoveryTargetAvailable",
+          "equals": true
+        },
+        {
+          "observation": "beacon.recoveredEnabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.recoveryWithoutReload",
+          "equals": true
+        },
+        {
+          "observation": "beacon.underNativeHud",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-boundary-edge-clamp-and-resolution",
+      "title": "边界可见性在受测分辨率与 UI 缩放下保持原生内缩且不裁切",
+      "category": "boundary",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "本场景记录其所在 capture 的分辨率与 UI 缩放。"
+      ],
+      "steps": [
+        "记录本次 capture 的分辨率与 UI 缩放。",
+        "让目标处于屏幕边界附近的镜头外区域。",
+        "记录自有箭头内缩并与原生实测值比较，确认仍在边界内。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.edgeWithinBounds",
+          "equals": true
+        },
+        {
+          "observation": "beacon.edgeInsetPx",
+          "equalsObservation": "native.edgeInsetPx"
+        },
+        {
+          "observation": "beacon.edgeClampMatchesNativeRule",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-ui-scale-follows-native",
+      "title": "信标槽位与箭头随原生画布缩放",
+      "category": "boundary",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "本场景记录其所在 capture 的 UI 缩放。"
+      ],
+      "steps": [
+        "记录本次 capture 的 UI 缩放。",
+        "在同一场景记录原生方向标记与自有信标的槽位尺寸。",
+        "确认自有槽位尺寸随原生缩放并与原生实测值相等。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "beacon.uiScaleFollowsNative",
+          "equals": true
+        },
+        {
+          "observation": "beacon.slotWidthPx",
+          "equalsObservation": "native.slotWidthPx"
+        },
+        {
+          "observation": "beacon.slotHeightPx",
+          "equalsObservation": "native.slotHeightPx"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-settings-label-zh",
+      "title": "简体中文语言下显示已定稿的信标设置名称与说明",
+      "category": "localization",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "完整加载模组并进入主菜单 Mods 中的本模组设置页面。"
+      ],
+      "steps": [
+        "以简体中文进入本模组设置页面。",
+        "记录页面标题、信标开关名称与说明文本。"
+      ],
+      "expect": [
+        {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        },
+        {
+          "observation": "settings.groupTitleText",
+          "finalTextKey": "gksr.settings.group.title",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "settings.beacon.labelText",
+          "finalTextKey": "gksr.settings.beacon.label",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "settings.beacon.descriptionText",
+          "finalTextKey": "gksr.settings.beacon.description",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-settings-label-en",
+      "title": "英语语言下显示已定稿的信标设置名称与说明",
+      "category": "localization",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "完整加载模组并进入主菜单 Mods 中的本模组设置页面。"
+      ],
+      "steps": [
+        "以英语进入本模组设置页面。",
+        "记录页面标题、信标开关名称与说明文本。"
+      ],
+      "expect": [
+        {
+          "observation": "language.active",
+          "equals": "en"
+        },
+        {
+          "observation": "settings.groupTitleText",
+          "finalTextKey": "gksr.settings.group.title",
+          "language": "en"
+        },
+        {
+          "observation": "settings.beacon.labelText",
+          "finalTextKey": "gksr.settings.beacon.label",
+          "language": "en"
+        },
+        {
+          "observation": "settings.beacon.descriptionText",
+          "finalTextKey": "gksr.settings.beacon.description",
+          "language": "en"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "beacon-settings-label-fallback-en",
+      "title": "当前语言缺少译文时信标设置文案回退英语",
+      "category": "localization",
+      "prerequisites": [
+        "游戏语言为简体中文与英语之外的其它语言（例如 fr）。",
+        "完整加载模组并进入主菜单 Mods 中的本模组设置页面。"
+      ],
+      "steps": [
+        "把游戏语言设为未覆盖的语言。",
+        "进入本模组设置页面并记录信标开关名称与说明文本。"
+      ],
+      "expect": [
+        {
+          "observation": "language.active",
+          "equals": "fr"
+        },
+        {
+          "observation": "settings.beacon.labelText",
+          "finalTextKey": "gksr.settings.beacon.label",
+          "language": "en"
+        },
+        {
+          "observation": "settings.beacon.descriptionText",
+          "finalTextKey": "gksr.settings.beacon.description",
+          "language": "en"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    }
+  ]
+}
