@@ -749,6 +749,13 @@ def evaluate_date_check(condition, observations, final_text):
     if target is not None and week is not None:
         _date_check_weekday(target_path, target, week, failures)
 
+    # Fail closed before any calendar arithmetic: a missing, non-integer, or
+    # out-of-range week/target (e.g. week = 0) is already recorded above and must
+    # stop here, so no modulo by an invalid week can raise an uncaught error
+    # instead of producing the failure artifact.
+    if failures:
+        return failures
+
     single = mode in ("single-day", "multi-day")
     sermon_day = mode == "sermon-day"
 
