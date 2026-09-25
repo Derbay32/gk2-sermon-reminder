@@ -22,6 +22,14 @@ namespace GK2.SermonReminder.Localization
         internal const string SettingsBeaconLabelKey = "gksr.settings.beacon.label";
         internal const string SettingsBeaconDescriptionKey = "gksr.settings.beacon.description";
 
+        // GKSA-14 approved fault-notice copy. The status keys are the native notice
+        // text (referenced by the notice core); the diagnostics keys are the separate
+        // user-facing explanations logged alongside the real technical detail.
+        internal const string StatusReminderUnavailableKey = "gksr.status.reminderUnavailable";
+        internal const string StatusHudUnavailableKey = "gksr.status.hudUnavailable";
+        internal const string DiagnosticsReminderUnavailableKey = "gksr.diagnostics.reminderUnavailable";
+        internal const string DiagnosticsHudUnavailableKey = "gksr.diagnostics.hudUnavailable";
+
         private const string English = "en";
         private const string Chinese = "zh_cn";
 
