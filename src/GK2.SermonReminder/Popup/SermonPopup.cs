@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using GK2.SermonReminder.Localization;
 using GK2.SermonReminder.State;
@@ -65,13 +64,16 @@ namespace GK2.SermonReminder.Popup
     /// <see cref="UIDialogWindow"/> instance returned by
     /// <see cref="LazyUI.GetWindow{T}"/> and the protected
     /// <c>LazyWidget&lt;UIDialogWindowData&gt;.data</c> slot, which is claimed with
-    /// our own <see cref="UIDialogWindowData"/> before the native
-    /// <c>Open</c> runs. Every native open is treated as a transaction that may
-    /// fail part-way. Content is only ever cleared or closed while the window's
-    /// current data is reference-equal to our own data; if another system takes
-    /// the window over we drop our native references and clear only our managed
-    /// callbacks. The cached window is never destroyed, cloned or re-initialised,
-    /// and no native pool object is ever destroyed.
+    /// our own <see cref="UIDialogWindowData"/> before the native <c>Open</c>
+    /// runs. Every native open is treated as a transaction that may fail
+    /// part-way, so an <see cref="OwnedTransaction"/> retains the exact window,
+    /// data, callbacks and the frozen native pool/list/content/prefab until
+    /// required cleanup actually succeeds. A read failure is never treated as a
+    /// confirmed takeover: only a readable, non-null, different data reference
+    /// ends our ownership, and content/buttons are touched only while the
+    /// window's current data is still reference-equal to ours. The cached window
+    /// is never destroyed, cloned or re-initialised, and no native pool object is
+    /// ever destroyed.
     ///
     /// De-duplication identity (slot name, demo flag, process slot generation) is
     /// frozen once per load in <see cref="CaptureLoadIdentity"/>; the concrete
@@ -79,6 +81,9 @@ namespace GK2.SermonReminder.Popup
     /// written only after the native dialog is confirmed actually displayed, and
     /// the process-memory maps are never cleared by reload, menu round-trip,
     /// overwrite, deletion or a settings toggle.
+    ///
+    /// Calendar logic is intentionally not reimplemented: the validated fresh
+    /// <see cref="SermonStateSnapshot"/> is consumed as-is.
     /// </summary>
     internal sealed class SermonPopup
     {
@@ -116,20 +121,30 @@ namespace GK2.SermonReminder.Popup
         // Current-load work.
         private bool enabled;
         private bool pending;
-        private bool shown;
-        private bool retryScheduled;
-        private float retryNotBeforeUnscaled;
 
-        // Owned native transaction.
-        private UIDialogWindow ownedWindow;
-        private UIDialogWindowData ownedData;
-        private Action<UIDialogWindowData> ownedCallback;
+        // Pending-display retry clock (finite, bounded). "Awaiting clock" is an
+        // unarmed state used when the unscaled clock is not yet readable.
+        private bool pendingRetryAwaitingClock;
+        private bool pendingRetryArmed;
+        private float pendingRetryDeadline;
+
+        // Cleanup retry clock, tracked separately so ineligible frames never
+        // reset a failed cleanup's backoff or discard its ownership.
+        private bool cleanupRetryAwaitingClock;
+        private bool cleanupRetryArmed;
+        private float cleanupRetryDeadline;
+
+        // The single owned native transaction, retained until cleanup completes.
+        private OwnedTransaction transaction;
 
         internal SermonPopupStatus LastStatus { get; private set; }
         internal SermonPopupStage LastStage { get; private set; }
 
         /// <summary>True while this load has queued (not yet displayed) popup work.</summary>
         internal bool IsPending => pending;
+
+        /// <summary>True while an owned native transaction is still being resolved.</summary>
+        internal bool HasUnresolvedTransaction => transaction != null;
 
         /// <summary>
         /// Freeze the immutable native slot key and generation for a load, before
@@ -176,8 +191,8 @@ namespace GK2.SermonReminder.Popup
 
         /// <summary>
         /// Begin a load for the same slot object captured earlier. A different
-        /// object never silently reuses the frozen identity. Only current-load
-        /// queued work and owned UI are cleared; the process maps are untouched.
+        /// object never silently reuses the frozen identity. Any unresolved owned
+        /// transaction is attempted first; the process maps are untouched.
         /// Contained.
         /// </summary>
         internal void BeginLoad(SaveSlotData slot, bool enabled)
@@ -185,7 +200,8 @@ namespace GK2.SermonReminder.Popup
             try
             {
                 this.enabled = enabled;
-                CancelLoadWork();
+                ClearPendingRetry();
+                TryResolveTransaction();
 
                 if (!hasIdentity)
                 {
@@ -208,24 +224,26 @@ namespace GK2.SermonReminder.Popup
         }
 
         /// <summary>
-        /// End the current load: clear its queued work and owned UI, then drop the
-        /// frozen identity. The dedup and generation maps are never cleared.
+        /// End the current load: cancel its queued work and identity, then attempt
+        /// to resolve any owned transaction without discarding it when cleanup is
+        /// still incomplete. The dedup and generation maps are never cleared.
         /// Contained.
         /// </summary>
         internal void EndLoad()
         {
-            try
-            {
-                CancelLoadWork();
-            }
-            catch (Exception)
-            {
-            }
-
+            ClearPendingRetry();
             enabled = false;
             hasIdentity = false;
             frozenSlot = null;
             identityFailure = null;
+
+            try
+            {
+                TryResolveTransaction();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         /// <summary>
@@ -252,8 +270,8 @@ namespace GK2.SermonReminder.Popup
 
         /// <summary>
         /// Evaluate the fresh snapshot against the frozen load identity and drive
-        /// the popup. Contained: any unexpected failure cleans the owned partial
-        /// transaction and retains the chance.
+        /// the popup. Contained: an unexpected failure never discards an owned
+        /// transaction before its required native cleanup succeeds.
         /// </summary>
         internal SermonPopupOutcome Update(SermonStateSnapshot snapshot)
         {
@@ -264,20 +282,11 @@ namespace GK2.SermonReminder.Popup
             }
             catch (Exception ex)
             {
-                try
-                {
-                    CleanupOwnedTransaction();
-                }
-                catch (Exception)
-                {
-                }
-
-                if (hasIdentity && enabled)
-                {
-                    pending = true;
-                    ScheduleRetry();
-                }
-
+                // Retain the owned transaction; native cleanup is retried, never
+                // skipped, so references are not cleared before cleanup succeeds.
+                if (transaction != null)
+                    transaction.CleanupNeeded = true;
+                ArmCleanupRetry();
                 outcome = new SermonPopupOutcome(SermonPopupStatus.Failed, SermonPopupStage.Cleanup, ex.GetType().Name);
             }
 
@@ -288,34 +297,47 @@ namespace GK2.SermonReminder.Popup
 
         private SermonPopupOutcome UpdateCore(SermonStateSnapshot snapshot)
         {
-            // Own-shown first: while our own modal is displayed the native pause
-            // makes the safety gate false, and it must never auto-close itself.
-            if (shown)
+            // Any owned transaction is resolved before new work is considered.
+            if (transaction != null)
             {
-                if (OwnsShownWindow())
+                // Own-shown must precede the external pause safety gate so our own
+                // native pause can never be read as a deferral that auto-closes us.
+                if (!transaction.CleanupNeeded && transaction.Displayed && OwnsShownWindow(transaction))
                     return Outcome(SermonPopupStatus.Healthy, SermonPopupStage.None, "shown");
 
-                DropOwnedReferences();
-                shown = false;
+                // No longer a live owned display: it must be cleaned, not dropped.
+                transaction.CleanupNeeded = true;
+
+                if (!CleanupRetryElapsed())
+                    return Outcome(SermonPopupStatus.Pending, SermonPopupStage.Cleanup, "cleanup-backoff");
+
+                if (!RunCleanup(transaction))
+                {
+                    ArmCleanupRetry();
+                    return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Cleanup, "cleanup-incomplete");
+                }
+
+                transaction = null;
+                DisarmCleanupRetry();
             }
 
             if (!enabled)
             {
-                CancelPendingWork();
+                ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "disabled");
             }
 
             if (!hasIdentity)
             {
                 // Retain the identity failure so an eligible evaluation can report it.
-                CancelPendingWork();
+                ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Identity, identityFailure);
             }
 
             if (!snapshot.Readable)
             {
                 // No stale Ready/day may survive an unreadable read.
-                CancelPendingWork();
+                ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "unreadable");
             }
 
@@ -323,13 +345,13 @@ namespace GK2.SermonReminder.Popup
             if (!opportunity)
             {
                 // Closed gates, off day, or an already-consumed opportunity.
-                CancelPendingWork();
+                ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "not-eligible");
             }
 
             if (dedupRecords.Contains(new DedupKey(identity, snapshot.AbsoluteDay)))
             {
-                CancelPendingWork();
+                ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "already-recorded");
             }
 
@@ -338,7 +360,7 @@ namespace GK2.SermonReminder.Popup
             if (!TryIsSafeToShow(out string gateReason))
                 return Outcome(SermonPopupStatus.Pending, SermonPopupStage.None, gateReason);
 
-            if (!RetryElapsed())
+            if (!PendingRetryElapsed())
                 return Outcome(SermonPopupStatus.Pending, SermonPopupStage.None, "retry-backoff");
 
             return AttemptDisplay(snapshot);
@@ -346,6 +368,12 @@ namespace GK2.SermonReminder.Popup
 
         private SermonPopupOutcome AttemptDisplay(SermonStateSnapshot snapshot)
         {
+            if (!ReflectionReady())
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "reflection-incomplete");
+            }
+
             UIDialogWindow window;
             try
             {
@@ -353,21 +381,14 @@ namespace GK2.SermonReminder.Popup
             }
             catch (Exception ex)
             {
-                ScheduleRetry();
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "window:" + ex.GetType().Name);
             }
 
             if (window == null)
             {
-                ScheduleRetry();
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "window-null");
-            }
-
-            FieldInfo dataField = DialogDataField;
-            if (dataField == null)
-            {
-                ScheduleRetry();
-                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "data-field");
             }
 
             // Missing localized text fails closed; the deferred catalog additions
@@ -377,64 +398,115 @@ namespace GK2.SermonReminder.Popup
             string confirm = SermonReminderLocalization.Get(ConfirmKey);
             if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(body) || string.IsNullOrEmpty(confirm))
             {
-                ScheduleRetry();
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Localization, "missing-popup-text");
             }
+
+            // After resolving the shared window and text, revalidate gameplay and
+            // that the resolved window is not already shown before any preclaim, so
+            // an in-use shared dialog is never overwritten.
+            if (!TryIsSafeToShow(out string recheckReason))
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Pending, SermonPopupStage.None, recheckReason);
+            }
+
+            bool shownAlready;
+            try
+            {
+                shownAlready = window.IsShown;
+            }
+            catch (Exception ex)
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "is-shown:" + ex.GetType().Name);
+            }
+
+            if (shownAlready)
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "window-in-use");
+            }
+
+            // Freeze the exact native pool/list/content/prefab before preclaim so
+            // cleanup can still run after the shared window changes underneath us.
+            Pool pool;
+            List<UIDialogWindowButton> activeList;
+            RectTransform content;
+            UIDialogWindowButton prefab;
+            if (!TryFreezeNativeRefs(window, out pool, out activeList, out content, out prefab))
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Claim, "freeze-refs");
+            }
+
+            var tx = new OwnedTransaction
+            {
+                Window = window,
+                Pool = pool,
+                ActiveList = activeList,
+                Content = content,
+                Prefab = prefab
+            };
+            tx.NativeClosed = closed => OnNativeClosed(tx, closed);
+            tx.Confirm = () => OnConfirm(tx);
 
             UIDialogWindowData data;
             try
             {
-                var button = new UIDialogWindowData.ButtonData(OnConfirmPressed, confirm, null, true, GameKey.Select);
+                var button = new UIDialogWindowData.ButtonData(tx.Confirm, confirm, null, true, GameKey.Select);
                 data = new UIDialogWindowData(title, body, button);
+                data.CloseButtonAction = tx.Confirm;
             }
             catch (Exception ex)
             {
-                ScheduleRetry();
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Claim, "build-data:" + ex.GetType().Name);
             }
+
+            tx.Data = data;
 
             // Claim the transaction by installing our own data before the native
             // open, so a partial open is attributable to this attempt.
             try
             {
-                dataField.SetValue(window, data);
-                ownedWindow = window;
-                ownedData = data;
-                ownedCallback = OnNativeClosed;
+                DialogDataField.SetValue(window, data);
             }
             catch (Exception ex)
             {
-                ScheduleRetry();
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Claim, "assign-data:" + ex.GetType().Name);
             }
 
+            transaction = tx;
+
             try
             {
-                window.Open(data, ownedCallback);
+                window.Open(data, tx.NativeClosed);
             }
             catch (Exception ex)
             {
-                CleanupOwnedTransaction();
-                ScheduleRetry();
+                FailTransaction(tx);
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Open, ex.GetType().Name);
             }
 
             bool displayed;
             try
             {
-                displayed = VerifyDisplayed(window, data, title, body, confirm);
+                displayed = VerifyDisplayed(window, data, title, body, confirm, tx.NativeClosed);
             }
             catch (Exception ex)
             {
-                CleanupOwnedTransaction();
-                ScheduleRetry();
+                FailTransaction(tx);
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Show, "verify:" + ex.GetType().Name);
             }
 
             if (!displayed)
             {
-                CleanupOwnedTransaction();
-                ScheduleRetry();
+                FailTransaction(tx);
+                ArmPendingRetry();
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Show, "not-displayed");
             }
 
@@ -448,29 +520,53 @@ namespace GK2.SermonReminder.Popup
             {
             }
 
-            shown = true;
-            pending = false;
-            retryScheduled = false;
-            retryNotBeforeUnscaled = 0f;
+            tx.Displayed = true;
+            tx.CleanupNeeded = false;
+            ClearPendingRetry();
+            DisarmCleanupRetry();
             return Outcome(SermonPopupStatus.Healthy, SermonPopupStage.None, "displayed");
         }
 
-        private bool VerifyDisplayed(UIDialogWindow window, UIDialogWindowData data, string title, string body, string confirm)
+        /// <summary>
+        /// Mark the attempt failed and run required cleanup now; if cleanup is
+        /// incomplete the transaction is retained so it blocks new opens and is
+        /// retried with the finite cleanup clock.
+        /// </summary>
+        private void FailTransaction(OwnedTransaction tx)
+        {
+            tx.CleanupNeeded = true;
+            if (RunCleanup(tx) && ReferenceEquals(transaction, tx))
+            {
+                transaction = null;
+                DisarmCleanupRetry();
+                return;
+            }
+
+            // Cleanup is incomplete: retain ownership and bound the next attempt.
+            ArmCleanupRetry();
+        }
+
+        private bool VerifyDisplayed(
+            UIDialogWindow window,
+            UIDialogWindowData data,
+            string title,
+            string body,
+            string confirm,
+            Action<UIDialogWindowData> expectedCallback)
         {
             if (window == null || !window.IsShown)
                 return false;
 
-            // The shared data slot must still be ours.
-            if (!ReferenceEquals(TryGetData(window), data))
+            // The shared data slot must be readable and still ours.
+            if (!TryReadData(window, out object current) || !ReferenceEquals(current, data))
                 return false;
 
-            // Native Close must be able to reach our callback.
-            if (OnClosedField != null)
-            {
-                var installed = OnClosedField.GetValue(window) as Action<UIDialogWindowData>;
-                if (!ReferenceEquals(installed, ownedCallback))
-                    return false;
-            }
+            // The exact installed callback must be reachable, never skipped.
+            if (OnClosedField == null)
+                return false;
+            var installed = OnClosedField.GetValue(window) as Action<UIDialogWindowData>;
+            if (!ReferenceEquals(installed, expectedCallback))
+                return false;
 
             if (!ReferenceEquals(LazyWindowsStackController.ActiveWindow, window))
                 return false;
@@ -501,61 +597,45 @@ namespace GK2.SermonReminder.Popup
             return true;
         }
 
-        private void OnConfirmPressed()
+        /// <summary>Confirm/close action bound to its exact transaction.</summary>
+        private void OnConfirm(OwnedTransaction tx)
         {
             try
             {
-                UIDialogWindow window = ownedWindow;
-                if (window == null || !ReferenceEquals(TryGetData(window), ownedData))
+                if (!ReferenceEquals(transaction, tx) || tx.CleanupNeeded)
+                    return;
+                if (tx.Window == null || !ReferenceEquals(TryGetData(tx.Window), tx.Data))
                     return;
 
-                window.Close();
+                tx.Window.Close();
             }
             catch (Exception)
             {
             }
         }
 
-        private void OnNativeClosed(UIDialogWindowData closedData)
+        /// <summary>
+        /// Native-close callback bound to its exact transaction. It marks only its
+        /// own transaction for deferred cleanup; native cleanup runs outside the
+        /// in-progress native Close call, on Update/EndLoad, never reentrantly.
+        /// A stale or mismatched callback never alters any newer transaction.
+        /// </summary>
+        private void OnNativeClosed(OwnedTransaction tx, UIDialogWindowData closedData)
         {
             try
             {
-                UIDialogWindow window = ownedWindow;
-                UIDialogWindowData data = ownedData;
-                bool ours = data != null && ReferenceEquals(closedData, data);
-
-                shown = false;
-                pending = false;
-                ownedCallback = null;
-                ownedWindow = null;
-                ownedData = null;
-
-                if (!ours)
+                if (!ReferenceEquals(transaction, tx))
+                    return;
+                if (tx.Data == null || !ReferenceEquals(tx.Data, closedData))
                     return;
 
-                // Our own managed callbacks always come off; rendered content and
-                // the window itself only while its current data is still ours.
-                ClearManagedCallbacks(data);
-
-                try
-                {
-                    if (window == null || !ReferenceEquals(TryGetData(window), data))
-                        return;
-
-                    ClearRenderedContent(window);
-                    ReleaseOwnedButtons(window);
-
-                    if (DialogDataField != null && ReferenceEquals(DialogDataField.GetValue(window), data))
-                        DialogDataField.SetValue(window, null);
-                }
-                catch (Exception)
-                {
-                }
+                tx.Displayed = false;
+                tx.CleanupNeeded = true;
             }
             catch (Exception)
             {
-                shown = false;
-                DropOwnedReferences();
+                tx.Displayed = false;
+                tx.CleanupNeeded = true;
             }
         }
 
@@ -564,15 +644,16 @@ namespace GK2.SermonReminder.Popup
         /// is actually shown. Used to keep our own pause from being read as a
         /// deferral by the safety gate.
         /// </summary>
-        private bool OwnsShownWindow()
+        private static bool OwnsShownWindow(OwnedTransaction tx)
         {
-            UIDialogWindow window = ownedWindow;
-            if (window == null)
+            if (tx == null || tx.Window == null || tx.Data == null)
                 return false;
 
             try
             {
-                return window.IsShown && ReferenceEquals(TryGetData(window), ownedData);
+                if (!tx.Window.IsShown)
+                    return false;
+                return TryReadData(tx.Window, out object current) && ReferenceEquals(current, tx.Data);
             }
             catch (Exception)
             {
@@ -647,247 +728,378 @@ namespace GK2.SermonReminder.Popup
             return true;
         }
 
+        // --- cleanup -----------------------------------------------------------------
+
         /// <summary>
-        /// Clear only current-load queued work and owned UI, closing our own
-        /// modal so a load boundary cannot leave a stuck pause. Never touches the
-        /// dedup or generation maps.
+        /// Attempt to resolve the owned transaction, respecting the finite cleanup
+        /// backoff. Retains it when cleanup is incomplete.
         /// </summary>
-        private void CancelLoadWork()
+        private void TryResolveTransaction()
         {
-            CancelPendingWork();
-            shown = false;
-            CleanupOwnedTransaction();
-        }
+            if (transaction == null)
+                return;
 
-        /// <summary>Cancel invalid pending work only; a shown dialog is left until confirmed.</summary>
-        private void CancelPendingWork()
-        {
-            pending = false;
-            retryScheduled = false;
-            retryNotBeforeUnscaled = 0f;
-        }
+            transaction.CleanupNeeded = true;
+            if (!CleanupRetryElapsed())
+                return;
 
-        private void ScheduleRetry()
-        {
-            pending = true;
-            retryScheduled = true;
-            try
+            if (RunCleanup(transaction))
             {
-                retryNotBeforeUnscaled = Time.unscaledTime + RetryDelaySeconds;
+                transaction = null;
+                DisarmCleanupRetry();
             }
-            catch (Exception)
+            else
             {
-                // Cannot measure unscaled time: do not hammer the native UI.
-                retryNotBeforeUnscaled = float.PositiveInfinity;
+                ArmCleanupRetry();
             }
         }
 
-        private bool RetryElapsed()
+        /// <summary>
+        /// Resolve an owned transaction. Managed callbacks always come off. Native
+        /// content, buttons, window membership and the data slot are touched only
+        /// while the window's current data is readable and reference-equal to ours.
+        /// A confirmed takeover only clears our managed closures and ends
+        /// ownership; an unreadable read retains ownership and fails closed.
+        /// Returns true only when every required step has succeeded.
+        /// </summary>
+        private bool RunCleanup(OwnedTransaction tx)
         {
-            if (!retryScheduled)
+            if (tx == null)
                 return true;
 
+            if (!tx.CallbacksCleared)
+            {
+                try
+                {
+                    ClearManagedCallbacks(tx.Data);
+                    tx.CallbacksCleared = true;
+                }
+                catch (Exception)
+                {
+                    // Remains false; retried.
+                }
+            }
+
+            UIDialogWindow window = tx.Window;
+            if (window == null)
+            {
+                // Genuinely destroyed: ownership ends with no native cleanup left.
+                tx.ContentCleared = true;
+                tx.ButtonsResolved = true;
+                tx.WindowsClosed = true;
+                tx.DataDetached = true;
+                return tx.CallbacksCleared;
+            }
+
+            if (tx.DataDetached)
+                return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed;
+
+            if (!TryReadData(window, out object current))
+                return false; // Unreadable is not a confirmed takeover.
+
+            if (current == null)
+                return false; // Ambiguous, not proven foreign; retain and retry.
+
+            if (!ReferenceEquals(current, tx.Data))
+            {
+                // Confirmed takeover: never touch foreign content/buttons/window.
+                tx.ContentCleared = true;
+                tx.ButtonsResolved = true;
+                tx.WindowsClosed = true;
+                tx.DataDetached = true;
+                return tx.CallbacksCleared;
+            }
+
+            // Still ours: clear rendered content (best-effort, independent).
+            if (!tx.ContentCleared)
+            {
+                bool headerOk = TryClearTmp(window, HeaderField);
+                bool bodyOk = TryClearTmp(window, InformationField);
+                tx.ContentCleared = headerOk && bodyOk;
+            }
+
+            // Buttons are attempted independently so visible content is suppressed
+            // even if another cleanup step failed.
+            if (ProcessOwnedButtons(tx))
+                tx.ButtonsResolved = true;
+
+            // Recheck ownership around the callback-producing native close.
+            if (!TryReadData(window, out object beforeClose))
+                return false;
+            if (!ReferenceEquals(beforeClose, tx.Data))
+                return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved;
+
+            if (!tx.WindowsClosed)
+            {
+                try
+                {
+                    // Idempotent even when IsShown is already false: a partial
+                    // HideWindow (isShown set false before stack removal) is not
+                    // proof of cleanup.
+                    window.CloseWithoutCallback();
+                    tx.WindowsClosed = true;
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            if (!tx.DataDetached)
+            {
+                if (!TryReadData(window, out object preDetach))
+                    return false;
+
+                if (preDetach == null)
+                {
+                    tx.DataDetached = true;
+                }
+                else if (ReferenceEquals(preDetach, tx.Data))
+                {
+                    try
+                    {
+                        DialogDataField.SetValue(window, null);
+                        tx.DataDetached = true;
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                else
+                {
+                    // Taken over between steps: not ours to detach.
+                    tx.DataDetached = true;
+                }
+            }
+
+            return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed && tx.DataDetached;
+        }
+
+        private static void ClearManagedCallbacks(UIDialogWindowData data)
+        {
+            if (data == null)
+                return;
+
+            List<UIDialogWindowData.ButtonData> buttons = data.ButtonsData;
+            if (buttons != null)
+            {
+                foreach (UIDialogWindowData.ButtonData button in buttons)
+                {
+                    if (button != null)
+                        button.onPressed = null;
+                }
+            }
+
+            data.CloseButtonAction = null;
+        }
+
+        private static bool TryClearTmp(UIDialogWindow window, FieldInfo field)
+        {
+            if (field == null)
+                return false;
+
             try
             {
-                if (Time.unscaledTime >= retryNotBeforeUnscaled)
-                {
-                    retryScheduled = false;
-                    return true;
-                }
+                var tmp = field.GetValue(window) as TextMeshProUGUI;
+                if (tmp == null)
+                    return false;
+                tmp.text = string.Empty;
+                return true;
             }
             catch (Exception)
             {
                 return false;
             }
-
-            return false;
         }
 
         /// <summary>
-        /// Clean a partially or fully owned transaction. Only while the window's
-        /// current data is reference-equal to our own data may its content be
-        /// cleared and the window removed from the native stack. Another system's
-        /// taken-over data/window is never touched.
+        /// Return only buttons this window actually owns: the union of the frozen
+        /// active list and the attached children of this window's frozen
+        /// buttonsContent, excluding the original prefab. Each item is tracked
+        /// through Owned -> (Transferred | Uncertain) phases. Membership is checked
+        /// by reference identity before any mutation, an already returned item is
+        /// never touched, and an uncertain item is only re-checked read-only.
         /// </summary>
-        private void CleanupOwnedTransaction()
+        private bool ProcessOwnedButtons(OwnedTransaction tx)
         {
-            UIDialogWindow window = ownedWindow;
-            UIDialogWindowData data = ownedData;
+            List<UIDialogWindowButton> candidates = DiscoverOwnedButtons(tx);
+            foreach (UIDialogWindowButton candidate in candidates)
+                EnsureButtonState(tx, candidate);
 
-            ownedWindow = null;
-            ownedData = null;
-            ownedCallback = null;
-
-            if (data == null)
-                return;
-
-            // Our managed data callbacks are always cleared; the window's content
-            // and stack membership only while its current data is still ours, so
-            // another system's taken-over window is never closed or mutated.
-            ClearManagedCallbacks(data);
-
-            if (window == null)
-                return;
-
-            try
+            bool allDone = true;
+            foreach (ButtonState state in tx.Buttons.ToArray())
             {
-                if (!ReferenceEquals(TryGetData(window), data))
-                    return;
-
-                ClearRenderedContent(window);
-                ReleaseOwnedButtons(window);
-
-                // Remove this window from the stack without invoking any callback,
-                // preserving any other modal/pause that native tracks.
-                if (window.IsShown)
-                    window.CloseWithoutCallback();
-
-                // Detach our own data slot when it is still ours.
-                if (DialogDataField != null && ReferenceEquals(DialogDataField.GetValue(window), data))
-                    DialogDataField.SetValue(window, null);
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private static void ClearManagedCallbacks(UIDialogWindowData data)
-        {
-            try
-            {
-                List<UIDialogWindowData.ButtonData> buttons = data.ButtonsData;
-                if (buttons != null)
+                if (state.Button == null)
                 {
-                    foreach (UIDialogWindowData.ButtonData button in buttons)
+                    // Genuinely destroyed: ownership ends.
+                    state.Phase = ButtonPhase.Transferred;
+                    continue;
+                }
+
+                if (state.Phase == ButtonPhase.Transferred)
+                    continue;
+
+                if (state.Phase == ButtonPhase.Uncertain)
+                {
+                    // Read-only identity rechecks only; never re-mutate or release.
+                    if (!IsInPoolReadable(tx.Pool, state.Button, out bool uncertainInPool))
                     {
-                        if (button != null)
-                            button.onPressed = null;
+                        allDone = false;
+                        continue;
                     }
+
+                    if (uncertainInPool)
+                        state.Phase = ButtonPhase.Transferred;
+                    else
+                        allDone = false;
+                    continue;
                 }
 
-                data.CloseButtonAction = null;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private void ClearRenderedContent(UIDialogWindow window)
-        {
-            // Actual rendered TMP text, not merely local variables.
-            try
-            {
-                var header = HeaderField?.GetValue(window) as TextMeshProUGUI;
-                if (header != null)
-                    header.text = string.Empty;
-            }
-            catch (Exception)
-            {
-            }
-
-            try
-            {
-                var information = InformationField?.GetValue(window) as TextMeshProUGUI;
-                if (information != null)
-                    information.text = string.Empty;
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        /// <summary>
-        /// Return only buttons this window actually owns: the active button list
-        /// plus any attached orphan under this window's own buttonsContent whose
-        /// Draw failed before the native list insert. The original prefab and
-        /// entries already back in the native pool are excluded. No pooled button
-        /// is ever destroyed and another window's content is never scanned.
-        /// </summary>
-        private void ReleaseOwnedButtons(UIDialogWindow window)
-        {
-            Pool pool = null;
-            try
-            {
-                pool = UIDialogWindow.pool;
-            }
-            catch (Exception)
-            {
-            }
-
-            var content = ButtonsContentField?.GetValue(window) as RectTransform;
-            var prefab = ButtonPrefabField?.GetValue(window) as UIDialogWindowButton;
-            var active = ActiveButtonsField?.GetValue(window) as List<UIDialogWindowButton>;
-
-            var candidates = new List<UIDialogWindowButton>();
-            if (active != null)
-            {
-                foreach (UIDialogWindowButton button in active)
+                // Owned: membership must be readable before we touch the item.
+                if (!IsInPoolReadable(tx.Pool, state.Button, out bool inPool))
                 {
-                    if (button != null && !candidates.Contains(button))
-                        candidates.Add(button);
+                    allDone = false;
+                    continue;
+                }
+
+                if (inPool)
+                {
+                    // Already returned by someone: never clear or return again.
+                    state.Phase = ButtonPhase.Transferred;
+                    continue;
+                }
+
+                if (!state.Cleared)
+                    state.Cleared = TryClearButton(state.Button);
+
+                if (!state.Hidden)
+                    state.Hidden = TryHideButton(state.Button);
+
+                RemoveFromActiveList(tx, state.Button);
+
+                if (!state.Cleared)
+                {
+                    allDone = false;
+                    continue;
+                }
+
+                if (tx.Pool == null)
+                {
+                    state.Phase = ButtonPhase.Transferred;
+                    continue;
+                }
+
+                try
+                {
+                    // Nonthrowing ReleaseObject transfers ownership (it pushes first).
+                    tx.Pool.ReleaseObject(state.Button);
+                    state.Phase = ButtonPhase.Transferred;
+                }
+                catch (Exception)
+                {
+                    if (IsInPoolReadable(tx.Pool, state.Button, out bool afterThrow) && afterThrow)
+                        state.Phase = ButtonPhase.Transferred;
+                    else
+                        state.Phase = ButtonPhase.Uncertain;
+                }
+
+                if (state.Phase != ButtonPhase.Transferred)
+                    allDone = false;
+            }
+
+            return allDone;
+        }
+
+        private static List<UIDialogWindowButton> DiscoverOwnedButtons(OwnedTransaction tx)
+        {
+            var result = new List<UIDialogWindowButton>();
+
+            List<UIDialogWindowButton> activeList = tx.ActiveList;
+            if (activeList != null)
+            {
+                foreach (UIDialogWindowButton button in activeList)
+                {
+                    if (button != null && !ReferenceEquals(button, tx.Prefab) && !result.Contains(button))
+                        result.Add(button);
                 }
             }
 
+            RectTransform content = tx.Content;
             if (content != null)
             {
-                int count = content.childCount;
+                int count;
+                try
+                {
+                    count = content.childCount;
+                }
+                catch (Exception)
+                {
+                    count = 0;
+                }
+
                 for (int i = 0; i < count; i++)
                 {
-                    Transform child = content.GetChild(i);
+                    Transform child;
+                    try
+                    {
+                        child = content.GetChild(i);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
                     if (child == null)
                         continue;
 
-                    var button = child.GetComponent<UIDialogWindowButton>();
-                    if (button == null || ReferenceEquals(button, prefab) || candidates.Contains(button))
+                    UIDialogWindowButton button;
+                    try
+                    {
+                        button = child.GetComponent<UIDialogWindowButton>();
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+                    if (button == null || ReferenceEquals(button, tx.Prefab) || result.Contains(button))
                         continue;
 
-                    candidates.Add(button);
+                    result.Add(button);
                 }
             }
 
-            foreach (UIDialogWindowButton button in candidates)
+            return result;
+        }
+
+        private static void EnsureButtonState(OwnedTransaction tx, UIDialogWindowButton button)
+        {
+            foreach (ButtonState state in tx.Buttons)
             {
-                if (button == null || ReferenceEquals(button, prefab))
-                    continue;
-
-                ClearButton(button);
-
-                bool inPool;
-                try
-                {
-                    inPool = pool != null && pool.Objects != null && pool.Objects.Contains(button);
-                }
-                catch (Exception)
-                {
-                    inPool = true;
-                }
-
-                // Pool.ReleaseObject pushes before re-parenting; a throw after the
-                // push leaves the button in the pool, so never return it twice.
-                if (inPool)
-                    continue;
-
-                try
-                {
-                    pool?.ReleaseObject(button);
-                }
-                catch (Exception)
-                {
-                }
+                if (ReferenceEquals(state.Button, button))
+                    return;
             }
 
-            // Drop stale references so the next native open cannot reuse them.
+            tx.Buttons.Add(new ButtonState { Button = button });
+        }
+
+        private static void RemoveFromActiveList(OwnedTransaction tx, UIDialogWindowButton button)
+        {
             try
             {
-                active?.Clear();
+                tx.ActiveList?.Remove(button);
             }
             catch (Exception)
             {
             }
         }
 
-        private void ClearButton(UIDialogWindowButton button)
+        private static bool TryClearButton(UIDialogWindowButton button)
         {
+            if (button == null)
+                return true;
+
+            bool ok = true;
+
             try
             {
                 LazyButton lazy = button.LazyButton;
@@ -896,6 +1108,7 @@ namespace GK2.SermonReminder.Popup
             }
             catch (Exception)
             {
+                ok = false;
             }
 
             try
@@ -906,33 +1119,263 @@ namespace GK2.SermonReminder.Popup
             }
             catch (Exception)
             {
+                ok = false;
+            }
+
+            return ok;
+        }
+
+        private static bool TryHideButton(UIDialogWindowButton button)
+        {
+            try
+            {
+                if (button == null || button.gameObject == null)
+                    return true;
+                button.gameObject.SetActive(false);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static bool IsInPoolReadable(Pool pool, UIDialogWindowButton button, out bool inPool)
+        {
+            inPool = false;
+
+            // No pool means nothing can have been returned through it.
+            if (pool == null)
+                return true;
+
+            try
+            {
+                Stack<MonoBehaviour> objects = pool.Objects;
+                if (objects == null)
+                    return false;
+                inPool = objects.Contains(button);
+                return true;
+            }
+            catch (Exception)
+            {
+                // Unreadable membership does not prove returned.
+                return false;
+            }
+        }
+
+        private static bool TryFreezeNativeRefs(
+            UIDialogWindow window,
+            out Pool pool,
+            out List<UIDialogWindowButton> activeList,
+            out RectTransform content,
+            out UIDialogWindowButton prefab)
+        {
+            pool = null;
+            activeList = null;
+            content = null;
+            prefab = null;
+
+            try
+            {
+                pool = UIDialogWindow.pool;
+                activeList = ActiveButtonsField?.GetValue(window) as List<UIDialogWindowButton>;
+                content = ButtonsContentField?.GetValue(window) as RectTransform;
+                prefab = ButtonPrefabField?.GetValue(window) as UIDialogWindowButton;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return pool != null && activeList != null && content != null && prefab != null;
+        }
+
+        private static bool ReflectionReady() =>
+            DialogDataField != null
+            && OnClosedField != null
+            && HeaderField != null
+            && InformationField != null
+            && ButtonsContentField != null
+            && ActiveButtonsField != null
+            && ButtonPrefabField != null
+            && ButtonLabelField != null;
+
+        private static bool TryReadData(UIDialogWindow window, out object value)
+        {
+            value = null;
+            if (window == null || DialogDataField == null)
+                return false;
+
+            try
+            {
+                value = DialogDataField.GetValue(window);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 
         private static object TryGetData(UIDialogWindow window)
         {
-            if (window == null || DialogDataField == null)
-                return null;
+            TryReadData(window, out object value);
+            return value;
+        }
+
+        // --- retry clocks ------------------------------------------------------------
+
+        private void ArmPendingRetry()
+        {
+            pending = true;
+            pendingRetryArmed = false;
+            pendingRetryAwaitingClock = true;
+            pendingRetryDeadline = 0f;
+        }
+
+        private void ClearPendingRetry()
+        {
+            pending = false;
+            pendingRetryArmed = false;
+            pendingRetryAwaitingClock = false;
+            pendingRetryDeadline = 0f;
+        }
+
+        private bool PendingRetryElapsed()
+        {
+            if (!pending && !pendingRetryArmed && !pendingRetryAwaitingClock)
+                return true;
+
+            if (pendingRetryAwaitingClock)
+            {
+                if (!TryReadClock(out float armedAt))
+                    return false; // Wait for a finite clock; never arm on Infinity.
+                pendingRetryAwaitingClock = false;
+                pendingRetryArmed = true;
+                pendingRetryDeadline = armedAt + RetryDelaySeconds;
+            }
+
+            if (!pendingRetryArmed)
+                return true;
+
+            if (!TryReadClock(out float now))
+                return false;
+
+            if (now >= pendingRetryDeadline)
+            {
+                pendingRetryArmed = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ArmCleanupRetry()
+        {
+            cleanupRetryArmed = false;
+            cleanupRetryAwaitingClock = true;
+            cleanupRetryDeadline = 0f;
+        }
+
+        private void DisarmCleanupRetry()
+        {
+            cleanupRetryArmed = false;
+            cleanupRetryAwaitingClock = false;
+            cleanupRetryDeadline = 0f;
+        }
+
+        private bool CleanupRetryElapsed()
+        {
+            if (cleanupRetryAwaitingClock)
+            {
+                if (!TryReadClock(out float armedAt))
+                    return false;
+                cleanupRetryAwaitingClock = false;
+                cleanupRetryArmed = true;
+                cleanupRetryDeadline = armedAt + RetryDelaySeconds;
+            }
+
+            if (!cleanupRetryArmed)
+                return true;
+
+            if (!TryReadClock(out float now))
+                return false;
+
+            if (now >= cleanupRetryDeadline)
+            {
+                cleanupRetryArmed = false;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryReadClock(out float now)
+        {
+            now = 0f;
 
             try
             {
-                return DialogDataField.GetValue(window);
+                now = Time.unscaledTime;
             }
             catch (Exception)
             {
-                return null;
+                return false;
             }
-        }
 
-        private void DropOwnedReferences()
-        {
-            ownedWindow = null;
-            ownedData = null;
-            ownedCallback = null;
+            if (float.IsNaN(now) || float.IsInfinity(now))
+                return false;
+
+            return true;
         }
 
         private static SermonPopupOutcome Outcome(SermonPopupStatus status, SermonPopupStage stage, string detail) =>
             new SermonPopupOutcome(status, stage, detail);
+
+        // --- nested state ------------------------------------------------------------
+
+        private enum ButtonPhase
+        {
+            Owned,
+            Uncertain,
+            Transferred
+        }
+
+        private sealed class ButtonState
+        {
+            internal UIDialogWindowButton Button;
+            internal ButtonPhase Phase;
+            internal bool Cleared;
+            internal bool Hidden;
+        }
+
+        /// <summary>
+        /// One owned native open transaction. Retains the exact window, data,
+        /// callbacks and frozen native pool/list/content/prefab plus per-button
+        /// return phases until every required cleanup step succeeds.
+        /// </summary>
+        private sealed class OwnedTransaction
+        {
+            internal UIDialogWindow Window;
+            internal UIDialogWindowData Data;
+            internal Action<UIDialogWindowData> NativeClosed;
+            internal Action Confirm;
+
+            internal Pool Pool;
+            internal List<UIDialogWindowButton> ActiveList;
+            internal RectTransform Content;
+            internal UIDialogWindowButton Prefab;
+
+            internal bool Displayed;
+            internal bool CleanupNeeded;
+            internal bool CallbacksCleared;
+            internal bool ContentCleared;
+            internal bool ButtonsResolved;
+            internal bool WindowsClosed;
+            internal bool DataDetached;
+
+            internal readonly List<ButtonState> Buttons = new List<ButtonState>();
+        }
 
         private readonly struct NativeSlotKey : IEquatable<NativeSlotKey>
         {
