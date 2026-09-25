@@ -1,0 +1,126 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    GKSA-10: GK2 Sermon Reminder.
+    Builds one deterministic managed BepInEx plugin DLL. Native game, BepInEx and
+    framework assemblies are referenced only, never copied (all Private=false).
+    No self-contained publish, no AOT, no dependency assembly copying.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AssemblyName>GK2.SermonReminder</AssemblyName>
+    <RootNamespace>GK2.SermonReminder</RootNamespace>
+
+    <!-- Deterministic managed artifact. No PDB / XML doc / ref assembly output. -->
+    <Deterministic>true</Deterministic>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+
+    <Version>0.1.0</Version>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Authors>derbay32</Authors>
+    <Description>Non-sermon-day integer countdown shown beneath the native Graveyard Keeper 2 clock.</Description>
+
+    <!--
+      Explicit reference roots. Local verification passes these on the command
+      line; the defaults target a default Windows Steam install.
+    -->
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Graveyard Keeper 2</GameDir>
+    <GameDataDir Condition="'$(GameDataDir)' == ''">$(GameDir)/GraveyardKeeper2_Data</GameDataDir>
+    <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GameDataDir)/Managed</GameManagedDir>
+    <BepInExDir Condition="'$(BepInExDir)' == ''">$(GameDir)/BepInEx</BepInExDir>
+    <FrameworkDir Condition="'$(FrameworkDir)' == ''">$(BepInExDir)/plugins</FrameworkDir>
+    <FrameworkDll Condition="'$(FrameworkDll)' == ''">$(FrameworkDir)/GK2.Framework.dll</FrameworkDll>
+  </PropertyGroup>
+
+  <!--
+    Actionable missing-reference validation. Fails with a clear message before
+    the compiler reports an opaque unresolved-reference error.
+  -->
+  <Target Name="GK2ValidateNativeReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(GameManagedDir)/Assembly-CSharp.dll')"
+           Text="GK2 Sermon Reminder: native game assembly not found at '$(GameManagedDir)/Assembly-CSharp.dll'. Pass -p:GameDir=&lt;install root&gt; (the folder containing GraveyardKeeper2_Data/Managed)." />
+    <Error Condition="!Exists('$(GameManagedDir)/LazyBearTechnology.dll')"
+           Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/LazyBearTechnology.dll'. Pass -p:GameDir=&lt;install root&gt;." />
+    <Error Condition="!Exists('$(BepInExDir)/core/BepInEx.dll')"
+           Text="GK2 Sermon Reminder: BepInEx not found at '$(BepInExDir)/core/BepInEx.dll'. Pass -p:BepInExDir=&lt;BepInEx folder&gt;." />
+    <Error Condition="!Exists('$(BepInExDir)/core/0Harmony.dll')"
+           Text="GK2 Sermon Reminder: 0Harmony not found at '$(BepInExDir)/core/0Harmony.dll'. Pass -p:BepInExDir=&lt;BepInEx folder&gt;." />
+    <Error Condition="!Exists('$(FrameworkDll)')"
+           Text="GK2 Sermon Reminder: GK2 Mod Framework not found at '$(FrameworkDll)'. Pass -p:FrameworkDir=&lt;folder containing GK2.Framework.dll&gt; or -p:FrameworkDll=&lt;path&gt;." />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDir)/core/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDir)/core/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="GK2.Framework">
+      <HintPath>$(FrameworkDll)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameManagedDir)/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="LazyBearTechnology">
+      <HintPath>$(GameManagedDir)/LazyBearTechnology.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(GameManagedDir)/Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameManagedDir)/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameManagedDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(GameManagedDir)/UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(GameManagedDir)/UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(GameManagedDir)/UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(GameManagedDir)/Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Embedded per-language JSON catalog, stable semantic keys. -->
+  <!--
+    WithCulture=false keeps these in the main assembly: the '.en.' / '.zh_cn.'
+    filename suffixes would otherwise make MSBuild emit culture satellite
+    assemblies, splitting the catalog out of the plugin DLL.
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Localization/gksr.en.json" WithCulture="false">
+      <LogicalName>gk2.sermonreminder.localization.en.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Localization/gksr.zh_cn.json" WithCulture="false">
+      <LogicalName>gk2.sermonreminder.localization.zh_cn.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>
