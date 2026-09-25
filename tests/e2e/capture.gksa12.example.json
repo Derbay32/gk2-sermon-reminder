@@ -114,8 +114,8 @@
       },
       "measurement": {
         "values": {
-          "beacon.slotWidthPx": 40,
-          "beacon.slotHeightPx": 36
+          "beacon.slotWidthLocal": 40,
+          "beacon.slotHeightLocal": 36
         },
         "operatorObservation": "REPLACE with the observed run note; never mark an unexecuted scenario as passed."
       },
@@ -145,7 +145,7 @@
           "native.slotWidthLocal": 40,
           "native.slotHeightLocal": 36
         },
-        "operatorObservation": "REPLACE: owned original prefab slot equals the native original prefab slot measured for the same effective target."
+        "operatorObservation": "REPLACE: measure the ACTUAL OWNED iconImage.rectTransform.sizeDelta AFTER native Draw and compare it with the untouched original native prefab slot in LOCAL units, not cached source dimensions, for the same effective target."
       },
       "notes": "REPLACE with the observed run notes."
     }
