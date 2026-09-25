@@ -311,8 +311,8 @@ namespace GK2.SermonReminder.Beacon
             // 9. Draw with the real native widget, then restore the borrowed icon and
             //    the pristine prefab slot the native Draw replaces. This is the only
             //    point at which the failure episode is cleared.
-            if (!TryDraw(data, faith))
-                return Fail(BeaconFailureStage.Component, "beacon draw failed");
+            if (!TryDraw(data, faith, out string drawFailure))
+                return Fail(BeaconFailureStage.Component, drawFailure);
 
             ClearEpisode();
             return new BeaconUpdateResult(BeaconStatus.Healthy, BeaconFailureStage.None);
@@ -439,18 +439,18 @@ namespace GK2.SermonReminder.Beacon
 
                 widget = created;
 
+                // The clone's images must be real components on our clone; a foreign
+                // field reassigned outside our clone is never tracked or touched.
                 Image icon = created.iconImage;
-
-                // Cache the actual owned image before any further check, so cleanup can
-                // detach the borrowed sprite even if another member is missing.
-                ownedIcon = icon;
-
                 Image pointer = created.pointerImage;
-                if (icon == null || pointer == null)
+                if (!IsOwnedLiveComponent(icon) || !IsOwnedLiveComponent(pointer))
                 {
                     ReleaseOwnedDisplay();
                     return false;
                 }
+
+                // Track the actual owned image so cleanup can detach the borrowed sprite.
+                ownedIcon = icon;
 
                 // The pristine native prefab slot, captured before any Draw swaps the
                 // on-screen bubble icon and calls SetNativeSize. It must be strictly
@@ -679,7 +679,8 @@ namespace GK2.SermonReminder.Beacon
         /// <summary>
         /// Native <c>GameScene.GetWgoViewGlobal(SGuid)</c> resolved by name, exactly as
         /// the HUD calls it, without naming its unreferenced Odin-based type. A missing
-        /// type or method is a fault, never silently treated as an absent native view.
+        /// type or method, an incompatible return type, or an unexpected result is a
+        /// fault, never silently treated as an absent native view.
         /// </summary>
         private bool TryGetWgoViewGlobal(SGuid uniqueId, out Wgo view, out string failure)
         {
@@ -709,10 +710,33 @@ namespace GK2.SermonReminder.Beacon
                 return false;
             }
 
-            // A successful invocation may legitimately yield null / fake-null; that is
-            // the native "no view" answer the caller may fall back from.
-            view = result as Wgo;
-            return true;
+            // An actual native null / fake-null view is the legitimate "no view" answer
+            // the caller may fall back from. Any other unexpected result type is a fault
+            // and is never silently converted into a null view.
+            if (result == null)
+            {
+                view = null;
+                return true;
+            }
+
+            if (result is Wgo resolved)
+            {
+                view = resolved;
+                return true;
+            }
+
+            string typeName;
+            try
+            {
+                typeName = result.GetType().Name;
+            }
+            catch (Exception)
+            {
+                typeName = "unknown";
+            }
+
+            failure = "native view lookup returned unexpected type: " + typeName;
+            return false;
         }
 
         private static MethodInfo ResolveViewGlobalMethod()
@@ -724,12 +748,19 @@ namespace GK2.SermonReminder.Beacon
                 if (gameSceneType == null)
                     return null;
 
-                return gameSceneType.GetMethod(
+                MethodInfo method = gameSceneType.GetMethod(
                     ViewGlobalMethodName,
                     BindingFlags.Public | BindingFlags.Static,
                     null,
                     new[] { typeof(SGuid) },
                     null);
+
+                // The exact native method must return a Wgo-compatible type; a wrong
+                // overload must never be accepted and silently converted to a null view.
+                if (method == null || !typeof(Wgo).IsAssignableFrom(method.ReturnType))
+                    return null;
+
+                return method;
             }
             catch (Exception)
             {
@@ -790,26 +821,45 @@ namespace GK2.SermonReminder.Beacon
         /// the captured pristine prefab slot to the actual owned image. Native Draw
         /// swaps to the on-screen bubble sprite with SetNativeSize and restores its own
         /// cached prefab icon off-screen, so this must run after every Draw.
+        ///
+        /// The live <c>iconImage</c> and <c>pointerImage</c> must be usable owned
+        /// components on this clone before Draw runs; there is no cached visual
+        /// fallback. A reassigned foreign field fails the draw and clears the clone.
         /// </summary>
-        private bool TryDraw(UIMagnifyingGlassWidgetData data, Sprite faith)
+        private bool TryDraw(UIMagnifyingGlassWidgetData data, Sprite faith, out string failure)
         {
+            failure = null;
             try
             {
                 UIMagnifyingGlassWidget current = widget;
                 if (current == null)
+                {
+                    failure = "owned beacon widget unavailable";
                     return false;
+                }
+
+                // Require the widget's actual, owned live components before Draw.
+                Image icon = current.iconImage;
+                Image pointer = current.pointerImage;
+                if (!IsOwnedLiveComponent(icon) || !IsOwnedLiveComponent(pointer))
+                {
+                    failure = "owned beacon icon component unavailable";
+                    return false;
+                }
+
+                // Keep cleanup tracking aligned with the image that actually receives
+                // the borrowed sprite; clear the previously tracked owned image if the
+                // live reference changed. Cache swaps are cleanup-only, never a visual
+                // fallback.
+                if (!ReferenceEquals(ownedIcon, icon))
+                {
+                    Image previous = ownedIcon;
+                    ownedIcon = icon;
+                    DetachSprite(previous);
+                }
 
                 // Native placement, icon swap and pointer-style selection.
                 current.Draw(data);
-
-                // Reapply to the actual owned image Draw just touched; fall back to the
-                // tracked reference if the live field has become unusable.
-                Image icon = current.iconImage;
-                if (icon == null)
-                    icon = ownedIcon;
-
-                if (icon == null)
-                    return false;
 
                 icon.sprite = faith;
 
@@ -819,8 +869,9 @@ namespace GK2.SermonReminder.Beacon
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                failure = "beacon draw failed: " + ex.GetType().Name;
                 return false;
             }
         }
@@ -848,36 +899,9 @@ namespace GK2.SermonReminder.Beacon
         private bool ReleaseOwnedDisplay()
         {
             // Detach the borrowed sprite at the property level first, never destroying
-            // the native Sprite. Fall back to the live widget when the cached image is
-            // not available.
-            Image icon = ownedIcon;
-            if (icon == null)
-            {
-                UIMagnifyingGlassWidget live = widget;
-                if (live != null)
-                {
-                    try
-                    {
-                        icon = live.iconImage;
-                    }
-                    catch (Exception)
-                    {
-                        icon = null;
-                    }
-                }
-            }
-
-            if (icon != null)
-            {
-                try
-                {
-                    icon.sprite = null;
-                }
-                catch (Exception)
-                {
-                    // An already-destroyed component has no property left to clear.
-                }
-            }
+            // the native Sprite. This is cleanup only: the cached image is used solely
+            // to clear a reference that a live field may no longer expose.
+            DetachSprite(ownedIcon);
 
             GameObject owned = ownedObject;
 
@@ -904,6 +928,52 @@ namespace GK2.SermonReminder.Beacon
 
             ForgetOwnership();
             return true;
+        }
+
+        /// <summary>
+        /// Clear the borrowed sprite reference at the property level only: the native
+        /// Sprite itself is never destroyed or released. A destroyed or foreign image is
+        /// skipped rather than touched.
+        /// </summary>
+        private void DetachSprite(Image image)
+        {
+            if (!IsOwnedLiveComponent(image))
+                return;
+
+            try
+            {
+                image.sprite = null;
+            }
+            catch (Exception)
+            {
+                // An already-destroyed component has no property left to clear.
+            }
+        }
+
+        /// <summary>
+        /// True when the component reference is a live, usable component within the
+        /// owned clone's own hierarchy (the clone root or one of its children). A null,
+        /// Unity-fake-null, or foreign (outside our clone) reference is rejected, so a
+        /// field reassigned outside our owned clone is never tracked or touched.
+        /// </summary>
+        private bool IsOwnedLiveComponent(Component component)
+        {
+            if (component == null)
+                return false;
+
+            GameObject owned = ownedObject;
+            if (owned == null)
+                return false;
+
+            try
+            {
+                return component.transform.IsChildOf(owned.transform);
+            }
+            catch (Exception)
+            {
+                // An unreadable transform is not a usable owned component.
+                return false;
+            }
         }
 
         private void ForgetOwnership()
