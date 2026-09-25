@@ -77,8 +77,8 @@
     "删除重建场景须使用可恢复测试环境中的存档副本执行。",
     "信标可见性按阶段分别观察，不与持久化开关值混用：beacon.shownOnLoadWhileEnabled 在开关为开启的载入、beacon.shownOnLoadAfterDisable 在切为关闭后的载入、beacon.shownOnLoadAfterReenable 在切回开启后的载入分别记录；settings.beaconEnabled* 只记录主菜单持久化值，不代表任何已载入存档的活动快照。",
     "弹窗由开启切为关闭的证明必须在同一进程内针对一个从未提示过、且尚无去重记录的合格槽与具体游戏日执行；否则去重本身就会抑制弹窗，无法区分是设置生效还是去重生效。故该场景要求 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true，并以 popup.shownAfterDisable 观察真实不显示。",
-    "本模组不提供原生 SaveSlotData 之外的槽代字段：save.slotGeneration / save.slotGenerationBefore / save.slotGenerationAfter 与 dedup.capturedSlotGeneration 都表示本模组按原生槽键维护的进程内槽代计数，在初始载入捕获身份时读取，早于后续可变存档字段变化。",
-    "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁、替换或强制关闭游戏管理的共享原生对话框实例，也不得改动其他系统已打开的对话框。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。"
+    "原生 SaveSlotData 没有槽代字段。save.slotGeneration / save.slotGenerationBefore / save.slotGenerationAfter 与 dedup.capturedSlotGeneration 都表示本模组按不可变原生槽键在进程内存中维护的槽代计数，在初始载入捕获身份时读取，早于后续可变存档字段变化。",
+    "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁或替换游戏管理并缓存的共享原生对话框实例，也不得关闭或改动其他系统已接管的内容与其他系统已打开的对话框。本模组仍可经游戏原生关闭流程关闭退出/清理时仍归本模组所有的弹窗内容。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。"
   ],
   "observationVocabulary": {
     "beacon.shownOnLoadAfterDisable": "bool: 本次载入时信标开关已为关闭的前提下原生信标是否显示（预期 false）",
@@ -167,7 +167,7 @@
     "popup.deferredWhileOtherModal": "bool: 其他原生模态活动时是否延后显示",
     "popup.deferredWhileOtherPause": "bool: 既有暂停期间是否延后显示",
     "popup.deferredWhilePlayerNotControllable": "bool: 玩家不可操作时是否延后显示",
-    "popup.didNotDestroySharedNativeDialog": "bool: 本模组在退出清理时是否未销毁、未替换也未强制关闭游戏管理并缓存的共享原生对话框实例（该实例的后续存续由游戏自身场景与菜单卸载决定，不由本模组强制要求）",
+    "popup.didNotDestroySharedNativeDialog": "bool: 本模组在退出清理时是否未销毁、未替换游戏管理并缓存的共享原生对话框实例（该实例的后续存续由游戏自身场景与菜单卸载决定，不由本模组强制要求）；允许本模组经原生关闭流程关闭退出/清理时仍归其所有的弹窗内容，但不得关闭或改动其他系统已接管的内容与其他对话框",
     "popup.displayCountWithinLoad": "int: 本次存档载入期间弹窗实际显示的次数（<=1）",
     "popup.displayCountWithinSameFrame": "int: 同一帧内弹窗实际显示的次数（<=1）",
     "popup.displayedAfterExit": "bool: 退出存档后是否仍显示弹窗（必须为 false）",
@@ -643,6 +643,26 @@
           "observation": "state.sermonReadyValue"
         },
         {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": false,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": false,
+          "observation": "pause.otherPauseSourceActiveAtEligibility"
+        },
+        {
           "equals": false,
           "observation": "popup.shownAfterDisable"
         },
@@ -654,13 +674,15 @@
       "id": "settings-popup-disable-next-load",
       "prerequisites": [
         "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
-        "存在一个满足教堂与教学门槛、处于布道日且机会未消费的存档；本进程对该槽该具体游戏日从未提示过，即尚无去重记录。",
-        "初始弹窗开关为开启。"
+        "存在一个满足教堂与教学两个精确门槛、处于布道日且原生 sermon_ready>=1 的存档；载入后存档完整就绪、安全门真正清空且玩家可操作，弹窗与角落文字资源健康可用，界面无菜单、对话或过场占用且无其他暂停来源。本进程对该槽该具体游戏日从未提示过，即尚无去重记录。",
+        "初始弹窗开关为开启。",
+        "上述夹具前提（资源健康、就绪/安全/可操作、无占用界面与其他暂停）由操作者截图或观察独立确认，不得按弹窗是否出现反推。"
       ],
       "steps": [
         "读取该槽该日的载入前去重状态；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
         "在主菜单把弹窗开关切为关闭；预期持久化值为关闭；检查 settings.popupEnabled 为 false。",
-        "载入该从未提示过的合格存档并读取资格与日期；预期除弹窗开关外资格满足；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 settings.popupEnabled。",
+        "载入该从未提示过的合格存档并读取资格、日期与就绪状态；预期除弹窗开关外资格满足且画面就绪、安全、可操作；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue、save.readyToPlay、ui.safetyGateClear、ui.playerControllable 与 settings.popupEnabled。",
+        "确认该次载入界面无菜单、对话或过场占用且无其他暂停来源；预期两项排除条件均成立；检查 ui.busyGateActive 为 false 与 pause.otherPauseSourceActiveAtEligibility 为 false。",
         "观察弹窗并检查提示机会；预期不显示且未消耗机会；检查 popup.shownAfterDisable 为 false 与 popup.chanceConsumed 为 false。"
       ],
       "title": "弹窗开关由开启切为关闭后在下次载入从未提示过的合格存档时不显示弹窗"
@@ -804,6 +826,40 @@
       },
       "expect": [
         {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
           "equals": true,
           "observation": "settings.beaconEnabledBefore"
         },
@@ -820,12 +876,20 @@
           "observation": "settings.beaconEnabledAfter"
         },
         {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterReload"
+        },
+        {
           "equals": false,
           "observation": "beacon.shownOnLoadAfterDisable"
         },
         {
           "equals": true,
           "observation": "settings.hudTextStillShownOnNextLoad"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterRoundtrip"
         },
         {
           "equals": true,
@@ -839,19 +903,24 @@
       "id": "settings-beacon-next-load-visibility",
       "prerequisites": [
         "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
-        "存在一个满足教堂与教学门槛的存档；弹窗开关为关闭以避免弹窗干扰，初始信标开关为开启。"
+        "存在一个完整就绪、教堂与教学两个精确门槛任务均 Completed、处于布道日且原生 sermon_ready>=1 的存档；其信仰图标、教堂目标点与原生 widget 资源健康可用，且原生 HUD 实际可见。弹窗开关为关闭以避免弹窗干扰，初始信标开关为开启。",
+        "开启、关闭与重新开启三个阶段载入的是同一存档的同一具体游戏日，绝对日保持不变。",
+        "上述资格、日期与资源健康条件属于夹具前提，必须由操作者截图或观察对每次载入独立确认，不得按本模组信标是否出现反推。"
       ],
       "steps": [
         "在主菜单读取信标开关持久化值；预期为开启；检查 settings.beaconEnabledBefore 为 true。",
-        "载入存档并观察原生信标；预期信标显示；检查 beacon.shownOnLoadWhileEnabled 为 true。",
+        "载入同一存档（第 1 次，开关为开启）并核对资格、日期与资源健康；预期完整就绪、两个门槛任务 Completed、处于布道日且 sermon_ready>=1，原生 HUD 可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.sermonWeekday 等于 game.sermonWeekday。",
+        "观察第 1 次载入的原生信标；预期信标显示；检查 beacon.shownOnLoadWhileEnabled 为 true。",
         "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
         "在主菜单只把信标开关切为关闭；预期持久化值为关闭；检查 settings.beaconEnabledAfter 为 false。",
-        "再次载入同一存档并观察原生信标；预期信标不再显示；检查 beacon.shownOnLoadAfterDisable 为 false。",
+        "再次载入同一存档的同一绝对日（第 2 次，开关为关闭）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterReload 等于 save.absoluteDay。",
+        "观察第 2 次载入的原生信标；预期信标不再显示；检查 beacon.shownOnLoadAfterDisable 为 false。",
         "读取角落文字提醒；预期仍显示；检查 settings.hudTextStillShownOnNextLoad 为 true。",
         "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
         "打开本模组设置页面；预期设置页面可打开；检查 settings.modsEntryUsed 为 true。",
         "把信标开关切回开启；预期持久化值为开启；检查 settings.beaconEnabledAfterReverseToggle 为 true。",
-        "再次载入同一存档并观察原生信标；预期信标恢复显示；检查 beacon.shownOnLoadAfterReenable 为 true。"
+        "再次载入同一存档的同一绝对日（第 3 次，开关重新开启）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。",
+        "观察第 3 次载入的原生信标；预期信标恢复显示；检查 beacon.shownOnLoadAfterReenable 为 true。"
       ],
       "title": "信标开关按已保存值在下次载入存档时生效（关闭后不显示、重新开启后恢复显示）"
     },
