@@ -473,26 +473,58 @@ namespace GK2.SermonReminder
 
         internal void Tick()
         {
-            if (!enabled)
+            // Fresh flags for THIS tick; no stale classification can survive.
+            bool stateReadFailed = false;
+            bool cornerHudFailed = false;
+            bool stateReady = false;
+
+            try
             {
-                // A disabled entry must never start a load or show a notice (the load
-                // period is already closed by OnDisable's EndLoad). It may still advance
-                // retained notice cleanup via a false/flags Update, which only ever
-                // returns a buffered failed notice and never reactivates or shows.
-                try { notices?.Update(false, false); }
-                catch (Exception) { }
-                return;
+                if (!enabled)
+                {
+                    // A disabled entry never starts a load or shows a notice. It still
+                    // advances retained notice cleanup through the single finally call
+                    // below, which cannot show because the notice load period is closed.
+                    return;
+                }
+
+                if (!TickState(out stateReadFailed, out SermonStateSnapshot snapshot))
+                    return;
+
+                stateReady = true;
+                TickCorner(snapshot, ref cornerHudFailed);
             }
-
-            // Both category flags are derived fresh in TickCore and applied exactly once
-            // per tick, including every early return, so no stale classification survives.
-            if (TickCore())
-                return;
-
-            // This tick aborted before classification. Keep buffered notice cleanup
-            // advancing, but never start a notice while the load is not ready/active.
-            try { notices?.Update(false, false); }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                // Defensive last resort. The state and corner stages already contain their
+                // own native failures; if the state read had succeeded the escape is a
+                // corner failure and the healthy eligible beacon is preserved, otherwise
+                // it is a state-read failure. Never blanket-classify every escape as state.
+                if (stateReady)
+                {
+                    try { hud.Teardown(); }
+                    catch (Exception) { }
+                    ResetEligibility();
+                    LogCornerDiagnostic("corner-escape", "GKSR_HUD_FAILED: unexpected corner escape", ex);
+                    cornerHudFailed = true;
+                }
+                else
+                {
+                    SafeResetBeacon();
+                    try { hud.Teardown(); }
+                    catch (Exception) { }
+                    ResetEligibility();
+                    LogStateDiagnostic("state-escape", "GKSR_STATE_UNREADABLE: unexpected state escape", ex);
+                    stateReadFailed = true;
+                }
+            }
+            finally
+            {
+                // Exactly one contained flag delivery per tick for every path, so a
+                // buffered failure is never discarded by a scattered flush.
+                try { notices?.Update(stateReadFailed, cornerHudFailed); }
+                catch (Exception) { }
+            }
         }
 
         /// <summary>
@@ -517,77 +549,120 @@ namespace GK2.SermonReminder
         }
 
         /// <summary>
-        /// Classify one tick. Returns true once the two fault flags for THIS tick were
-        /// supplied exactly once to the notice module; false when the tick aborted
-        /// before classification (the caller then keeps cleanup advancing only).
-        /// Every native read and corner operation is contained so one feature's native
-        /// exception can never escape framework lifecycle or disable healthy siblings.
+        /// State stage: resolve the current save, preserve the load identity, and read a
+        /// fresh snapshot. Returns false when the tick must stop without a corner stage
+        /// (not ready or a state-read failure); the two flags are left meaningful for the
+        /// caller's single delivery. State reads fail as state-read and suppress only
+        /// state-dependent displays, never the healthy beacon.
         /// </summary>
-        private bool TickCore()
+        private bool TickState(out bool stateReadFailed, out SermonStateSnapshot snapshot)
+        {
+            stateReadFailed = false;
+            snapshot = default;
+
+            if (!ready)
+            {
+                // Not-ready tick: never a state fault. Retained notice cleanup is advanced
+                // by the caller's single delivery with both flags false.
+                SafeResetBeacon();
+                hud.Teardown();
+                ResetEligibility();
+                return false;
+            }
+
+            GameSave current;
+            try
+            {
+                current = TryGetCurrentSave();
+            }
+            catch (Exception ex)
+            {
+                return StateFailure("save-read", "current save read failed", ex, out stateReadFailed, out snapshot);
+            }
+
+            if (activeSave == null && current != null)
+            {
+                // The initial capture during readiness failed; adopt the first
+                // subsequently readable non-null save once for this same ready period. A
+                // genuine lifecycle boundary discards this pending capture.
+                activeSave = current;
+            }
+
+            if (activeSave == null)
+            {
+                // Ready load with no readable/non-null current save (missing or throwing).
+                return StateFailure("save-unavailable",
+                    "current save unavailable during ready load", null, out stateReadFailed, out snapshot);
+            }
+
+            if (!ReferenceEquals(current, activeSave))
+            {
+                // A different save than the captured identity: never adopt silently. The
+                // expected identity and readiness are retained so no budgets replenish.
+                return StateFailure("save-reference-changed",
+                    "active save reference changed unexpectedly", null, out stateReadFailed, out snapshot);
+            }
+
+            try
+            {
+                snapshot = reader.Read(activeSave);
+            }
+            catch (Exception ex)
+            {
+                return StateFailure("state-read", "fresh state read threw", ex, out stateReadFailed, out snapshot);
+            }
+
+            if (!snapshot.Readable)
+            {
+                return StateFailure("unreadable:" + snapshot.Failure,
+                    snapshot.Failure ?? "state unreadable", null, out stateReadFailed, out snapshot);
+            }
+
+            // The state channel is complete on an actual readable snapshot, BEFORE any
+            // corner/text work: a missing corner text now belongs to the corner category.
+            ClearStateDiagnostic();
+            return true;
+        }
+
+        /// <summary>
+        /// Common state-failure path: fail closed on owned state-dependent outputs and
+        /// preserve the expected load identity, readiness and the beacon episode. The
+        /// exception detail (when present) is logged as technical detail only.
+        /// </summary>
+        private bool StateFailure(
+            string key,
+            string reason,
+            Exception ex,
+            out bool stateReadFailed,
+            out SermonStateSnapshot snapshot)
+        {
+            stateReadFailed = true;
+            snapshot = default;
+
+            // A state-read failure suppresses all state-dependent displays (including the
+            // beacon, whose eligibility cannot be evaluated without a readable state) and
+            // preserves the expected load identity and readiness so recovery is automatic.
+            SafeResetBeacon();
+            hud.Teardown();
+            ResetEligibility();
+            LogStateDiagnostic(key, "GKSR_STATE_UNREADABLE: " + reason, ex);
+            return false;
+        }
+
+        /// <summary>
+        /// Corner stage: advances the beacon on the fresh readable snapshot, then renders
+        /// the corner display. A missing required corner text, an actual binding/render
+        /// failure or a Done-required failed icon set the corner flag; ordinary Pending,
+        /// gates closed, a naturally absent HUD and an irrelevant icon failure do not.
+        /// The corner flag is passed by reference so a computed Done-icon failure is never
+        /// lost when the subsequent render reports Pending. This whole stage is contained:
+        /// a corner presentation/native/log exception becomes a corner failure and never a
+        /// state fault, and the healthy eligible beacon is preserved.
+        /// </summary>
+        private void TickCorner(SermonStateSnapshot snapshot, ref bool cornerHudFailed)
         {
             try
             {
-                if (!ready)
-                {
-                    // Not-ready tick: no notice may be classified or shown, but retained
-                    // cleanup is still advanced by the caller's inactive Update path, and
-                    // the disabled entry never reaches here.
-                    SafeResetBeacon();
-                    hud.Teardown();
-                    ResetEligibility();
-                    return false;
-                }
-
-                GameSave current = TryGetCurrentSave();
-                if (activeSave == null && current != null)
-                {
-                    // The initial capture during readiness failed; adopt the first
-                    // subsequently readable non-null save once for this same ready
-                    // period. A genuine lifecycle boundary discards this pending capture.
-                    activeSave = current;
-                }
-
-                if (activeSave == null)
-                {
-                    // Ready load with no readable/non-null current save (missing or the
-                    // read threw). This is a state-read fault, not a readiness loss.
-                    SafeResetBeacon();
-                    hud.Teardown();
-                    ResetEligibility();
-                    LogStateDiagnostic("save-unavailable",
-                        "GKSR_STATE_UNREADABLE: current save unavailable during ready load");
-                    FlushNotices(stateReadFailed: true, cornerHudFailed: false);
-                    return true;
-                }
-
-                if (!ReferenceEquals(current, activeSave))
-                {
-                    // A different save than the captured identity: never adopt silently.
-                    // Keep the expected identity and readiness so no budgets replenish.
-                    SafeResetBeacon();
-                    hud.Teardown();
-                    ResetEligibility();
-                    LogStateDiagnostic("save-reference-changed",
-                        "GKSR_STATE_UNREADABLE: active save reference changed unexpectedly");
-                    FlushNotices(stateReadFailed: true, cornerHudFailed: false);
-                    return true;
-                }
-
-                SermonStateSnapshot snapshot = reader.Read(activeSave);
-                if (!snapshot.Readable)
-                {
-                    // No assumed business state: fail closed, hide and drop the owned
-                    // resources so a fault can never reuse the previous judgement. The
-                    // expected identity and load budget are retained for recovery.
-                    SafeResetBeacon();
-                    hud.Teardown();
-                    ResetEligibility();
-                    LogStateDiagnostic("unreadable:" + snapshot.Failure,
-                        "GKSR_STATE_UNREADABLE: " + snapshot.Failure);
-                    FlushNotices(stateReadFailed: true, cornerHudFailed: false);
-                    return true;
-                }
-
                 // The beacon advances before any corner/Done work, so on the first
                 // LateUpdate after consumption a false eligibility clears it independently
                 // of the corner text and the Done icon being Pending or Failed.
@@ -599,19 +674,12 @@ namespace GK2.SermonReminder
                 if (!snapshot.GatesSatisfied)
                 {
                     // Gates not complete is a normal hidden state, not a fault; also the
-                    // explicit end of this resource-eligibility episode (no corner work
-                    // is expected), so its episode is closed here.
-                    ClearStateDiagnostic();
+                    // explicit end of this resource-eligibility episode.
                     ClearCornerDiagnostic();
                     hud.Suppress();
                     ResetEligibility();
-                    FlushNotices(false, false);
-                    return true;
+                    return;
                 }
-
-                // The state-read channel is complete on an actual readable snapshot; a
-                // missing corner text now belongs to the corner category, not to state.
-                ClearStateDiagnostic();
 
                 if (string.IsNullOrEmpty(text))
                 {
@@ -620,34 +688,30 @@ namespace GK2.SermonReminder
                     hud.Suppress();
                     ResetEligibility();
                     LogCornerDiagnostic("corner-text-missing:" + state,
-                        "GKSR_HUD_FAILED: required corner text unavailable for " + state);
-                    FlushNotices(false, true);
-                    return true;
+                        "GKSR_HUD_FAILED: required corner text unavailable for " + state, null);
+                    cornerHudFailed = true;
+                    return;
                 }
 
                 LogDisplayTransition(snapshot);
-                // Phase 1: resolve and validate the native host and style BEFORE any
-                // sprite work. This detects a replaced or destroyed binding and runs
-                // even while the Done icon is pending or failed, so a HUD rebuild is
-                // never missed during a load.
+                // Phase 1: resolve and validate the native host and style BEFORE any sprite
+                // work, detecting a replaced or destroyed binding even while the Done icon
+                // is pending or failed.
                 SermonBindingResult binding = hud.PrepareBinding();
                 if (binding.Rebound)
                 {
-                    // The previous binding is gone: drop the old sprite reference before
-                    // acquiring one for the new binding.
                     ResetEligibility();
                 }
 
                 if (binding.Status == SermonHudStatus.Failed)
                 {
-                    // Actual binding failure: a corner-category fault. The binding
-                    // failure already removed the owned presentation. The icon episode is
-                    // kept (a broken asset stays broken across a rebind), and the corner
-                    // episode is preserved until a completed healthy rendering or a boundary.
+                    // Actual binding failure: a corner-category fault. The binding failure
+                    // already removed the owned presentation; the icon episode is kept.
                     ResetEligibility(preserveIconDiagnostic: true);
-                    LogCornerDiagnostic("hud-failed:" + binding.Failure, "GKSR_HUD_FAILED: " + binding.Failure);
-                    FlushNotices(false, true);
-                    return true;
+                    LogCornerDiagnostic("hud-failed:" + binding.Failure,
+                        "GKSR_HUD_FAILED: " + binding.Failure, null);
+                    cornerHudFailed = true;
+                    return;
                 }
 
                 if (binding.Status != SermonHudStatus.Healthy)
@@ -655,13 +719,11 @@ namespace GK2.SermonReminder
                     // The native HUD is simply not live right now (menu, loading or a
                     // rebuild): ordinary Pending, never a fault.
                     ResetEligibility();
-                    FlushNotices(false, false);
-                    return true;
+                    return;
                 }
 
-                // Phase 2: bind is healthy, so poll the owned sprite. Off the sermon day
-                // it is released; on the sermon day it is preloaded and retained while
-                // Ready or Done so consuming the sermon does not start a cold load.
+                // Phase 2: bind is healthy, so poll the owned sprite. Off the sermon day it
+                // is released; on the sermon day it is preloaded and retained.
                 bool spriteEligible = state == SermonDisplayState.Ready || state == SermonDisplayState.Done;
                 if (!spriteEligible)
                 {
@@ -671,6 +733,7 @@ namespace GK2.SermonReminder
                 }
 
                 NativeCheckSpritePoll icon = checkSprite.Poll(spriteEligible);
+                bool doneIconFailed = false;
 
                 if (!spriteEligible || icon.Status == NativeCheckSpriteStatus.Ready)
                 {
@@ -680,10 +743,13 @@ namespace GK2.SermonReminder
                 {
                     // A native Done icon failed AND the current display requires it: a
                     // corner-category fault. An unrelated icon failure on Ready/countdown
-                    // is not a fault and never clears the required display.
+                    // is not a fault and never clears the required display. The flag is
+                    // retained through the render result so a Pending suppression below
+                    // never cancels this real fault.
                     string reason = checkSprite.LastFailure ?? "unknown";
                     LogCornerDiagnostic("icon-failed:" + reason,
-                        "GKSR_HUD_FAILED: native done sprite unavailable (" + reason + ")");
+                        "GKSR_HUD_FAILED: native done sprite unavailable (" + reason + ")", null);
+                    doneIconFailed = true;
                 }
 
                 Sprite sprite = state == SermonDisplayState.Done && icon.Status == NativeCheckSpriteStatus.Ready
@@ -691,42 +757,47 @@ namespace GK2.SermonReminder
                     : null;
 
                 SermonHudResult result = hud.Update(state, text, sprite);
+
                 if (result.Status == SermonHudStatus.Failed)
                 {
-                    // Actual render failure: a corner-category fault; the corner episode
-                    // is preserved until a completed healthy render or a boundary.
-                    LogCornerDiagnostic("hud-render-failed:" + result.Failure, "GKSR_HUD_FAILED: " + result.Failure);
-                    FlushNotices(false, true);
-                    return true;
+                    // Actual render failure: a corner-category fault; the episode is
+                    // preserved until a completed healthy render or a boundary.
+                    LogCornerDiagnostic("hud-render-failed:" + result.Failure,
+                        "GKSR_HUD_FAILED: " + result.Failure, null);
+                    cornerHudFailed = true;
+                    return;
+                }
+
+                // A Done-required failed icon is a real corner fault even though it renders
+                // as Pending; genuine Pending (icon still loading, or an ordinary absent
+                // host) keeps cornerHudFailed false and is not a fault.
+                if (doneIconFailed)
+                {
+                    cornerHudFailed = true;
                 }
 
                 if (result.Status == SermonHudStatus.Pending)
                 {
                     // Suppressed because the Done icon is unavailable: the business state
                     // stays a readable Done and the in-flight handle is retained. Ordinary
-                    // asset pending neither clears a prior corner episode nor notifies.
-                    FlushNotices(false, false);
-                    return true;
+                    // asset pending never clears a prior corner episode.
+                    return;
                 }
 
                 // Healthy render: the only point where the corner episode is complete.
                 ClearCornerDiagnostic();
-                FlushNotices(false, false);
-                return true;
             }
             catch (Exception ex)
             {
-                // A native read/corner exception in this tick is contained. A native
-                // exception during a ready load is a state-read fault (the state could not
-                // be evaluated); cleanup is independent so a beacon failure never skips
-                // the corner cleanup and vice versa, and the beacon episode is preserved.
-                ResetBeaconResources();
+                // A corner text/native HUD/icon presentation or log exception is a corner
+                // failure, never a state fault. Only corner-owned resources are suppressed
+                // and the healthy eligible beacon is preserved.
                 try { hud.Teardown(); }
                 catch (Exception) { }
                 ResetEligibility();
-                LogStateDiagnostic("tick:" + ex.GetType().Name, "GKSR_TICK_FAILED: " + ex.GetType().Name);
-                FlushNotices(stateReadFailed: true, cornerHudFailed: false);
-                return true;
+                LogCornerDiagnostic("corner-stage:" + ex.GetType().Name,
+                    "GKSR_HUD_FAILED: corner stage " + ex.GetType().Name, ex);
+                cornerHudFailed = true;
             }
         }
 
@@ -901,28 +972,25 @@ namespace GK2.SermonReminder
         }
 
         /// <summary>
-        /// Supply both fault flags for THIS tick exactly once. The notice module only
-        /// shows/queues while its own load period is active, so a disabled or not-ready
-        /// path that still reaches here can advance retained cleanup but can never
-        /// silently start a load or show a notice.
+        /// One bounded, deduplicated corner-category diagnostic. It emits the approved
+        /// user-facing explanation once per episode, then the technical stage/reason and
+        /// the actual caught exception separately when one exists (never a fabricated
+        /// stack for a logical failure). It stays on its own episode across intermediate
+        /// healthy bindings and Pending phases and is cleared only after a completed
+        /// healthy corner rendering or a genuine lifecycle/eligibility boundary. Every
+        /// lookup and log is contained, including when called from an exception handler.
         /// </summary>
-        private void FlushNotices(bool stateReadFailed, bool cornerHudFailed)
+        private void LogCornerDiagnostic(string key, string message, Exception ex)
         {
-            try { notices?.Update(stateReadFailed, cornerHudFailed); }
+            try
+            {
+                if (string.Equals(lastCornerDiagnostic, key, StringComparison.Ordinal)) return;
+                lastCornerDiagnostic = key;
+                LogCategoryDiagnostic(SermonReminderLocalization.DiagnosticsHudUnavailableKey);
+                SafeWarn(message);
+                LogExceptionDetail(ex);
+            }
             catch (Exception) { }
-        }
-
-        /// <summary>
-        /// One bounded, deduplicated corner-category diagnostic. It stays on its own
-        /// episode across intermediate healthy bindings and Pending phases, and is
-        /// cleared only after a completed healthy corner rendering or a genuine
-        /// lifecycle/eligibility boundary.
-        /// </summary>
-        private void LogCornerDiagnostic(string key, string message)
-        {
-            if (string.Equals(lastCornerDiagnostic, key, StringComparison.Ordinal)) return;
-            lastCornerDiagnostic = key;
-            SafeWarn(message);
         }
 
         private void ClearCornerDiagnostic() => lastCornerDiagnostic = null;
@@ -969,12 +1037,17 @@ namespace GK2.SermonReminder
         /// approved category diagnostic text is logged separately from the technical
         /// GKSR stage and reason already carried in the message.
         /// </summary>
-        private void LogStateDiagnostic(string key, string message)
+        private void LogStateDiagnostic(string key, string message, Exception ex)
         {
-            if (string.Equals(lastStateDiagnostic, key, StringComparison.Ordinal)) return;
-            lastStateDiagnostic = key;
-            LogCategoryDiagnostic(SermonReminderLocalization.DiagnosticsReminderUnavailableKey);
-            SafeWarn(message);
+            try
+            {
+                if (string.Equals(lastStateDiagnostic, key, StringComparison.Ordinal)) return;
+                lastStateDiagnostic = key;
+                LogCategoryDiagnostic(SermonReminderLocalization.DiagnosticsReminderUnavailableKey);
+                SafeWarn(message);
+                LogExceptionDetail(ex);
+            }
+            catch (Exception) { }
         }
 
         private void ClearStateDiagnostic() => lastStateDiagnostic = null;
@@ -987,9 +1060,24 @@ namespace GK2.SermonReminder
         /// </summary>
         private void LogCategoryDiagnostic(string diagnosticsKey)
         {
-            string explanation = SermonReminderLocalization.Get(diagnosticsKey);
+            string explanation;
+            try { explanation = SermonReminderLocalization.Get(diagnosticsKey); }
+            catch (Exception) { explanation = null; }
+
             if (!string.IsNullOrEmpty(explanation))
                 SafeWarn(explanation);
+        }
+
+        /// <summary>
+        /// Emit the actual caught exception as separate technical detail when one exists.
+        /// A logical failure (no exception) logs nothing here rather than fabricating a
+        /// stack. Contained so a logging failure can never escape a handler or abort cleanup.
+        /// </summary>
+        private void LogExceptionDetail(Exception ex)
+        {
+            if (ex == null) return;
+            try { SafeWarn(ex.ToString()); }
+            catch (Exception) { }
         }
 
         /// <summary>
