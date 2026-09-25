@@ -68,6 +68,7 @@ namespace GK2.SermonReminder.Hud
     internal sealed class SermonHudAdapter
     {
         private const string DisplayObjectName = "GK2SermonReminder.Display";
+        private const string TextObjectName = "GK2SermonReminder.Text";
         private const string IconObjectName = "GK2SermonReminder.DoneIcon";
         private const string HappinessLabelFieldName = "happinessLabel";
         private const string WheelFieldName = "wheel";
@@ -360,18 +361,29 @@ namespace GK2.SermonReminder.Hud
 
         private bool TryCreateDisplay(HUD hud, GameObject group, TextMeshProUGUI source)
         {
-            GameObject go = null;
+            GameObject root = null;
             try
             {
-                go = new GameObject(DisplayObjectName, typeof(RectTransform));
+                root = new GameObject(DisplayObjectName, typeof(RectTransform));
 
                 // Register for cleanup immediately: if parenting or component
                 // creation fails, the object can never be orphaned.
-                displayObject = go;
+                displayObject = root;
 
-                go.transform.SetParent(group.transform, false);
+                var rootRect = (RectTransform)root.transform;
+                rootRect.anchorMin = new Vector2(0f, 1f);
+                rootRect.anchorMax = new Vector2(0f, 1f);
+                rootRect.pivot = new Vector2(0.5f, 1f);
 
-                var text = go.AddComponent<TextMeshProUGUI>();
+                root.transform.SetParent(group.transform, false);
+
+                // One owned TMP child carries the text so the conditional Done
+                // Image can keep sibling order before it. Destroying the root
+                // disposes the child with it.
+                var textGo = new GameObject(TextObjectName, typeof(RectTransform));
+                textGo.transform.SetParent(root.transform, false);
+
+                var text = textGo.AddComponent<TextMeshProUGUI>();
                 text.raycastTarget = false;
 
                 label = text;
@@ -384,7 +396,7 @@ namespace GK2.SermonReminder.Hud
             }
             catch (Exception)
             {
-                if (go != null) UnityEngine.Object.Destroy(go);
+                if (root != null) UnityEngine.Object.Destroy(root);
                 displayObject = null;
                 label = null;
                 return false;
@@ -399,10 +411,11 @@ namespace GK2.SermonReminder.Hud
                 go = new GameObject(IconObjectName, typeof(RectTransform));
                 iconObject = go;
 
-                // Parented under the mod-owned display root and created as its
-                // first child, so the Image sits under the native HUD and renders
-                // before the Done text.
+                // Owned by the display root and forced to sibling index 0, so the
+                // Image sits under the native HUD and renders before the Done
+                // text child.
                 go.transform.SetParent(displayObject.transform, false);
+                go.transform.SetSiblingIndex(0);
 
                 var rect = (RectTransform)go.transform;
                 rect.anchorMin = new Vector2(0f, 1f);
