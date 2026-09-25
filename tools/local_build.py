@@ -12,7 +12,10 @@ ignored, local-only provenance report. This helper:
   * records the source HEAD, a dirty flag, the exact command and exit code,
     hashes of the actual resolved native reference inputs, the produced plugin
     DLL hash, and the output file list;
-  * refuses to claim verification of a named commit when the source is dirty;
+  * attributes the named commit only after every check succeeds on clean source
+    and the produced DLL's informational version ends in ``+HEAD``; failed
+    builds, dirty source, invalid HEAD and version mismatches all leave the
+    attribution null;
   * writes no secret or environment dump.
 
 The emitted report is explicitly local-only: it is not a hosted CI result and
@@ -115,17 +118,35 @@ def parse_getitem(output: str) -> tuple:
     return items, []
 
 
-def collect_native_inputs(root: Path, project: Path, env, dotnet: Path, properties: list) -> tuple:
-    """Resolve the actual reference inputs and hash the native ones."""
+def collect_native_inputs(root: Path, project: Path, env, dotnet: Path, properties: list, configuration: str) -> tuple:
+    """Resolve the actual reference inputs and hash the native ones.
+
+    Uses the same configuration as the real build so the resolved reference set
+    is the one the build will actually use.
+    """
     command = [
-        str(dotnet), "build", str(project), "-c", "Release",
+        str(dotnet), "build", str(project), "-c", configuration,
         *properties,
         "-getItem:Reference",
     ]
     result = subprocess.run(
         command, cwd=str(root), env=env, capture_output=True, text=True, check=False
     )
-    items, errors = parse_getitem(result.stdout)
+
+    errors = []
+    if result.returncode != 0:
+        errors.append(
+            f"reference resolution failed with exit code {result.returncode} "
+            f"(command: {' '.join(command)})"
+        )
+
+    items, parse_errors = parse_getitem(result.stdout)
+    errors.extend(parse_errors)
+    if not items:
+        errors.append(
+            "reference resolution produced an empty reference list; refusing to treat "
+            "an unresolved project as buildable"
+        )
 
     references = []
     seen = set()
@@ -213,7 +234,12 @@ def main(argv=None) -> int:
         "command": [],
         "commandText": "",
         "exitCode": None,
-        "output": {"pluginDll": None, "sha256": None, "informationalVersion": None},
+        "output": {
+            "pluginDll": None,
+            "sha256": None,
+            "informationalVersion": None,
+            "informationalVersionMatchesHead": False,
+        },
         "outputFileList": [],
         "logPath": str(log_path.relative_to(root)),
         "warnings": [],
@@ -239,6 +265,16 @@ def main(argv=None) -> int:
         "dirtyPathCount": len(dirty_paths),
         "dirtyPaths": dirty_paths[:50],
     }
+
+    # A named commit can only be attributed once ALL checks succeed on clean
+    # source. Until then the field stays null so a failed report can never carry
+    # a supposedly verified commit.
+    head_is_valid = bool(re.match(r"^[0-9a-f]{40}$", head))
+    report["source"]["headValid"] = head_is_valid
+    if not head_is_valid:
+        report["errors"].append(
+            f"cannot read a valid HEAD commit id (got {head!r}); no commit will be attributed"
+        )
     if dirty:
         # A dirty tree may still build, but the result must never be presented
         # as verifying the named commit.
@@ -246,8 +282,6 @@ def main(argv=None) -> int:
             f"source tree is dirty ({len(dirty_paths)} changed path(s)); this build does "
             f"NOT verify commit {head}"
         )
-    else:
-        report["verifiedNamedCommit"] = head
 
     # 2. Explicit dotnet + pinned SDK.
     dotnet, dotnet_root, dotnet_errors = resolve_dotnet(args.dotnet)
@@ -298,7 +332,7 @@ def main(argv=None) -> int:
         f"-p:FrameworkDir={args.framework_dir}",
     ]
     references, reference_errors = collect_native_inputs(
-        root, project, env, dotnet, reference_properties
+        root, project, env, dotnet, reference_properties, args.configuration
     )
     report["references"]["inputs"] = references
     report["references"]["errors"] = reference_errors
@@ -351,6 +385,19 @@ def main(argv=None) -> int:
     }
     report["outputFileList"] = output_files(output_dir)
 
+    # The produced assembly must actually be built from this HEAD; otherwise the
+    # build cannot be attributed to the named commit.
+    informational = report["output"]["informationalVersion"] or ""
+    expected_suffix = "+" + head
+    report["output"]["informationalVersionMatchesHead"] = (
+        head_is_valid and informational.endswith(expected_suffix)
+    )
+    if head_is_valid and not informational.endswith(expected_suffix):
+        report["errors"].append(
+            f"produced DLL informational version {informational!r} does not end with "
+            f"'+{head}'; refusing to attribute the build to that commit"
+        )
+
     native_hashes = {entry["sha256"] for entry in references if entry["sha256"]}
     for entry in report["outputFileList"]:
         lowered = Path(entry["relativePath"]).name.lower()
@@ -362,6 +409,12 @@ def main(argv=None) -> int:
             )
 
     report["ok"] = not report["errors"]
+
+    # Attribute the named commit only now: clean source, valid HEAD, and a DLL
+    # whose informational version identifies exactly that commit.
+    if report["ok"] and not dirty and head_is_valid and report["output"]["informationalVersionMatchesHead"]:
+        report["verifiedNamedCommit"] = head
+
     write_report()
 
     if not report["ok"]:
