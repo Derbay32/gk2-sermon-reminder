@@ -1,0 +1,186 @@
+{
+  "kind": "gksa14-e2e-capture-example",
+  "captureVersion": 1,
+  "_note": [
+    "SCHEMA EXAMPLE ONLY — THIS FILE IS NOT EVIDENCE.",
+    "Its kind is deliberately not 'gksa14-e2e-capture', so tests/e2e/verify.py",
+    "rejects it as an unsupported schema. Do not treat this file as a passing",
+    "capture; the validator never generates a capture and never marks a scenario",
+    "passed.",
+    "This file exists so the negative check can prove that an unexecuted example",
+    "is rejected instead of silently accepted.",
+    "The two failure categories are state-read (gksr.status.reminderUnavailable)",
+    "and corner-hud (gksr.status.hudUnavailable); the check-mark icon failure is",
+    "part of the corner-hud category, not a separate category.",
+    "The native notice is a titleless, iconless, non-blocking plain-text",
+    "notification with native lifetime and auto-dismiss; it never pauses the game",
+    "or captures input.",
+    "At most one actually displayed notice per category per load; a failed show",
+    "logs only and never consumes eligibility; a queued notice is cleared if the",
+    "fault recovers before display or the load ends; recovery adds no success",
+    "message.",
+    "observationVocabulary keys are an evidence schema, not a mandatory production",
+    "telemetry API; real facts may be collected by operator observation, logs, or an",
+    "authorized future test facility.",
+    "Every visual scenario requires a screenshot plus a measurement or an",
+    "explicit operatorObservation.",
+    "Phase-specific observation keys (BeforeResolve/BeforeRetry/AfterFaultRecovery/AfterRestore/Before/After/BeforeRefault) separate snapshots so a scenario never asserts contradictory current values."
+  ],
+  "environment": {
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "proton.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "bepinex.version": "5.4.23.5",
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "plugin.version": "REPLACE",
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.loaded": true,
+    "resolution.width": 1920,
+    "resolution.height": 1080,
+    "uiScale": 1.0,
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "evidenceFiles": {
+      "screenshots/state-unreadable-hides-dependent.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "game.sermonWeekday": 2
+  },
+  "observations": {
+    "state-unreadable-hides-dependent": {
+      "save.sermonWeekday": 2,
+      "state.readinessObservedBeforeInjection": true,
+      "state.readable": false,
+      "state.defaultValueUsed": false,
+      "state.staleDateReused": false,
+      "fault.staleValueReused": false,
+      "fault.defaultValueUsed": false,
+      "hud.visible": false,
+      "hud.selectedTextKeyPresent": false,
+      "hud.tmpTextCleared": true,
+      "notice.stateReadDisplayedCount": 1,
+      "notice.cornerHudDisplayedCount": 0,
+      "notice.totalDisplayedCount": 1,
+      "language.active": "zh_cn"
+    },
+    "notice-copy-zh": {
+      "language.active": "zh_cn",
+      "notice.category": "state-read",
+      "notice.textKey": "gksr.status.reminderUnavailable",
+      "notice.text": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。",
+      "notice.titlePresent": false,
+      "notice.iconPresent": false,
+      "notice.confirmControlPresent": false,
+      "notice.nativeLifetime": true,
+      "notice.autoDismiss": true
+    },
+    "icon-failed-suppresses-done-notice-once": {
+      "icon.loadFailedBeforeRetry": true,
+      "icon.spriteLoadedBeforeRetry": false,
+      "icon.ownImagePresentBeforeRetry": false,
+      "icon.dependentPresentationSuppressed": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 0,
+      "hud.selectedTextKeyBeforeRetry": "gksr.hud.sermonDone",
+      "hud.visibleBeforeRetry": false,
+      "hud.tmpTextClearedBeforeRetry": true,
+      "notice.cornerHudDisplayedCount": 1,
+      "notice.stateReadDisplayedCount": 0
+    },
+    "recovery-before-display-cancels-queue": {
+      "notice.surfaceAvailableBefore": false,
+      "notice.queuePendingBefore": true,
+      "notice.queueCountBefore": 1,
+      "notice.surfaceAvailableAfterFaultRecovery": false,
+      "notice.queuePendingAfterFaultRecovery": false,
+      "notice.queueCountAfterFaultRecovery": 0,
+      "notice.surfaceAvailableAfterRestore": true,
+      "notice.stateReadBudgetConsumed": false,
+      "notice.totalDisplayedCount": 0
+    },
+    "cancelled-queue-preserves-budget-for-refailure": {
+      "notice.surfaceAvailableBefore": false,
+      "notice.queuePendingBefore": true,
+      "notice.stateReadDisplayedCountBefore": 0,
+      "notice.stateReadBudgetConsumedBefore": false,
+      "notice.queuePendingAfterCancellation": false,
+      "notice.stateReadBudgetConsumedAfterCancellation": false,
+      "notice.surfaceAvailableBeforeRefault": true,
+      "ui.safetyGateClearBeforeRefault": true,
+      "notice.staleNoticeAfterRecovery": false,
+      "notice.stateReadDisplayedCountAfterRefault": 1,
+      "notice.stateReadBudgetConsumed": true
+    },
+    "independent-category-budgets": {
+      "notice.stateReadDisplayedCount": 1,
+      "notice.cornerHudDisplayedCount": 1,
+      "notice.totalDisplayedCount": 2,
+      "notice.causalOrderRespected": true,
+      "notice.cornerEvaluatedOnlyAfterStateRecovered": true
+    },
+    "normal-load-hud-pending-no-fault": {
+      "hud.pendingBefore": true,
+      "hud.liveNativeHudPresentBefore": false,
+      "hud.visibleBefore": false,
+      "fault.reportedBefore": false,
+      "hud.pendingAfter": false,
+      "hud.liveNativeHudPresentAfter": true,
+      "hud.displayEligibleAfter": true,
+      "hud.nativeHudAppearedAfterLoad": true,
+      "fault.reported": false,
+      "notice.totalDisplayedCount": 0
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "state-unreadable-hides-dependent",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png",
+        "log": "logs/BepInEx-load.log"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+      },
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+    },
+    {
+      "scenarioId": "notice-copy-zh",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png",
+        "log": "logs/BepInEx-load.log"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed notice text and the absence of title, icon and confirm control."
+      },
+      "notes": "REPLACE with the observed run notes."
+    },
+    {
+      "scenarioId": "icon-failed-suppresses-done-notice-once",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png",
+        "log": "logs/BepInEx-load.log"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed icon failure isolation, cleared TMP text and corner-hud notice count."
+      },
+      "notes": "REPLACE with the observed run notes."
+    }
+  ]
+}
