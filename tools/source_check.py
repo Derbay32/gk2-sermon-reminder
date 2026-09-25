@@ -12,8 +12,10 @@ Checks:
   * every native ``<Reference>`` sets ``Private=false``;
   * every ``<EmbeddedResource>`` keeps an explicit ``LogicalName`` and
     ``WithCulture="false"``;
-  * localization keys keep placeholder parity across languages and the
-    implemented countdown sentences match the accepted manifest finalText;
+  * localization declares both supported catalogs (en, zh_cn), every supported
+    catalog carries an identical key set, every value is a nonempty string,
+    placeholder parity holds, and the implemented countdown sentences match the
+    accepted manifest finalText;
   * no final localized sentence is duplicated inside C# source.
 
 Only the Python 3 standard library is used.
@@ -45,6 +47,10 @@ PROHIBITED_BASENAME_PREFIXES = (
 
 # Localization language id -> manifest catalog label used in finalText.
 LANGUAGE_TO_CATALOG_LABEL = {"en": "en", "zh_cn": "zh-CN"}
+
+# Raw game language ids the plugin must ship catalogs for. Both catalogs must
+# exist and carry identical key sets; a locale may never be dropped silently.
+SUPPORTED_LANGUAGE_IDS = ("en", "zh_cn")
 
 # Countdown keys GKSA-10 is required to implement. Future-state manifest keys
 # (sermonReminder / sermonDone) are deliberately not required here.
@@ -181,6 +187,23 @@ def check_references(root: Path, project: Path) -> tuple:
     return references, violations
 
 
+def supported_language_ids(manifest: dict) -> tuple:
+    """Raw game language ids the plugin must ship catalogs for.
+
+    Derived from the accepted manifest's language mapping when present so the
+    manifest stays the single source of truth, falling back to the two
+    supported ids otherwise.
+    """
+    mapping = manifest.get("languageMapping") if isinstance(manifest, dict) else None
+    if isinstance(mapping, dict):
+        label_to_raw = mapping.get("catalogLabelToRawGameLanguageId")
+        if isinstance(label_to_raw, dict):
+            raws = {value for value in label_to_raw.values() if isinstance(value, str) and value}
+            if raws:
+                return tuple(sorted(raws))
+    return SUPPORTED_LANGUAGE_IDS
+
+
 def check_manifest_and_localization(root: Path, manifest_path: Path, entries: list, project_dir: Path) -> dict:
     """Compare implemented localization to the accepted manifest.
 
@@ -190,6 +213,10 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
     localization = {
         "logicalResourceMap": {},
         "languages": [],
+        "supportedLanguages": [],
+        "missingSupportedLanguages": [],
+        "keySetsEqual": None,
+        "missingKeys": {},
         "keyParity": [],
         "manifestComparison": [],
         "violations": [],
@@ -213,13 +240,17 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
         if not isinstance(data, dict):
             localization["violations"].append(f"{entry['include']}: top level must be an object")
             continue
-        catalogs.setdefault(language, {})[entry["include"]] = data
+        catalogs.setdefault(language, []).append((entry["include"], data))
 
     localization["languages"] = sorted(catalogs)
 
+    manifest = {}
     manifest_text = {}
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            localization["violations"].append("manifest top level is not an object")
+            manifest = {}
         manifest_text = manifest.get("finalText", {})
         if not isinstance(manifest_text, dict):
             localization["violations"].append("manifest finalText is not an object")
@@ -227,26 +258,72 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
     except (OSError, json.JSONDecodeError) as exc:
         localization["violations"].append(f"cannot load manifest {manifest_path}: {exc}")
 
-    # Union of every implemented key.
-    implemented_keys = set()
-    for by_file in catalogs.values():
-        for data in by_file.values():
-            implemented_keys.update(data.keys())
+    supported = supported_language_ids(manifest)
+    localization["supportedLanguages"] = list(supported)
+
+    # Every supported language must actually ship a readable catalog. Removing a
+    # whole locale's resource declaration is a failure, never a silent pass.
+    for language in supported:
+        if language not in catalogs:
+            localization["missingSupportedLanguages"].append(language)
+            localization["violations"].append(
+                f"supported language catalog missing: {language!r} "
+                "(no embedded resource declared or file unreadable)"
+            )
+
+    # Every value must be a nonempty string before any regex comparison; a
+    # non-string value is a reported violation, never a TypeError.
+    keys_by_language = {}
+    for language in sorted(catalogs):
+        keys = set()
+        for include, data in catalogs[language]:
+            for key, value in data.items():
+                keys.add(key)
+                if not isinstance(value, str):
+                    localization["violations"].append(
+                        f"{include}: key {key!r} must be a nonempty string "
+                        f"(found {type(value).__name__})"
+                    )
+                elif not value.strip():
+                    localization["violations"].append(
+                        f"{include}: key {key!r} must be a nonempty string (found blank string)"
+                    )
+        keys_by_language[language] = keys
+
+    # The supported catalogs must carry identical key sets. A key present in one
+    # locale and missing from another is a failure. Future-state manifest keys
+    # remain optional and are never required here.
+    all_keys = set()
+    for language in supported:
+        all_keys |= keys_by_language.get(language, set())
+
+    for language in supported:
+        missing = sorted(all_keys - keys_by_language.get(language, set()))
+        if missing:
+            localization["missingKeys"][language] = missing
+            localization["violations"].append(
+                f"key parity failure: {language!r} is missing {missing}"
+            )
+    localization["keySetsEqual"] = not localization["missingKeys"]
+
+    implemented_keys = all_keys
 
     # GKSA-10 must implement the countdown keys.
     for key in REQUIRED_COUNTDOWN_KEYS:
         if key not in implemented_keys:
             localization["violations"].append(f"required countdown key not implemented: {key}")
 
-    # Placeholder parity across every language file that defines a key.
+    # Placeholder parity across every declared catalog that defines a key,
+    # considering only validated non-empty string values.
     for key in sorted(implemented_keys):
         placeholders_by_language = {}
         for language in sorted(catalogs):
-            for data in catalogs[language].values():
-                if key in data:
-                    value = data[key]
-                    placeholders = sorted(set(re.findall(r"\{(\w+)\}", value or "")))
-                    placeholders_by_language[language] = placeholders
+            for _, data in catalogs[language]:
+                value = data.get(key)
+                if isinstance(value, str) and value.strip():
+                    placeholders_by_language[language] = sorted(
+                        set(re.findall(r"\{(\w+)\}", value))
+                    )
 
         distinct = {tuple(v) for v in placeholders_by_language.values()}
         localization["keyParity"].append({
@@ -270,7 +347,7 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
             if catalog_label not in expected:
                 continue
             actual = None
-            for data in catalogs[language].values():
+            for _, data in catalogs[language]:
                 if key in data:
                     actual = data[key]
                     break
