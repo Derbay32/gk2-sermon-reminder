@@ -74,18 +74,23 @@
     "布局与视觉结论必须附带已校验的截图，并附带实测数值或明确的 operatorObservation；仅日志不能作为布局证据。",
     "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）的 sermon-day 模式；save.sermonWeekday 必须等于环境字段 game.sermonWeekday（单一运行时定义 T = ConstDef.Get(\"day_wrath\").IntValue），绝不写死 T。",
     "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
-    "删除重建场景须使用可恢复测试环境中的存档副本执行。"
+    "删除重建场景须使用可恢复测试环境中的存档副本执行。",
+    "信标可见性按阶段分别观察，不与持久化开关值混用：beacon.shownOnLoadWhileEnabled 在开关为开启的载入、beacon.shownOnLoadAfterDisable 在切为关闭后的载入、beacon.shownOnLoadAfterReenable 在切回开启后的载入分别记录；settings.beaconEnabled* 只记录主菜单持久化值，不代表任何已载入存档的活动快照。",
+    "弹窗由开启切为关闭的证明必须在同一进程内针对一个从未提示过、且尚无去重记录的合格槽与具体游戏日执行；否则去重本身就会抑制弹窗，无法区分是设置生效还是去重生效。故该场景要求 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true，并以 popup.shownAfterDisable 观察真实不显示。",
+    "本模组不提供原生 SaveSlotData 之外的槽代字段：save.slotGeneration / save.slotGenerationBefore / save.slotGenerationAfter 与 dedup.capturedSlotGeneration 都表示本模组按原生槽键维护的进程内槽代计数，在初始载入捕获身份时读取，早于后续可变存档字段变化。",
+    "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁、替换或强制关闭游戏管理的共享原生对话框实例，也不得改动其他系统已打开的对话框。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。"
   ],
   "observationVocabulary": {
-    "beacon.shown": "bool: 原生教堂信标当前是否显示",
+    "beacon.shownOnLoadAfterDisable": "bool: 本次载入时信标开关已为关闭的前提下原生信标是否显示（预期 false）",
+    "beacon.shownOnLoadAfterReenable": "bool: 本次载入时信标开关已切回开启的前提下原生信标是否恢复显示",
+    "beacon.shownOnLoadWhileEnabled": "bool: 本次载入时信标开关为开启的前提下原生教堂信标是否显示",
     "dedup.capturedIsDemoSave": "bool: 载入时捕获并冻结的存档类型 isDemoSave（身份字段之一）",
-    "dedup.capturedSlotGeneration": "int: 载入时捕获并冻结的槽代 slot-generation（身份字段之一）",
+    "dedup.capturedSlotGeneration": "int: 载入时捕获并冻结的本模组进程内槽代（身份字段之一；不是原生 SaveSlotData 字段）",
     "dedup.capturedSlotName": "string: 载入时捕获并冻结的保存槽名（身份字段之一）",
     "dedup.dayReadFreshPerTriggerEvaluation": "bool: 具体游戏日是否在每次触发评估时按当前值重新读取而非冻结",
     "dedup.dedupInheritedFromDeletedSlot": "bool: 重建槽是否继承删除前记录（必须为 false）",
     "dedup.identitySourceIsActualLoadedSlot": "bool: 去重身份是否来自实际载入的保存槽",
     "dedup.manualAndAutoTrackedSeparately": "bool: 手动与自动保存槽是否分别追踪",
-    "dedup.newGenerationRecordAbsentBeforeFirstLoad": "bool: 该进度实际使用的槽代在首次载入前是否尚无去重记录（覆盖尚未首次保存的新进度与删除重建后的新槽代）",
     "dedup.recordAbsentForThisSlotDayBeforeLoad": "bool: 载入前该槽该日是否尚无去重记录",
     "dedup.recordRetainedAcrossReload": "bool: 重读后是否保留去重记录",
     "dedup.recordRetainedAcrossToggle": "bool: 开关往返后是否保留去重记录",
@@ -162,6 +167,7 @@
     "popup.deferredWhileOtherModal": "bool: 其他原生模态活动时是否延后显示",
     "popup.deferredWhileOtherPause": "bool: 既有暂停期间是否延后显示",
     "popup.deferredWhilePlayerNotControllable": "bool: 玩家不可操作时是否延后显示",
+    "popup.didNotDestroySharedNativeDialog": "bool: 本模组在退出清理时是否未销毁、未替换也未强制关闭游戏管理并缓存的共享原生对话框实例（该实例的后续存续由游戏自身场景与菜单卸载决定，不由本模组强制要求）",
     "popup.displayCountWithinLoad": "int: 本次存档载入期间弹窗实际显示的次数（<=1）",
     "popup.displayCountWithinSameFrame": "int: 同一帧内弹窗实际显示的次数（<=1）",
     "popup.displayedAfterExit": "bool: 退出存档后是否仍显示弹窗（必须为 false）",
@@ -215,11 +221,11 @@
     "popup.sameSlotAsPriorRecord": "bool: 当前槽是否与既有记录为同一槽位",
     "popup.sameSlotSameDayAsBeforeRestart": "bool: 重启后载入的是否为重启前的同槽同日",
     "popup.scheduledButNotDisplayed": "bool: 是否已调度但尚未实际显示",
-    "popup.sharedNativeDialogPreserved": "bool: 游戏管理并缓存的共享原生对话框是否被保留（不要求本模组销毁）",
     "popup.showFailed": "bool: 弹窗显示调用是否失败",
     "popup.shown": "bool: 正常布道弹窗在当前观察点是否已实际显示",
     "popup.shownAfterCancellation": "bool: 取消后是否仍显示（必须为 false）",
     "popup.shownAfterDateChange": "bool: 日期变化后是否仍显示（必须为 false）",
+    "popup.shownAfterDisable": "bool: 弹窗开关已为关闭时载入从未提示过的合格存档是否显示弹窗（预期 false，关闭设置是唯一抑制原因）",
     "popup.shownAfterFailedDelete": "bool: 删除失败后是否重复显示（必须为 false）",
     "popup.shownAfterGateChange": "bool: 门槛变化后是否仍显示（必须为 false）",
     "popup.shownAfterRecovery": "bool: 资源恢复后是否显示弹窗",
@@ -266,11 +272,12 @@
     "save.otherSlotName": "string: 另一真实保存槽的名称",
     "save.priorAbsoluteDay": "int: 本进程既有去重记录所针对的绝对游戏日",
     "save.readyToPlay": "bool: 存档是否已加载完成并进入可操作画面",
+    "save.returnedToMainMenu": "bool: 当前是否已退出存档并回到主菜单（用于把退出与后续主菜单操作拆成独立可观察步骤）",
     "save.saveTimestampOlderThanSettingChange": "bool: 被读取存档的保存时间是否早于本次设置修改",
     "save.sermonWeekday": "int: 实际观察到的布道日星期编号，必须等于环境字段 game.sermonWeekday（单一运行时定义，不得改写）",
-    "save.slotGeneration": "int: 实际载入保存槽的代次（身份字段之一）",
-    "save.slotGenerationAfter": "int: 删除重建或覆盖保存后的槽代",
-    "save.slotGenerationBefore": "int: 待显示或删除重建前的槽代",
+    "save.slotGeneration": "int: 本模组按原生保存槽键维护的进程内槽代计数（不是原生 SaveSlotData 字段——原生没有该字段）；在初始载入捕获身份时读取，早于后续可变存档字段变化",
+    "save.slotGenerationAfter": "int: 删除重建或覆盖保存后本模组按原生槽键维护的进程内槽代（不是原生 SaveSlotData 字段）",
+    "save.slotGenerationBefore": "int: 变更前读取的本模组进程内槽代（不是原生 SaveSlotData 字段——原生没有该字段），用于与变更后的值对比",
     "save.slotIsManual": "bool: 该保存槽是否为手动保存槽",
     "save.slotName": "string: 实际载入保存槽的名称（身份字段之一）",
     "save.tutorialCompleted": "bool: 任务 19_base_ceremony_sermon 是否为 Completed",
@@ -279,15 +286,13 @@
     "settings.autosavedAfterToggle": "bool: 切换后是否在自动保存下写入设置",
     "settings.beaconDefaultValue": "bool: 首次使用且无已保存设置时信标开关的默认值（为 true）",
     "settings.beaconDescription": "string: 信标开关说明实际显示文本",
-    "settings.beaconEffectOnNextLoadReverse": "bool: 信标由关闭切回开启后下次载入是否恢复显示信标",
-    "settings.beaconEnabledAfter": "bool: 只切换信标开关后信标开关的值",
-    "settings.beaconEnabledAfterReverseToggle": "bool: 信标开关由关闭切回开启后的值",
-    "settings.beaconEnabledBefore": "bool: 本次观察开始时信标开关的值",
+    "settings.beaconEnabledAfter": "bool: 只在主菜单把信标开关切为关闭后的持久化值（并非活动载入状态）",
+    "settings.beaconEnabledAfterReverseToggle": "bool: 在已关闭基础上把信标开关切回开启后的持久化值",
+    "settings.beaconEnabledBefore": "bool: 主菜单信标开关的持久化值（关闭前的持久化基线，非已载入存档活动快照）",
     "settings.beaconIndependentOfPopup": "bool: 两个开关是否相互独立",
     "settings.beaconLabel": "string: 信标开关名称实际显示文本",
-    "settings.beaconPersistedValueEqualsAfter": "bool: 信标开关落盘值是否等于切换后的值",
+    "settings.beaconPersistedValueEqualsAfter": "bool: 主菜单信标开关切为关闭后，落盘的持久化值是否等于切换后的值（证明自动保存已写入，且与已载入存档活动快照区分）",
     "settings.beaconSettingUnchangedByPopupToggle": "bool: 切换弹窗开关是否未改变信标开关",
-    "settings.changeAppliedOnlyOnNextLoad": "bool: 开关修改是否只在下一次载入存档时生效，而不改变当前已载入存档按载入时取值得到的判定（主菜单入口，本模组无游戏内 Mods 界面）",
     "settings.gamepadNavigationWorked": "bool: 手柄能否在设置页面完整导航到开关",
     "settings.groupTitle": "string: 模组设置页面标题实际显示文本",
     "settings.hudTextStillShownOnNextLoad": "bool: 关闭信标后下次载入是否仍显示角落文字提醒",
@@ -299,8 +304,6 @@
     "settings.popupDefaultValue": "bool: 首次使用且无已保存设置时弹窗开关的默认值（必须为 false）",
     "settings.popupDescription": "string: 弹窗开关说明实际显示文本",
     "settings.popupDisabledThenReenabled": "bool: 是否在同一进程内先关闭再重新开启弹窗开关",
-    "settings.popupEffectOnNextLoad": "bool: 下次载入时弹窗是否按已保存设置显示",
-    "settings.popupEffectOnNextLoadAfterDisable": "bool: 弹窗由开启切为关闭后下次载入是否不再显示弹窗",
     "settings.popupEnabled": "bool: 当前全局弹窗开关值",
     "settings.popupEnabledAfterPopupToggle": "bool: 只切换弹窗开关后弹窗开关的值",
     "settings.popupEnabledAfterRestart": "bool: 游戏重启后读取到的弹窗开关值",
@@ -308,6 +311,7 @@
     "settings.popupEnabledBefore": "bool: 本次观察开始时弹窗开关的值",
     "settings.popupLabel": "string: 弹窗开关名称实际显示文本",
     "settings.popupSettingUnchangedByBeaconToggle": "bool: 切换信标开关是否未改变弹窗开关",
+    "settings.processExited": "bool: 游戏进程是否已正常退出（退出步骤的可观察结果）",
     "settings.processRestarted": "bool: 本次应用是否发生游戏进程重启",
     "settings.restartRequired": "bool: 是否要求重启才能生效（必须为 false）",
     "settings.rolledBackByOldSave": "bool: 读取旧存档是否回滚了全局设置（必须为 false）",
@@ -322,7 +326,7 @@
     "ui.busyGateActive": "bool: 当前是否有菜单、对话、过场或其他占用界面处于活动状态",
     "ui.busyGateActiveAfterClear": "bool: 安全门清空后是否仍为活动状态",
     "ui.busyGateActiveAtEligibility": "bool: 资格成立时安全门是否为活动状态",
-    "ui.otherNativeDialogsUnaffected": "bool: 其他原生对话框是否未受本模组影响",
+    "ui.otherNativeDialogsUnaffected": "bool: 本模组的清理是否未关闭、未改动其他系统已打开的对话框",
     "ui.otherNativeModalActive": "bool: 是否存在另一个活动的原生模态窗口",
     "ui.otherNativeModalClosedBeforeDisplay": "bool: 本模组弹窗显示前其他原生模态是否已关闭",
     "ui.otherNativeModalUnaffected": "bool: 本模组弹窗是否未影响其他原生模态",
@@ -588,9 +592,78 @@
       "steps": [
         "确认游戏进程未重启；预期仍为同一进程；检查 settings.processRestarted 为 false。",
         "在不重启的条件下载入已就绪的布道日存档；预期使用新开关值并显示弹窗；检查 settings.appliedValueOnLoad 与 popup.shown 为 true。",
-        "检查是否要求重启；预期不要求；检查 settings.restartRequired 为 false。"
+        "观察是否出现重启提示；预期没有重启要求；检查 settings.restartRequired 为 false。"
       ],
       "title": "修改开关后未重启即在下一次载入存档时生效"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterDisable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "settings-popup-disable-next-load",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个满足教堂与教学门槛、处于布道日且机会未消费的存档；本进程对该槽该具体游戏日从未提示过，即尚无去重记录。",
+        "初始弹窗开关为开启。"
+      ],
+      "steps": [
+        "读取该槽该日的载入前去重状态；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在主菜单把弹窗开关切为关闭；预期持久化值为关闭；检查 settings.popupEnabled 为 false。",
+        "载入该从未提示过的合格存档并读取资格与日期；预期除弹窗开关外资格满足；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 settings.popupEnabled。",
+        "观察弹窗并检查提示机会；预期不显示且未消耗机会；检查 popup.shownAfterDisable 为 false 与 popup.chanceConsumed 为 false。"
+      ],
+      "title": "弹窗开关由开启切为关闭后在下次载入从未提示过的合格存档时不显示弹窗"
     },
     {
       "category": "settings",
@@ -600,6 +673,10 @@
         "screenshot": true
       },
       "expect": [
+        {
+          "equals": true,
+          "observation": "settings.processExited"
+        },
         {
           "equals": true,
           "observation": "settings.processRestarted"
@@ -622,8 +699,9 @@
         "弹窗开关已设为开启并使设置已落盘。"
       ],
       "steps": [
-        "正常退出游戏进程；预期进程结束；检查后续 observations 的 settings.processRestarted 为 true。",
-        "重新启动游戏并读取弹窗开关；预期保留已保存值；检查 settings.popupEnabledAfterRestart 与 settings.persistedValueEqualsBeforeRestart 为 true。",
+        "正常退出游戏进程；预期进程结束；检查 settings.processExited 为 true。",
+        "重新启动游戏进程；预期为新进程且已加载已落盘设置；检查 settings.processRestarted 为 true。",
+        "在主菜单读取弹窗开关；预期保留已保存值；检查 settings.popupEnabledAfterRestart 与 settings.persistedValueEqualsBeforeRestart 为 true。",
         "载入已就绪的布道日存档；预期按已保存值生效；检查 settings.appliedValueOnLoad 为 true。"
       ],
       "title": "正常退出并重启游戏后保留已保存的开关设置"
@@ -688,20 +766,8 @@
           "observation": "settings.beaconSettingUnchangedByPopupToggle"
         },
         {
-          "equals": true,
-          "observation": "settings.popupEffectOnNextLoad"
-        },
-        {
-          "equals": true,
-          "observation": "beacon.shown"
-        },
-        {
           "equals": false,
           "observation": "settings.beaconEnabledAfter"
-        },
-        {
-          "equals": true,
-          "observation": "settings.popupSettingUnchangedByBeaconToggle"
         },
         {
           "equals": true,
@@ -709,23 +775,7 @@
         },
         {
           "equals": true,
-          "observation": "settings.hudTextStillShownOnNextLoad"
-        },
-        {
-          "equals": true,
-          "observation": "settings.changeAppliedOnlyOnNextLoad"
-        },
-        {
-          "equals": true,
-          "observation": "settings.beaconEnabledAfterReverseToggle"
-        },
-        {
-          "equals": true,
-          "observation": "settings.beaconEffectOnNextLoadReverse"
-        },
-        {
-          "equals": false,
-          "observation": "settings.popupEffectOnNextLoadAfterDisable"
+          "observation": "settings.popupSettingUnchangedByBeaconToggle"
         },
         {
           "equals": true,
@@ -735,21 +785,75 @@
       "id": "settings-beacon-independent",
       "prerequisites": [
         "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
-        "初始持久化状态：弹窗开关为关闭，信标开关为开启。",
-        "存在一个满足门槛且处于布道日机会未消费状态的存档。"
+        "初始持久化状态：弹窗开关为关闭，信标开关为开启。"
       ],
       "steps": [
-        "在主菜单读取两个持久化开关值；预期弹窗关闭、信标开启；检查 settings.popupEnabledBefore 与 settings.beaconEnabledBefore。",
-        "在主菜单只把弹窗开关切为开启；预期信标开关不变；检查 settings.popupEnabledAfterPopupToggle 与 settings.beaconSettingUnchangedByPopupToggle。",
-        "载入满足门槛的布道日存档；预期弹窗按新值显示且信标仍显示；检查 settings.popupEffectOnNextLoad 与 beacon.shown。",
-        "退出到主菜单，只把信标开关切为关闭；预期弹窗开关不变且信标值已持久化；检查 settings.beaconEnabledAfter、settings.popupSettingUnchangedByBeaconToggle、settings.beaconPersistedValueEqualsAfter。",
-        "再次载入同一存档；预期信标不再显示但角落文字仍在；检查 beacon.shown 为 false 与 settings.hudTextStillShownOnNextLoad 为 true。",
-        "检查生效时机；预期设置变更只影响下一次载入；检查 settings.changeAppliedOnlyOnNextLoad 为 true。",
-        "退出到主菜单把信标开关切回开启并再次载入；预期信标恢复显示且持久化值更新；检查 settings.beaconEnabledAfterReverseToggle 与 settings.beaconEffectOnNextLoadReverse。",
-        "退出到主菜单把弹窗开关切为关闭并再次载入；预期弹窗不再显示；检查 settings.popupEffectOnNextLoadAfterDisable 为 false。",
-        "比较两个开关的独立性；预期互不连动；检查 settings.beaconIndependentOfPopup 为 true。"
+        "在主菜单读取两个持久化开关值；预期弹窗关闭、信标开启；检查 settings.popupEnabledBefore 为 false 与 settings.beaconEnabledBefore 为 true。",
+        "在主菜单只把弹窗开关切为开启；预期弹窗持久化值变化而信标持久化值不变；检查 settings.popupEnabledAfterPopupToggle 为 true 与 settings.beaconSettingUnchangedByPopupToggle 为 true。",
+        "在主菜单只把信标开关切为关闭；预期信标持久化值变化并已落盘、弹窗持久化值不变；检查 settings.beaconEnabledAfter 为 false、settings.beaconPersistedValueEqualsAfter 为 true 与 settings.popupSettingUnchangedByBeaconToggle 为 true。",
+        "比较两个开关；预期互不连动；检查 settings.beaconIndependentOfPopup 为 true。"
       ],
-      "title": "信标开关与弹窗开关相互独立，且各自在下次载入存档时生效"
+      "title": "信标开关与弹窗开关在持久化值上相互独立且互不连动"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadWhileEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.returnedToMainMenu"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabledAfter"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.shownOnLoadAfterDisable"
+        },
+        {
+          "equals": true,
+          "observation": "settings.hudTextStillShownOnNextLoad"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledAfterReverseToggle"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadAfterReenable"
+        }
+      ],
+      "id": "settings-beacon-next-load-visibility",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个满足教堂与教学门槛的存档；弹窗开关为关闭以避免弹窗干扰，初始信标开关为开启。"
+      ],
+      "steps": [
+        "在主菜单读取信标开关持久化值；预期为开启；检查 settings.beaconEnabledBefore 为 true。",
+        "载入存档并观察原生信标；预期信标显示；检查 beacon.shownOnLoadWhileEnabled 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "在主菜单只把信标开关切为关闭；预期持久化值为关闭；检查 settings.beaconEnabledAfter 为 false。",
+        "再次载入同一存档并观察原生信标；预期信标不再显示；检查 beacon.shownOnLoadAfterDisable 为 false。",
+        "读取角落文字提醒；预期仍显示；检查 settings.hudTextStillShownOnNextLoad 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "打开本模组设置页面；预期设置页面可打开；检查 settings.modsEntryUsed 为 true。",
+        "把信标开关切回开启；预期持久化值为开启；检查 settings.beaconEnabledAfterReverseToggle 为 true。",
+        "再次载入同一存档并观察原生信标；预期信标恢复显示；检查 beacon.shownOnLoadAfterReenable 为 true。"
+      ],
+      "title": "信标开关按已保存值在下次载入存档时生效（关闭后不显示、重新开启后恢复显示）"
     },
     {
       "category": "gating",
@@ -1541,8 +1645,8 @@
         "本进程对该实际保存槽该具体游戏日尚无去重记录。"
       ],
       "steps": [
-        "载入该存档并读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 与 dedup.slotIdentityCapturedAtLoad。",
-        "对比捕获的槽字段与实际载入字段；预期逐一相等；检查 dedup.capturedSlotName/IsDemoSave/SlotGeneration 分别等于 save.slotName/isDemoSave/slotGeneration。",
+        "载入该存档并在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 与 dedup.slotIdentityCapturedAtLoad。",
+        "在初始载入捕获时、后续可变存档字段变化之前对比槽名、试玩标记与内存槽代；预期逐一相等；检查 dedup.capturedSlotName/IsDemoSave/SlotGeneration 分别等于 save.slotName/isDemoSave/slotGeneration。",
         "检查身份是否整次载入冻结；预期冻结；检查 dedup.slotIdentityFrozenForLoad 为 true。",
         "检查具体游戏日的读取时机；预期每次触发评估时重新读取；检查 dedup.dayReadFreshPerTriggerEvaluation 为 true。",
         "检查是否使用被禁止的身份来源；预期均未使用；检查 dedup.usedTimestamp、dedup.usedPlatform、dedup.usedLatestSlotGuess 均为 false。"
@@ -1627,8 +1731,10 @@
         "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
       ],
       "steps": [
-        "退出到主菜单再重新载入该槽该日；预期被抑制；检查 popup.mainMenuRoundtripSuppressed 为 true。",
-        "检查记录是否保留与绝对日一致；预期保留；检查 dedup.recordRetainedAfterMainMenu 为 true 且 absoluteDay 等于 roundtrip 后的值。"
+        "记录退出前的槽与绝对日；预期已记录；检查 save.slotName 与 save.absoluteDay 有值。",
+        "退出该存档到主菜单；预期已回到主菜单且不再显示弹窗；检查 popup.displayedAfterExit 为 false。",
+        "重新载入该槽该日并观察；预期被既有记录抑制；检查 popup.mainMenuRoundtripSuppressed 为 true。",
+        "检查记录保留与绝对日一致；预期保留；检查 dedup.recordRetainedAfterMainMenu 为 true 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。"
       ],
       "title": "返回主菜单后保留去重记录"
     },
@@ -1822,16 +1928,40 @@
       },
       "expect": [
         {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
           "equals": true,
           "observation": "save.isNewGameBeforeFirstSave"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
         },
         {
           "equals": true,
           "observation": "dedup.identitySourceIsActualLoadedSlot"
         },
         {
-          "equals": true,
-          "observation": "dedup.newGenerationRecordAbsentBeforeFirstLoad"
+          "equalsObservation": "save.slotName",
+          "observation": "dedup.capturedSlotName"
+        },
+        {
+          "equalsObservation": "save.isDemoSave",
+          "observation": "dedup.capturedIsDemoSave"
+        },
+        {
+          "equalsObservation": "save.slotGeneration",
+          "observation": "dedup.capturedSlotGeneration"
         },
         {
           "equals": false,
@@ -1844,14 +1974,17 @@
       ],
       "id": "dedup-new-game-before-first-save",
       "prerequisites": [
-        "存在一个尚未首次保存的新游戏进度，满足门槛与布道日条件，弹窗开关为开启。"
+        "存在一个尚未首次保存、但已在内存中分配了真实原生保存槽键的新游戏进度，满足门槛与布道日条件，弹窗开关为开启。",
+        "本进程对该实际槽键该具体游戏日尚无去重记录。"
       ],
       "steps": [
-        "在首次保存前进入可操作画面；预期为首次保存前；检查 save.isNewGameBeforeFirstSave 为 true。",
-        "读取身份来源；预期来自真实进度槽位；检查 dedup.identitySourceIsActualLoadedSlot 为 true。",
-        "观察弹窗；预期按资格显示；检查 popup.shown 为 true 且 dedup.usedLatestSlotGuess 为 false。"
+        "在首次保存前进入可操作画面并读取日期与资格；预期为首次保存前且处于布道日；检查 save.isNewGameBeforeFirstSave 为 true、save.isSermonDay 为 true 与 save.sermonWeekday 等于环境字段 game.sermonWeekday。",
+        "读取载入前去重状态；预期该槽该日无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 为 true。",
+        "在初始载入捕获时对比槽名、试玩标记与内存中槽代；预期逐一等于实际载入值且早于后续可变存档字段变化；检查 dedup.capturedSlotName、dedup.capturedIsDemoSave、dedup.capturedSlotGeneration 分别等于 save.slotName、save.isDemoSave、save.slotGeneration。",
+        "观察弹窗并检查身份来源；预期按资格显示且未使用最新槽猜测；检查 popup.shown 为 true 与 dedup.usedLatestSlotGuess 为 false。"
       ],
-      "title": "新游戏首次保存前使用该进度的真实槽位身份"
+      "title": "新游戏首次保存前使用该进度实际分配的原生槽键与内存槽代作为身份"
     },
     {
       "category": "dedup",
@@ -3456,7 +3589,7 @@
         },
         {
           "equals": true,
-          "observation": "popup.sharedNativeDialogPreserved"
+          "observation": "popup.didNotDestroySharedNativeDialog"
         },
         {
           "equals": true,
@@ -3470,15 +3603,17 @@
       "id": "lifecycle-cleanup-on-exit",
       "prerequisites": [
         "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示或显示状态。",
-        "退出时不存在其他原生对话框以外的本模组残留。"
+        "退出时该模组不持有除共享原生对话框实例以外的自有弹窗残留。"
       ],
       "steps": [
         "读取退出前状态；预期弹窗处于待显示或显示；检查 popup.pendingOrShownOnExit 为 true。",
-        "退出存档到主菜单；预期不再显示；检查 popup.displayedAfterExit 为 false。",
-        "检查本模组内容与引用；预期已清理并释放；检查 popup.modActiveContentClearedOnExit、popup.modPendingClearedOnExit、popup.modOwnedReferencesReleasedOnExit。",
-        "检查共享原生对话框与暂停；预期共享实例与其他原生对话框保留且无卡住暂停；检查 popup.sharedNativeDialogPreserved、ui.otherNativeDialogsUnaffected、pause.stuckPauseAfterExit。"
+        "退出存档到主菜单并观察弹窗；预期不再显示；检查 popup.displayedAfterExit 为 false。",
+        "检查本模组内容与自有引用；预期已清理并释放；检查 popup.modActiveContentClearedOnExit、popup.modPendingClearedOnExit、popup.modOwnedReferencesReleasedOnExit。",
+        "检查本模组是否销毁或替换游戏管理的共享原生对话框实例；预期未销毁；检查 popup.didNotDestroySharedNativeDialog 为 true。",
+        "检查本模组清理是否关闭或改动其他系统已打开的对话框；预期未改动；检查 ui.otherNativeDialogsUnaffected 为 true。",
+        "检查暂停；预期无卡住暂停；检查 pause.stuckPauseAfterExit 为 false。"
       ],
-      "title": "退出存档时清理本模组弹窗内容、待显示与自有引用，保留游戏管理的共享原生对话框且无卡住暂停"
+      "title": "退出存档时清理本模组弹窗内容、待显示与自有引用，且不销毁共享原生对话框、不干扰其他对话框且无卡住暂停"
     }
   ],
   "specRefs": [
