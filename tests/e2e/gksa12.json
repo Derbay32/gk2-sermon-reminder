@@ -15,7 +15,7 @@
     "键盘与手柄均可修改信标开关。",
     "信标复用原生方向标记的独立显示实例（原生 UIMagnifyingGlassWidget），不改写原生任务标记。",
     "信标图标取自原生静态物品定义；不将原生资源复制进发行包。",
-    "信标保留原生图标槽尺寸与箭头样式；实测值必须与同一场景观察到的原生槽位/来源实测值相等，不得与猜测常量比较。",
+    "信标保留原生图标槽尺寸与箭头样式；自有槽尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值，必须与同一场景未改动的原生原始 prefab 槽位局部尺寸实测值相等，不得与猜测常量比较。",
     "信标沿用原生屏幕投影与边缘定位规则，并在目标进入镜头后移除边缘箭头。",
     "室内外门路由沿用原生选择，最终目标为教堂布道场景点 gd_church_player_pray。",
     "原生 Sprite PathID777 属于历史标识，不是当前构建身份；本清单不写死该值。",
@@ -37,13 +37,14 @@
     "被关闭的信标无需在内部解析 beacon.targetAvailable；外部环境对目标可用性可另行记录，但不得为已停用组件强制解析工作。",
     "几何与参考比较必须使用同一有效路由目标、同一镜头、同一视口、同一 UI 缩放与同一帧：原生参考由原生 API 针对同一有效路由目标导出，不使用可能指向他处的任意原生任务标记作为等值参考。",
     "屏幕位置区分未夹取的原始投影（rawProjectedScreenX/Y）与最终夹取到边界内的放置（clampedScreenX/Y）；两者分别与原生 API 的同名结果比较。",
-    "原始槽位尺寸取自原始 prefab 槽位（originalPrefabSlotWidthPx/HeightPx），不采用原生 Draw 在屏幕气泡上调用 SetNativeSize 的结果。",
+    "槽位尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值（beacon.slotWidthLocal/HeightLocal），与未改动的原生原始 prefab 槽位局部尺寸（native.slotWidthLocal/HeightLocal）比较，不采用原生 Draw 在屏幕气泡上调用 SetNativeSize 的结果。",
     "原生 Draw 刷新后，自有图标身份与原生信仰静态定义（native.faithIconDefinitionId）比较，不与默认任务图标比较。",
     "原生提示层的显隐以实际观察为准：不假定打开任意背包或菜单一定会隐藏原生 HUD；分别在原生可见阶段与实际隐藏阶段记录原生与信标的可见性并比较继承关系。",
     "任务共存的基线在已加载场景中取得，或在受控等效的两次载入中以稳定的原生任务目标取得；比较的是两次已加载状态下的标记数量与原始任务图标身份，而不是载入前与载入后的计数。",
     "Done 文字与图标的健康可用性是以可见 Done 为前提场景（已消费、时序）的显式前提；信标清除不得等待 Done 图标加载完成。",
     "设置页面注册范围仅限 GKSA-12 自身，不依赖尚未实现的弹窗票共用页面。",
-    "几何数值在观察对观察等值比较之外，还须用现有运算符断言为有限数值/正尺寸（维度为正，坐标在合理数值范围内），不使用猜测像素尺寸。"
+    "几何数值在观察对观察等值比较之外，还须用现有运算符断言为有限数值：正尺寸用 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 三者组合证明严格为正；坐标用 IEEE754 binary64 可表示范围（min -1.7976931348623157e308、max 1.7976931348623157e308）证明有限，不使用猜测像素尺寸或人为坐标上限。",
+    "几何与参考测量协议：所有几何比较使用同一有效路由目标、同一镜头、同一视口、同一 UI 缩放与同一帧；自有槽尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值，原生参考实测自同一目标未改动的原始 prefab 槽位局部尺寸；渲染像素宽高在匹配的原生画布、镜头与当前缩放下实测；不使用任意原生任务标记位置作为等值参考。本清单不要求遥测或专用 API。"
   ],
   "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
   "specRefs": [
@@ -59,7 +60,7 @@
   "beaconSource": {
     "displayInstance": "原生 UIMagnifyingGlassWidget 的独立自有实例，位于原生 HUD 之下，不登记进原生任务追踪集合。",
     "iconSource": "原生静态物品定义提供的信仰图标；运行时以原生信仰图标静态定义标识核对自有图标身份，不复制原生资源进发行包，也不采用默认任务图标。",
-    "slotStyle": "保留原生图标槽尺寸与箭头样式；尺寸取自原始 prefab 槽位（originalPrefabSlot*），不以原生 Draw 的屏幕气泡 SetNativeSize 结果为准，并以同一场景的原生原始 prefab 槽位实测值为基准。",
+    "slotStyle": "保留原生图标槽尺寸与箭头样式；尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值（beacon.slotWidthLocal/HeightLocal），与同一场景未改动的原生原始 prefab 槽位局部尺寸（native.slotWidthLocal/HeightLocal）比较，不以原生 Draw 的屏幕气泡 SetNativeSize 结果或缓存来源尺寸为准。",
     "projection": "沿用原生屏幕投影与边缘定位规则；区分未夹取的原始投影与最终夹取到边界内的放置，并与原生 API 针对同一有效路由目标的同名结果比较。",
     "routeFinalTargetId": "gd_church_player_pray",
     "historicalPathIdNote": "原生 Sprite PathID777 属于历史标识，不是当前构建身份；本清单不写死该值，也不将其作为断言依据。"
@@ -133,7 +134,7 @@
     "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定（必须为 false）",
     "inventory.itemShortage": "bool: 当前存档是否存在物品/材料短缺（不得影响信标资格）",
     "settings.beacon.defaultEnabled": "bool: 首次使用且无已保存配置时信标开关的默认值（必须为 true）",
-    "settings.beacon.enabled": "bool: 信标开关当前的持久化值",
+    "settings.beacon.enabled": "bool: 信标开关当前的持久化值（区别于活动载入快照 beacon.enabledActiveLoad*）",
     "settings.beacon.toggledByKeyboard": "bool: 是否使用键鼠成功修改了信标开关",
     "settings.beacon.toggledByGamepad": "bool: 是否使用手柄成功修改了信标开关",
     "settings.beacon.autoSavedOnToggle": "bool: 修改开关后是否自动保存",
@@ -223,10 +224,10 @@
     "beacon.rawProjectedScreenY": "number: 自有信标按原生投影得到的未夹取屏幕 Y",
     "beacon.clampedScreenX": "number: 自有信标最终夹取到边界内的屏幕 X",
     "beacon.clampedScreenY": "number: 自有信标最终夹取到边界内的屏幕 Y",
-    "beacon.originalPrefabSlotWidthPx": "number: 自有信标取自原始 prefab 槽位的宽度",
-    "beacon.originalPrefabSlotHeightPx": "number: 自有信标取自原始 prefab 槽位的高度",
-    "beacon.originalPrefabSlotWidthPxAfterTransitions": "number: 反复进出镜头转换后自有信标取自原始 prefab 槽位的宽度",
-    "beacon.originalPrefabSlotHeightPxAfterTransitions": "number: 反复进出镜头转换后自有信标取自原始 prefab 槽位的高度",
+    "beacon.slotWidthLocal": "number: 自有信标在原生 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部宽度；与同一场景未改动的原生原始 prefab 槽位局部宽度比较，不采用屏幕气泡 SetNativeSize 结果或缓存来源尺寸",
+    "beacon.slotHeightLocal": "number: 自有信标在原生 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部高度；与同一场景未改动的原生原始 prefab 槽位局部高度比较，不采用屏幕气泡 SetNativeSize 结果或缓存来源尺寸",
+    "beacon.slotWidthLocalAfterTransitions": "number: 反复进出镜头转换后自有信标实际 iconImage.rectTransform.sizeDelta 的局部宽度；与未改动的原生原始 prefab 槽位局部宽度比较",
+    "beacon.slotHeightLocalAfterTransitions": "number: 反复进出镜头转换后自有信标实际 iconImage.rectTransform.sizeDelta 的局部高度；与未改动的原生原始 prefab 槽位局部高度比较",
     "beacon.faithIconDefinitionId": "string: 自有信标实际使用的信仰图标静态定义标识",
     "beacon.faithIconDefinitionIdAfterDraw": "string: 原生 Draw 刷新后自有信标实际使用的信仰图标静态定义标识",
     "beacon.visibleNormal": "bool: 正常可操作画面上自有信标是否可见",
@@ -249,8 +250,8 @@
     "native.rawProjectedScreenY": "number: 原生 API 得到的未夹取屏幕 Y",
     "native.clampedScreenX": "number: 原生 API 最终夹取到边界内的屏幕 X",
     "native.clampedScreenY": "number: 原生 API 最终夹取到边界内的屏幕 Y",
-    "native.originalPrefabSlotWidthPx": "number: 原生原始 prefab 槽位宽度（对照实测值）",
-    "native.originalPrefabSlotHeightPx": "number: 原生原始 prefab 槽位高度（对照实测值）",
+    "native.slotWidthLocal": "number: 同一有效路由目标未改动的原生原始 prefab 槽位局部宽度参考（局部单位，不用像素标签）",
+    "native.slotHeightLocal": "number: 同一有效路由目标未改动的原生原始 prefab 槽位局部高度参考（局部单位，不用像素标签）",
     "native.faithIconDefinitionId": "string: 原生信仰图标静态定义标识（用于核对自有图标身份）",
     "native.iconIdentityAfterDraw": "string: 原生 Draw 刷新后原生信仰图标的来源标识",
     "native.hudVisibleNormal": "bool: 正常可操作画面下原生提示层是否可见",
@@ -259,7 +260,28 @@
     "quests.markerCountBeaconInactive": "int: 信标未激活的已加载状态下原生任务标记数量",
     "quests.markerCountBeaconActive": "int: 信标激活的已加载状态下原生任务标记数量",
     "quests.markerIconIdentityBeaconInactive": "string: 信标未激活时原生任务标记的图标身份",
-    "quests.markerIconIdentityBeaconActive": "string: 信标激活时原生任务标记的图标身份"
+    "quests.markerIconIdentityBeaconActive": "string: 信标激活时原生任务标记的图标身份",
+    "save.loadedBeforeReady": "bool: 未就绪的可操作前画面上存档是否已完成加载（该阶段必须为 false）",
+    "save.loadedAfterReady": "bool: 加载完成后存档是否已完成加载并进入可操作状态",
+    "beacon.enabledBeforeReady": "bool: 未就绪阶段自有信标是否显示（该阶段必须为 false）",
+    "beacon.enabledAfterReady": "bool: 加载完成且资格健康后自有信标是否显示",
+    "beacon.instanceCountBeforeReady": "int: 未就绪阶段自有信标显示实例数量（必须为 0）",
+    "beacon.instanceCountAfterReady": "int: 加载完成且资格健康后自有信标显示实例数量（必须为 1）",
+    "beacon.enabledBeforeRecovery": "bool: 资源不可用、恢复前阶段自有信标是否显示（该阶段必须为 false）",
+    "beacon.enabledAfterRecovery": "bool: 解除故障、恢复后自有信标是否自动重新显示",
+    "beacon.targetAvailableBeforeRecovery": "bool: 恢复前教堂目标点是否可用（该阶段必须为 false）",
+    "beacon.iconAvailableBeforeRecovery": "bool: 恢复前原生信仰图标是否可用（该阶段必须为 false）",
+    "beacon.componentAvailableBeforeRecovery": "bool: 恢复前信标组件是否可用（该阶段必须为 false）",
+    "beacon.instanceCountAfterRecovery": "int: 恢复后自有信标显示实例数量（必须为 1）",
+    "beacon.duplicateCallbackCountAfterRecovery": "int: 恢复后重复回调次数（必须为 0）",
+    "beacon.enabledActiveLoadBeforeToggle": "bool: 切换开关前那次活动载入中信标是否实际显示（活动载入快照，区别于持久化值）",
+    "beacon.visibleActiveLoadBeforeToggle": "bool: 切换开关前那次活动载入在正常画面上信标是否实际可见（活动载入快照）",
+    "beacon.enabledActiveLoadAfterToggle": "bool: 切换开关并重新载入后信标是否实际显示（活动载入快照，区别于持久化值）",
+    "beacon.visibleActiveLoadAfterToggle": "bool: 切换开关并重新载入后在正常画面上信标是否实际可见（活动载入快照）",
+    "beacon.renderedWidthPx": "number: 在匹配的原生画布、镜头与当前 UI 缩放下自有信标图标实际渲染的像素宽度",
+    "beacon.renderedHeightPx": "number: 在匹配的原生画布、镜头与当前 UI 缩放下自有信标图标实际渲染的像素高度",
+    "native.renderedWidthPx": "number: 以未改动的原生原始 prefab 槽位在匹配的原生画布、镜头与当前 UI 缩放下得到的渲染像素宽度参考",
+    "native.renderedHeightPx": "number: 以未改动的原生原始 prefab 槽位在匹配的原生画布、镜头与当前 UI 缩放下得到的渲染像素高度参考"
   },
   "validation": {
     "supportedCaptureVersions": [
@@ -611,15 +633,20 @@
       "title": "修改设置后再次载入存档即生效且无需重启",
       "category": "config",
       "prerequisites": [
-        "存在满足信标资格的存档。",
+        "存在满足信标资格的存档（该存档的目标点/图标/组件可用性由外部环境独立记录；关闭状态下组件无需内部解析）。",
         "游戏进程保持运行，未重启。"
       ],
       "steps": [
-        "在开启状态下载入存档；预期信标显示；检查 beacon.enabled=true。",
-        "返回主菜单把信标开关改为关闭；预期保存且不重启；检查 settings.beacon.enabled=false。",
-        "不重启游戏再次载入同一存档；预期按新设置停用信标；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true 与 beacon.enabled=false。"
+        "在开启状态下载入存档；预期信标实际显示；检查 beacon.enabledActiveLoadBeforeToggle=true 与 beacon.visibleActiveLoadBeforeToggle=true。",
+        "返回主菜单；预期回到模组设置页面；检查 settings.pageCount=1。",
+        "把信标开关改为关闭；预期保存新的持久值；检查 settings.beacon.enabled=false（持久化值）。",
+        "不重启游戏再次载入同一存档；预期按新设置停用信标；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true、beacon.enabledActiveLoadAfterToggle=false 与 beacon.visibleActiveLoadAfterToggle=false。"
       ],
       "expect": [
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": false
+        },
         {
           "observation": "settings.beacon.appliedOnNextLoad",
           "equals": true
@@ -629,16 +656,24 @@
           "equals": true
         },
         {
-          "observation": "settings.beacon.enabled",
-          "equals": false
-        },
-        {
-          "observation": "beacon.enabled",
-          "equals": false
-        },
-        {
-          "observation": "beacon.targetAvailable",
+          "observation": "beacon.enabledActiveLoadBeforeToggle",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleActiveLoadBeforeToggle",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabledActiveLoadAfterToggle",
+          "equals": false
+        },
+        {
+          "observation": "beacon.visibleActiveLoadAfterToggle",
+          "equals": false
+        },
+        {
+          "observation": "settings.pageCount",
+          "equals": 1
         }
       ],
       "evidence": {
@@ -721,16 +756,25 @@
       "title": "关闭改为开启后再次载入存档即启用信标且无需重启",
       "category": "config",
       "prerequisites": [
-        "存在满足信标资格的存档。",
+        "存在满足信标资格的存档（该存档的目标点/图标/组件可用性由外部环境独立记录；关闭状态下组件无需内部解析）。",
         "信标开关当前为关闭。",
         "游戏进程保持运行，未重启。"
       ],
       "steps": [
-        "在关闭状态下载入存档并确认信标停用；预期信标不显示；检查 beacon.enabled=false。",
-        "返回主菜单把信标开关改为开启；预期保存新值；检查 settings.beacon.persistedAfterToggle=true 且 settings.beacon.enabled=true。",
-        "不重启游戏再次载入同一存档；预期信标按新设置启用；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true 且 beacon.enabled=true。"
+        "在关闭状态下载入存档；预期信标实际不显示；检查 beacon.enabledActiveLoadBeforeToggle=false 与 beacon.visibleActiveLoadBeforeToggle=false。",
+        "返回主菜单；预期回到模组设置页面；检查 settings.pageCount=1。",
+        "把信标开关改为开启；预期保存新的持久值；检查 settings.beacon.enabled=true（持久化值）与 settings.beacon.persistedAfterToggle=true。",
+        "不重启游戏再次载入同一存档；预期按新设置启用信标；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true、beacon.enabledActiveLoadAfterToggle=true 与 beacon.visibleActiveLoadAfterToggle=true。"
       ],
       "expect": [
+        {
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.beacon.persistedAfterToggle",
+          "equals": true
+        },
         {
           "observation": "settings.beacon.appliedOnNextLoad",
           "equals": true
@@ -740,16 +784,24 @@
           "equals": true
         },
         {
-          "observation": "settings.beacon.enabled",
+          "observation": "beacon.enabledActiveLoadBeforeToggle",
+          "equals": false
+        },
+        {
+          "observation": "beacon.visibleActiveLoadBeforeToggle",
+          "equals": false
+        },
+        {
+          "observation": "beacon.enabledActiveLoadAfterToggle",
           "equals": true
         },
         {
-          "observation": "beacon.enabled",
+          "observation": "beacon.visibleActiveLoadAfterToggle",
           "equals": true
         },
         {
-          "observation": "beacon.visibleNormal",
-          "equals": true
+          "observation": "settings.pageCount",
+          "equals": 1
         }
       ],
       "evidence": {
@@ -1320,33 +1372,84 @@
         "可在加载中与未就绪状态观察信标。"
       ],
       "steps": [
-        "进入存档加载过程中记录状态；预期处于加载中且无信标；检查 save.loading=true 且 beacon.instanceCount=0。",
-        "在尚未就绪的可操作前画面记录状态；预期未就绪且无信标；检查 save.loaded=false 且 beacon.enabled=false。",
-        "等待加载完成；预期信标按资格出现；检查 save.loaded=true 且 beacon.enabled=true。"
+        "进入存档加载过程中记录状态；预期处于加载中且无信标；检查 save.loading=true、beacon.enabledBeforeReady=false 与 beacon.instanceCountBeforeReady=0。",
+        "在尚未就绪的可操作前画面记录状态；预期未就绪且无信标；检查 save.loadedBeforeReady=false 与 beacon.enabledBeforeReady=false。",
+        "等待加载完成；预期存档就绪、资格健康且信标出现；检查 save.loadedAfterReady=true、beacon.enabledAfterReady=true、beacon.instanceCountAfterReady=1、state.readable=true、state.sermonReadyValue>=1、save.churchUnlocked=true 与 save.tutorialCompleted=true。"
       ],
       "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
         {
           "observation": "save.loading",
           "equals": true
         },
         {
-          "observation": "save.loaded",
+          "observation": "save.loadedBeforeReady",
           "equals": false
         },
         {
-          "observation": "beacon.enabled",
+          "observation": "beacon.enabledBeforeReady",
           "equals": false
         },
         {
-          "observation": "beacon.instanceCount",
+          "observation": "beacon.instanceCountBeforeReady",
+          "equals": 0
+        },
+        {
+          "observation": "save.loadedAfterReady",
+          "equals": true
+        },
+        {
+          "observation": "beacon.enabledAfterReady",
+          "equals": true
+        },
+        {
+          "observation": "beacon.instanceCountAfterReady",
+          "equals": 1
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
           "numberRange": {
-            "min": 0,
-            "max": 0
+            "min": 1
           }
         },
         {
-          "observation": "save.sermonWeekday",
-          "equalsEnvironment": "game.sermonWeekday"
+          "observation": "settings.beacon.enabled",
+          "equals": true
+        },
+        {
+          "observation": "beacon.targetAvailable",
+          "equals": true
+        },
+        {
+          "observation": "beacon.iconAvailable",
+          "equals": true
+        },
+        {
+          "observation": "beacon.componentAvailable",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleNormal",
+          "equals": true
         }
       ],
       "evidence": {
@@ -1425,18 +1528,18 @@
     },
     {
       "id": "beacon-slot-and-pointer-match-native",
-      "title": "信标原始 prefab 槽尺寸与箭头样式与原生来源一致",
+      "title": "信标实际局部槽尺寸与箭头样式与原生来源一致",
       "category": "native-reuse",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
         "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
         "信标开关为开启。",
-        "可记录原生原始 prefab 槽位尺寸与同一有效路由目标的参考标识。"
+        "可记录同一有效路由目标未改动的原生原始 prefab 槽位局部尺寸与参考标识。"
       ],
       "steps": [
-        "记录自有信标与原生 API 针对同一有效路由目标的参考标识；预期一致；检查 beacon.effectiveTargetId 等于 native.referenceTargetId。",
-        "记录自有信标取自原始 prefab 的槽宽与槽高；预期为正数；检查对应 numberRange 通过。",
-        "比较自有原始 prefab 槽尺寸与原生原始 prefab 槽尺寸；预期相等；检查 equalsObservation 通过。",
+        "记录自有信标与原生 API 针对同一有效路由目标的参考标识、镜头、视口、UI 缩放与帧号；预期一致；检查 beacon.effectiveTargetId 等于 native.referenceTargetId，且 beacon.contextFrame/CameraId/ViewportWidthPx/ViewportHeightPx/UiScale 分别等于 native.referenceFrame/CameraId/ViewportWidthPx/ViewportHeightPx/UiScale。",
+        "记录自有信标 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部槽宽与槽高；预期为严格正的有限值；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合通过。",
+        "比较自有实测局部槽尺寸与同一目标未改动的原生原始 prefab 槽位局部尺寸；预期相等；检查 beacon.slotWidthLocal/HeightLocal 分别等于 native.slotWidthLocal/HeightLocal。",
         "记录自有箭头 Sprite/样式标识；预期与原生一致；检查 beacon.pointerSpriteId 等于 native.pointerSpriteId。"
       ],
       "expect": [
@@ -1453,26 +1556,60 @@
           "equalsObservation": "native.referenceTargetId"
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPx",
+          "observation": "beacon.contextFrame",
+          "equalsObservation": "native.referenceFrame"
+        },
+        {
+          "observation": "beacon.contextCameraId",
+          "equalsObservation": "native.referenceCameraId"
+        },
+        {
+          "observation": "beacon.contextViewportWidthPx",
+          "equalsObservation": "native.referenceViewportWidthPx"
+        },
+        {
+          "observation": "beacon.contextViewportHeightPx",
+          "equalsObservation": "native.referenceViewportHeightPx"
+        },
+        {
+          "observation": "beacon.contextUiScale",
+          "equalsObservation": "native.referenceUiScale"
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPx",
+          "observation": "beacon.slotWidthLocal",
+          "notEquals": 0
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotHeightLocal",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPx",
-          "equalsObservation": "native.originalPrefabSlotWidthPx"
+          "observation": "beacon.slotHeightLocal",
+          "notEquals": 0
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPx",
-          "equalsObservation": "native.originalPrefabSlotHeightPx"
+          "observation": "beacon.slotHeightLocal",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
+          "equalsObservation": "native.slotWidthLocal"
+        },
+        {
+          "observation": "beacon.slotHeightLocal",
+          "equalsObservation": "native.slotHeightLocal"
         },
         {
           "observation": "beacon.pointerSpriteId",
@@ -1497,8 +1634,8 @@
       ],
       "steps": [
         "记录自有信标与原生 API 的有效路由目标、镜头、视口、UI 缩放与帧号；预期一致；检查对应 equalsObservation 均通过。",
-        "记录未夹取的原始投影坐标；预期为有限数值且与原生一致；检查 numberRange 与 equalsObservation 通过。",
-        "记录最终夹取到边界内的放置坐标；预期与原生一致；检查 equalsObservation 通过。",
+        "记录未夹取的原始投影坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
+        "记录最终夹取到边界内的放置坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
         "记录边缘内缩距离并确认沿用原生规则；预期与原生一致；检查 beacon.edgeInsetPx 等于 native.edgeInsetPx 且 beacon.edgeClampMatchesNativeRule=true。"
       ],
       "expect": [
@@ -1537,15 +1674,15 @@
         {
           "observation": "beacon.rawProjectedScreenX",
           "numberRange": {
-            "min": -1000000,
-            "max": 1000000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
           "observation": "beacon.rawProjectedScreenY",
           "numberRange": {
-            "min": -1000000,
-            "max": 1000000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
@@ -1559,15 +1696,15 @@
         {
           "observation": "beacon.clampedScreenX",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
           "observation": "beacon.clampedScreenY",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
@@ -1605,7 +1742,7 @@
       ],
       "steps": [
         "保持目标在镜头外并记录边缘方向箭头是否显示；预期显示；检查 beacon.edgeArrowVisibleWhenTargetOffscreen=true。",
-        "记录最终夹取放置坐标；预期与原生一致；检查 beacon.clampedScreenX/Y 等于 native.clampedScreenX/Y。",
+        "记录最终夹取放置坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
         "记录边缘内缩并与原生比较；预期与原生一致且沿用原生规则；检查 beacon.edgeInsetPx 等于 native.edgeInsetPx 且 beacon.edgeClampMatchesNativeRule=true。"
       ],
       "expect": [
@@ -1620,15 +1757,15 @@
         {
           "observation": "beacon.clampedScreenX",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
           "observation": "beacon.clampedScreenY",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
@@ -1667,7 +1804,7 @@
       "steps": [
         "让目标进入镜头并记录边缘箭头状态；预期箭头移除；检查 beacon.edgeArrowRemovedWhenTargetOnscreen=true。",
         "记录图标是否定位到引导目标；预期定位；检查 beacon.iconPlacedAtTargetWhenOnscreen=true。",
-        "记录原始投影坐标并与原生比较；预期一致；检查 beacon.rawProjectedScreenX/Y 等于 native.rawProjectedScreenX/Y。"
+        "记录原始投影坐标并与原生比较；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。"
       ],
       "expect": [
         {
@@ -1685,15 +1822,15 @@
         {
           "observation": "beacon.rawProjectedScreenX",
           "numberRange": {
-            "min": -1000000,
-            "max": 1000000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
           "observation": "beacon.rawProjectedScreenY",
           "numberRange": {
-            "min": -1000000,
-            "max": 1000000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
@@ -1893,19 +2030,19 @@
     },
     {
       "id": "beacon-native-draw-preserves-icon-and-slot",
-      "title": "原生绘制刷新与反复进出镜头后仍保持信仰图标与原始 prefab 槽尺寸",
+      "title": "原生绘制刷新与反复进出镜头后仍保持信仰图标与原始 prefab 槽局部尺寸",
       "category": "native-draw",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
         "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
         "信标开关为开启。",
         "可使目标反复进出镜头并触发原生绘制刷新。",
-        "可记录原生信仰图标静态定义标识与原始 prefab 槽尺寸。"
+        "可记录原生信仰图标静态定义标识与未改动的原生原始 prefab 槽位局部尺寸。"
       ],
       "steps": [
         "使目标反复进出镜头至少两次并触发原生绘制刷新；预期发生多次刷新与转换；检查 drawRefreshCount>0 且 offscreenOnscreenTransitionCount>1。",
         "记录刷新后的信仰图标来源；预期仍为原生信仰图标；检查 beacon.iconStillMatchesNativeAfterDrawRefresh=true 且 faithIconDefinitionIdAfterDraw 等于 native.faithIconDefinitionId。",
-        "记录刷新后取自原始 prefab 的槽尺寸；预期为正数且与原生原始 prefab 槽相等；检查 numberRange 与 equalsObservation 通过。",
+        "记录刷新后自有信标 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部槽尺寸；预期为严格正的有限值且与同一目标未改动的原生原始 prefab 槽位局部尺寸相等；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合及 equalsObservation 通过。",
         "记录刷新后箭头 Sprite/样式；预期与原生一致；检查 equalsObservation 通过。"
       ],
       "expect": [
@@ -1930,26 +2067,64 @@
           "equalsObservation": "native.faithIconDefinitionId"
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPxAfterTransitions",
+          "observation": "beacon.effectiveTargetId",
+          "equalsObservation": "native.referenceTargetId"
+        },
+        {
+          "observation": "beacon.contextFrame",
+          "equalsObservation": "native.referenceFrame"
+        },
+        {
+          "observation": "beacon.contextCameraId",
+          "equalsObservation": "native.referenceCameraId"
+        },
+        {
+          "observation": "beacon.contextViewportWidthPx",
+          "equalsObservation": "native.referenceViewportWidthPx"
+        },
+        {
+          "observation": "beacon.contextViewportHeightPx",
+          "equalsObservation": "native.referenceViewportHeightPx"
+        },
+        {
+          "observation": "beacon.contextUiScale",
+          "equalsObservation": "native.referenceUiScale"
+        },
+        {
+          "observation": "beacon.slotWidthLocalAfterTransitions",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPxAfterTransitions",
+          "observation": "beacon.slotWidthLocalAfterTransitions",
+          "notEquals": 0
+        },
+        {
+          "observation": "beacon.slotWidthLocalAfterTransitions",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotHeightLocalAfterTransitions",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPxAfterTransitions",
-          "equalsObservation": "native.originalPrefabSlotWidthPx"
+          "observation": "beacon.slotHeightLocalAfterTransitions",
+          "notEquals": 0
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPxAfterTransitions",
-          "equalsObservation": "native.originalPrefabSlotHeightPx"
+          "observation": "beacon.slotHeightLocalAfterTransitions",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotWidthLocalAfterTransitions",
+          "equalsObservation": "native.slotWidthLocal"
+        },
+        {
+          "observation": "beacon.slotHeightLocalAfterTransitions",
+          "equalsObservation": "native.slotHeightLocal"
         },
         {
           "observation": "beacon.pointerSpriteIdAfterTransitions",
@@ -1972,7 +2147,7 @@
         "存档存在进行中的被追踪任务，且可在信标激活前后保持同一已加载场景。"
       ],
       "steps": [
-        "在已加载场景中、信标未激活时记录原生任务标记数量与图标身份；预期基线可读；检查 markerCountBeaconInactive >= 0 且图标身份已记录。",
+        "在已加载场景中、信标未激活时记录原生任务标记数量与图标身份；预期基线可读；检查 markerCountBeaconInactive 为非负整数且图标身份已记录。",
         "在同一场景激活信标；预期信标显示而任务标记不变；检查 beacon.enabled=true。",
         "再次记录任务标记数量与图标身份；预期与基线相同；检查 markerCountBeaconActive 等于 markerCountBeaconInactive 且图标身份相等。",
         "核对追踪集合、交互事件与优先级；预期均未改变；检查对应布尔为 true。"
@@ -1988,9 +2163,7 @@
         },
         {
           "observation": "quests.markerCountBeaconInactive",
-          "numberRange": {
-            "min": 0
-          }
+          "integerGreaterThan": -1
         },
         {
           "observation": "quests.markerCountBeaconActive",
@@ -2167,18 +2340,19 @@
     },
     {
       "id": "beacon-cleared-first-lateupdate-done-icon-pending",
-      "title": "Done 图标待定或失败时信标仍在消耗后首个 LateUpdate 清除且 Done 仍被抑制",
+      "title": "Done 图标待定时信标仍在消耗后首个 LateUpdate 清除且 Done 仍被抑制",
       "category": "timing",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
         "布道日当天，原生 sermon_ready >= 1（Ready 状态，信标显示）。",
-        "测试设施可受控使 Done 图标加载处于待定或失败（done.iconPending=true 或 done.iconFailed=true）。"
+        "测试设施可受控使 Done 图标加载处于待定（done.iconPending=true 且 done.iconFailed=false）。"
       ],
       "steps": [
-        "注入 Done 图标待定或失败并开始布道；预期机会被消耗；检查 state.sermonReadyValue<1。",
-        "记录消耗后首个 LateUpdate 帧号与信标清除帧号；预期同帧（允许同帧）；检查 timing.beaconClearedFrame 等于 timing.firstLateUpdateFrameAfterConsumption。",
-        "核对 Done 呈现；预期图标不健康时整个 Done 呈现被抑制但业务状态可读；检查 done.textSuppressedWhileUnhealthy=true 且 state.readable=true。",
-        "确认信标清除未等待 Done 图标加载；预期清除已发生；检查 beacon.enabled=false 且 timing.framesUntilBeaconCleared 在 0..1。"
+        "注入 Done 图标待定；预期图标处于待定且未失败；检查 done.iconPending=true 与 done.iconFailed=false。",
+        "在待定状态下开始布道并消耗机会；预期机会被消耗；检查 timing.consumptionFrame>=0 且 state.sermonReadyValue<1。",
+        "记录消耗后首个 LateUpdate 帧号与信标清除帧号；预期均为非负整数且同帧（允许同帧）；检查 timing.firstLateUpdateFrameAfterConsumption>=timing.consumptionFrame、timing.beaconClearedFrame 等于 timing.firstLateUpdateFrameAfterConsumption 且 timing.framesUntilBeaconCleared 在 0..1。",
+        "核对 Done 呈现；预期图标不健康时整个 Done 呈现被抑制且业务状态可读；检查 done.textSuppressedWhileUnhealthy=true、done.iconAvailable=false、hud.visible=false 与 state.readable=true。",
+        "确认本场景选定的逻辑状态仍为 Done；预期状态为 Done；检查 state.sermonReadyValue<1。"
       ],
       "expect": [
         {
@@ -2198,6 +2372,22 @@
           "numberRange": {
             "maxExclusive": 1
           }
+        },
+        {
+          "observation": "done.iconPending",
+          "equals": true
+        },
+        {
+          "observation": "done.iconFailed",
+          "equals": false
+        },
+        {
+          "observation": "done.iconAvailable",
+          "equals": false
+        },
+        {
+          "observation": "timing.consumptionFrame",
+          "integerGreaterThan": -1
         },
         {
           "observation": "timing.firstLateUpdateFrameAfterConsumption",
@@ -2225,6 +2415,10 @@
         {
           "observation": "done.textSuppressedWhileUnhealthy",
           "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
         }
       ],
       "evidence": {
@@ -2462,10 +2656,10 @@
         "信标开关为开启。"
       ],
       "steps": [
-        "注入教堂目标点不可用；预期仅信标依赖被停用；检查 beacon.targetAvailable=false 且 beacon.enabled=false。",
-        "核对角落 Ready 文字与业务状态；预期保留；检查 state.readable=true、state.sermonReadyValue>=1、hud.textKey=gksr.hud.sermonReminder。",
-        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.targetAvailableAfterRecovery=true 且 beacon.enabled=true。",
-        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCount=1 且 beacon.duplicateCallbackCount=0。"
+        "注入教堂目标点不可用；预期仅信标依赖被停用；检查 beacon.targetAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.targetAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
       ],
       "expect": [
         {
@@ -2473,11 +2667,15 @@
           "equalsEnvironment": "game.sermonWeekday"
         },
         {
-          "observation": "beacon.targetAvailable",
+          "observation": "beacon.targetAvailableBeforeRecovery",
           "equals": false
         },
         {
-          "observation": "beacon.enabled",
+          "observation": "beacon.enabledBeforeRecovery",
+          "equals": false
+        },
+        {
+          "observation": "fault.staleValueReused",
           "equals": false
         },
         {
@@ -2499,15 +2697,11 @@
           "equals": "gksr.hud.sermonReminder"
         },
         {
-          "observation": "fault.staleValueReused",
-          "equals": false
-        },
-        {
           "observation": "beacon.targetAvailableAfterRecovery",
           "equals": true
         },
         {
-          "observation": "beacon.recoveredEnabled",
+          "observation": "beacon.enabledAfterRecovery",
           "equals": true
         },
         {
@@ -2515,11 +2709,11 @@
           "equals": true
         },
         {
-          "observation": "beacon.instanceCount",
+          "observation": "beacon.instanceCountAfterRecovery",
           "equals": 1
         },
         {
-          "observation": "beacon.duplicateCallbackCount",
+          "observation": "beacon.duplicateCallbackCountAfterRecovery",
           "equals": 0
         }
       ],
@@ -2540,11 +2734,11 @@
         "信标开关为开启。"
       ],
       "steps": [
-        "注入原生信仰图标不可用；预期仅信标依赖被停用；检查 beacon.iconAvailable=false 且 beacon.enabled=false。",
-        "核对角落 Ready 文字与业务状态；预期保留；检查 state.readable=true、state.sermonReadyValue>=1、hud.textKey=gksr.hud.sermonReminder。",
+        "注入原生信仰图标不可用；预期仅信标依赖被停用；检查 beacon.iconAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
         "确认未使用替代图标或假任务标记；预期均否；检查 beacon.substituteIconOrFakeMarkerUsed=false。",
-        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.iconAvailableAfterRecovery=true 且 beacon.enabled=true。",
-        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCount=1 且 beacon.duplicateCallbackCount=0。"
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.iconAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
       ],
       "expect": [
         {
@@ -2552,11 +2746,11 @@
           "equalsEnvironment": "game.sermonWeekday"
         },
         {
-          "observation": "beacon.iconAvailable",
+          "observation": "beacon.iconAvailableBeforeRecovery",
           "equals": false
         },
         {
-          "observation": "beacon.enabled",
+          "observation": "beacon.enabledBeforeRecovery",
           "equals": false
         },
         {
@@ -2586,7 +2780,7 @@
           "equals": true
         },
         {
-          "observation": "beacon.recoveredEnabled",
+          "observation": "beacon.enabledAfterRecovery",
           "equals": true
         },
         {
@@ -2594,11 +2788,11 @@
           "equals": true
         },
         {
-          "observation": "beacon.instanceCount",
+          "observation": "beacon.instanceCountAfterRecovery",
           "equals": 1
         },
         {
-          "observation": "beacon.duplicateCallbackCount",
+          "observation": "beacon.duplicateCallbackCountAfterRecovery",
           "equals": 0
         }
       ],
@@ -2619,10 +2813,10 @@
         "信标开关为开启。"
       ],
       "steps": [
-        "注入信标组件不可用；预期仅信标依赖被停用；检查 beacon.componentAvailable=false 且 beacon.enabled=false。",
-        "核对角落 Ready 文字与业务状态；预期保留；检查 state.readable=true、state.sermonReadyValue>=1、hud.textKey=gksr.hud.sermonReminder。",
-        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.componentAvailableAfterRecovery=true 且 beacon.enabled=true。",
-        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCount=1 且 beacon.duplicateCallbackCount=0。"
+        "注入信标组件不可用；预期仅信标依赖被停用；检查 beacon.componentAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.componentAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
       ],
       "expect": [
         {
@@ -2630,11 +2824,11 @@
           "equalsEnvironment": "game.sermonWeekday"
         },
         {
-          "observation": "beacon.componentAvailable",
+          "observation": "beacon.componentAvailableBeforeRecovery",
           "equals": false
         },
         {
-          "observation": "beacon.enabled",
+          "observation": "beacon.enabledBeforeRecovery",
           "equals": false
         },
         {
@@ -2660,7 +2854,7 @@
           "equals": true
         },
         {
-          "observation": "beacon.recoveredEnabled",
+          "observation": "beacon.enabledAfterRecovery",
           "equals": true
         },
         {
@@ -2668,11 +2862,11 @@
           "equals": true
         },
         {
-          "observation": "beacon.instanceCount",
+          "observation": "beacon.instanceCountAfterRecovery",
           "equals": 1
         },
         {
-          "observation": "beacon.duplicateCallbackCount",
+          "observation": "beacon.duplicateCallbackCountAfterRecovery",
           "equals": 0
         }
       ],
@@ -2746,7 +2940,7 @@
       "steps": [
         "记录本次 capture 的分辨率与 UI 缩放；预期为有效正数；检查 resolution 与 uiScale 类型通过。",
         "让目标处于屏幕边界附近的镜头外区域；预期箭头仍在边界内；检查 beacon.edgeWithinBounds=true。",
-        "记录最终夹取放置坐标；预期为正且与原生一致；检查 numberRange 与 equalsObservation 通过。",
+        "记录最终夹取放置坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
         "记录边缘内缩并与原生比较；预期一致；检查 beacon.edgeInsetPx 等于 native.edgeInsetPx。"
       ],
       "expect": [
@@ -2761,15 +2955,15 @@
         {
           "observation": "beacon.clampedScreenX",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
           "observation": "beacon.clampedScreenY",
           "numberRange": {
-            "min": 0,
-            "max": 100000
+            "min": -1.7976931348623157e+308,
+            "max": 1.7976931348623157e+308
           }
         },
         {
@@ -2802,12 +2996,12 @@
       "prerequisites": [
         "两个门槛任务均为 Completed。",
         "当前为布道日且原生 sermon_ready >= 1。",
-        "本场景记录其所在 capture 的 UI 缩放。"
+        "本场景记录其所在 capture 的 UI 缩放，并在匹配的原生画布、镜头与当前缩放下测量渲染像素。"
       ],
       "steps": [
         "记录本次 capture 的 UI 缩放；预期为有效正数；检查 uiScale 类型通过。",
-        "记录自有信标与原生 API 针对同一有效路由目标的原始 prefab 槽尺寸；预期为正数；检查 numberRange 通过。",
-        "比较自有与原生原始 prefab 槽尺寸；预期相等；检查 equalsObservation 通过。"
+        "记录自有信标 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部槽尺寸与原生原始 prefab 槽位局部尺寸；预期均为严格正的有限值且相等；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合及 equalsObservation 通过。",
+        "在匹配的原生画布、镜头与当前缩放下记录自有与原生参考的实际渲染像素宽高；预期为严格正的有限值且相等；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合及 equalsObservation 通过。"
       ],
       "expect": [
         {
@@ -2819,26 +3013,100 @@
           "equals": true
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPx",
+          "observation": "beacon.effectiveTargetId",
+          "equalsObservation": "native.referenceTargetId"
+        },
+        {
+          "observation": "beacon.contextFrame",
+          "equalsObservation": "native.referenceFrame"
+        },
+        {
+          "observation": "beacon.contextCameraId",
+          "equalsObservation": "native.referenceCameraId"
+        },
+        {
+          "observation": "beacon.contextViewportWidthPx",
+          "equalsObservation": "native.referenceViewportWidthPx"
+        },
+        {
+          "observation": "beacon.contextViewportHeightPx",
+          "equalsObservation": "native.referenceViewportHeightPx"
+        },
+        {
+          "observation": "beacon.contextUiScale",
+          "equalsObservation": "native.referenceUiScale"
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPx",
+          "observation": "beacon.slotWidthLocal",
+          "notEquals": 0
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotHeightLocal",
           "numberRange": {
-            "min": 0,
-            "maxExclusive": 0
+            "min": 0
           }
         },
         {
-          "observation": "beacon.originalPrefabSlotWidthPx",
-          "equalsObservation": "native.originalPrefabSlotWidthPx"
+          "observation": "beacon.slotHeightLocal",
+          "notEquals": 0
         },
         {
-          "observation": "beacon.originalPrefabSlotHeightPx",
-          "equalsObservation": "native.originalPrefabSlotHeightPx"
+          "observation": "beacon.slotHeightLocal",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.slotWidthLocal",
+          "equalsObservation": "native.slotWidthLocal"
+        },
+        {
+          "observation": "beacon.slotHeightLocal",
+          "equalsObservation": "native.slotHeightLocal"
+        },
+        {
+          "observation": "beacon.renderedWidthPx",
+          "numberRange": {
+            "min": 0
+          }
+        },
+        {
+          "observation": "beacon.renderedWidthPx",
+          "notEquals": 0
+        },
+        {
+          "observation": "beacon.renderedWidthPx",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.renderedHeightPx",
+          "numberRange": {
+            "min": 0
+          }
+        },
+        {
+          "observation": "beacon.renderedHeightPx",
+          "notEquals": 0
+        },
+        {
+          "observation": "beacon.renderedHeightPx",
+          "notEquals": 0.0
+        },
+        {
+          "observation": "beacon.renderedWidthPx",
+          "equalsObservation": "native.renderedWidthPx"
+        },
+        {
+          "observation": "beacon.renderedHeightPx",
+          "equalsObservation": "native.renderedHeightPx"
         }
       ],
       "evidence": {
