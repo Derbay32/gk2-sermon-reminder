@@ -1,12 +1,13 @@
 name: ci
 
-# Repository source/structural CI for GKSA-10.
+# Repository source/structural CI for GKSA-10 and GKSA-11.
 #
-# This workflow only runs Python-standard-library source and manifest/structure
-# checks on hosted runners. It does NOT build native code, does NOT build the
-# plugin against game assemblies, and does NOT run or validate the game. Every
-# uploaded report is a source/structure/negative report and must never be read
-# as a game passing.
+# This workflow only runs Python-standard-library source, manifest/structure and
+# negative CLI checks on hosted runners. It does NOT build native code, does NOT
+# build the plugin against game assemblies, and does NOT run or validate the
+# game. The native reference assemblies are deliberately unavailable here, so no
+# compile or fake-assembly build is attempted. Every uploaded report is a
+# source/structure/negative report and must never be read as a game passing.
 on:
   pull_request:
     branches:
@@ -39,61 +40,114 @@ jobs:
             tools/package.py \
             tests/e2e/verify.py
 
-      - name: Source and resource guard
+      - name: Source and resource guard (GKSA-11 manifest)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           python3 tools/source_check.py \
             --repo-root . \
-            --output artifacts/ci/source-check.json
+            --manifest tests/e2e/gksa11.json \
+            --output artifacts/ci/source-check-gksa11.json
 
-      - name: Manifest structural check
+      - name: Manifest structural check (GKSA-10 and GKSA-11)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
-          python3 tests/e2e/verify.py \
-            --manifest tests/e2e/gksa10.json \
-            --check-manifest \
-            --output artifacts/manifest.json
+          set -euo pipefail
+          for ticket in gksa10 gksa11; do
+            python3 tests/e2e/verify.py \
+              --manifest "tests/e2e/${ticket}.json" \
+              --check-manifest \
+              --output "artifacts/ci/manifest-${ticket}.json"
+          done
 
-      - name: Negative check - missing capture is rejected
+      - name: Negative check - missing capture is rejected (both tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
-          test ! -e tests/e2e/no-such-capture.json
-          set +e
-          python3 tests/e2e/verify.py \
-            --manifest tests/e2e/gksa10.json \
-            --capture tests/e2e/no-such-capture.json \
-            --output artifacts/ci/missing-capture.json
-          status=$?
-          set -e
-          echo "missing-capture exit code: $status"
-          test "$status" -eq 2
-          python3 -c "import json,sys; d=json.load(open('artifacts/ci/missing-capture.json')); sys.exit(0 if d.get('ok') is False else 1)"
+          set -euo pipefail
+          for ticket in gksa10 gksa11; do
+            capture="tests/e2e/no-such-capture-${ticket}.json"
+            test ! -e "$capture"
+            set +e
+            python3 tests/e2e/verify.py \
+              --manifest "tests/e2e/${ticket}.json" \
+              --capture "$capture" \
+              --output "artifacts/ci/reject-missing-${ticket}.json"
+            status=$?
+            set -e
+            echo "reject-missing-${ticket} exit code: $status"
+            test "$status" -eq 2
+            python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-missing-${ticket}.json')); sys.exit(0 if d.get('ok') is False else 1)"
+          done
 
-      - name: Negative check - example capture is rejected
+      - name: Negative check - example capture is rejected (both tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
-          set +e
-          python3 tests/e2e/verify.py \
-            --manifest tests/e2e/gksa10.json \
-            --capture tests/e2e/capture.example.json \
-            --output artifacts/ci/reject-example.json
-          status=$?
-          set -e
-          echo "reject-example exit code: $status"
-          test "$status" -eq 2
-          python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-example.json')); sys.exit(0 if d.get('ok') is False else 1)"
+          set -euo pipefail
+          for pair in "gksa10 capture.example.json" "gksa11 capture.gksa11.example.json"; do
+            set -- $pair
+            ticket=$1
+            example=$2
+            set +e
+            python3 tests/e2e/verify.py \
+              --manifest "tests/e2e/${ticket}.json" \
+              --capture "tests/e2e/${example}" \
+              --output "artifacts/ci/reject-example-${ticket}.json"
+            status=$?
+            set -e
+            echo "reject-example-${ticket} exit code: $status"
+            test "$status" -eq 2
+            python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-example-${ticket}.json')); sys.exit(0 if d.get('ok') is False else 1)"
+          done
+
+      # Bounded negative CLI checks that prove ticket binding, not game support:
+      # each manifest is fed a minimal malformed capture whose supported kind
+      # belongs to the opposite ticket. A plain '-example' kind would be rejected
+      # for being unsupported, which would not exercise the ticket mismatch, so the
+      # opposite ticket's real kind is used deliberately. The inputs live outside
+      # the uploaded report paths, are labelled negative-only, and model no game
+      # execution whatsoever.
+      - name: Negative check - cross-ticket capture is rejected (both directions)
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ci/negative-inputs
+          negative_dir="artifacts/ci/negative-inputs"
+          python3 -c "import json; json.dump({'kind': 'gksa11-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding, describes no game execution'}, open('${negative_dir}/cross-gksa11.json', 'w'), indent=2, sort_keys=True)"
+          python3 -c "import json; json.dump({'kind': 'gksa10-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding, describes no game execution'}, open('${negative_dir}/cross-gksa10.json', 'w'), indent=2, sort_keys=True)"
+          for pair in "gksa10 ${negative_dir}/cross-gksa11.json" "gksa11 ${negative_dir}/cross-gksa10.json"; do
+            set -- $pair
+            ticket=$1
+            capture=$2
+            set +e
+            python3 tests/e2e/verify.py \
+              --manifest "tests/e2e/${ticket}.json" \
+              --capture "$capture" \
+              --output "artifacts/ci/reject-cross-${ticket}.json" 2>/dev/null
+            status=$?
+            set -e
+            echo "reject-cross-${ticket} exit code: $status"
+            test "$status" -eq 2
+            # The report keeps ok=false and the mismatch reason, so the negative
+            # result and its cause travel together in the uploaded artifact.
+            python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-cross-${ticket}.json')); msg=(d.get('error') or {}).get('message',''); sys.exit(0 if d.get('ok') is False and 'does not match manifest ticket' in msg else 1)"
+          done
 
       - name: Upload structural reports (not a game pass)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: gksa10-structural-reports
+          name: gksa10-gksa11-source-structure-reports
           path: |
-            artifacts/ci/source-check.json
-            artifacts/manifest.json
-            artifacts/ci/missing-capture.json
-            artifacts/ci/reject-example.json
+            artifacts/ci/source-check-gksa11.json
+            artifacts/ci/manifest-gksa10.json
+            artifacts/ci/manifest-gksa11.json
+            artifacts/ci/reject-missing-gksa10.json
+            artifacts/ci/reject-missing-gksa11.json
+            artifacts/ci/reject-example-gksa10.json
+            artifacts/ci/reject-example-gksa11.json
+            artifacts/ci/reject-cross-gksa10.json
+            artifacts/ci/reject-cross-gksa11.json
           if-no-files-found: error

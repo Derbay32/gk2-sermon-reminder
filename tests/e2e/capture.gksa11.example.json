@@ -1,0 +1,80 @@
+{
+  "kind": "gksa11-e2e-capture-example",
+  "captureVersion": 1,
+  "_note": [
+    "SCHEMA EXAMPLE ONLY — THIS FILE IS NOT EVIDENCE.",
+    "Its kind is deliberately not 'gksa11-e2e-capture', so tests/e2e/verify.py",
+    "rejects it as an unsupported schema. Do not treat this file as a passing",
+    "capture; the validator never generates a capture and never marks a scenario",
+    "passed.",
+    "This file exists so the negative check can prove that an unexecuted example",
+    "is rejected instead of silently accepted.",
+    "The done icon is requested from the game's Addressables by Sprite GUID",
+    "4d1c67d72f3e6c8419b24e8c275d101e (catalog asset btn_i-check.png).",
+    "It must stay an owned UnityEngine.UI.Image under the native HUD, before the",
+    "Done text, at the 20:18 aspect derived from the measured text line height."
+  ],
+  "environment": {
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "proton.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "bepinex.version": "5.4.23.5",
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "plugin.version": "REPLACE",
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.loaded": true,
+    "resolution.width": 1920,
+    "resolution.height": 1080,
+    "uiScale": 1.0,
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "evidenceFiles": {
+      "screenshots/ready-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "game.sermonWeekday": 2
+  },
+  "observations": {
+    "ready-zh": {
+      "save.absoluteDay": 8,
+      "save.dayOfWeek": 2,
+      "save.sermonWeekday": 2,
+      "save.daysInWeek": 6,
+      "save.isSermonDay": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 1,
+      "hud.visible": true,
+      "hud.nonSermonCountdownShown": false,
+      "hud.textKey": "gksr.hud.sermonReminder",
+      "hud.text": "布道日！",
+      "hud.cornerTextInstanceCount": 1,
+      "language.active": "zh_cn",
+      "icon.spaceReservedWhenReady": false
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "ready-zh",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/ready-zh.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+    }
+  ]
+}

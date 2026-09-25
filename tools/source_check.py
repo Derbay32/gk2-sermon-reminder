@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GKSA-10 source and resource guard.
+"""GKSA-11 source and resource guard.
 
 Structural / source inspection only. This helper never installs or runs the
 game, never compiles native code, and never asserts a game E2E verdict. It is
@@ -13,9 +13,9 @@ Checks:
   * every ``<EmbeddedResource>`` keeps an explicit ``LogicalName`` and
     ``WithCulture="false"``;
   * localization declares both supported catalogs (en, zh_cn), every supported
-    catalog carries an identical key set, every value is a nonempty string,
-    placeholder parity holds, and the implemented countdown sentences match the
-    accepted manifest finalText;
+    catalog carries an identical key set, every required HUD key is present,
+    every value is a nonempty string, placeholder parity holds, and every
+    implemented HUD sentence matches the accepted manifest finalText;
   * no final localized sentence is duplicated inside C# source.
 
 Only the Python 3 standard library is used.
@@ -52,9 +52,16 @@ LANGUAGE_TO_CATALOG_LABEL = {"en": "en", "zh_cn": "zh-CN"}
 # exist and carry identical key sets; a locale may never be dropped silently.
 SUPPORTED_LANGUAGE_IDS = ("en", "zh_cn")
 
-# Countdown keys GKSA-10 is required to implement. Future-state manifest keys
-# (sermonReminder / sermonDone) are deliberately not required here.
-REQUIRED_COUNTDOWN_KEYS = ("gksr.hud.sermonCountdown.one", "gksr.hud.sermonCountdown.other")
+# HUD keys the implemented plugin must declare in every supported catalog: the
+# GKSA-10 countdown pair plus the GKSA-11 ready/done pair. The accepted ticket
+# manifests stay the single source of truth for the sentences themselves; only
+# the key names are required here, so no final sentence is copied into Python.
+REQUIRED_HUD_KEYS = (
+    "gksr.hud.sermonCountdown.one",
+    "gksr.hud.sermonCountdown.other",
+    "gksr.hud.sermonReminder",
+    "gksr.hud.sermonDone",
+)
 
 
 def strip_ns(tag: str) -> str:
@@ -291,8 +298,9 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
         keys_by_language[language] = keys
 
     # The supported catalogs must carry identical key sets. A key present in one
-    # locale and missing from another is a failure. Future-state manifest keys
-    # remain optional and are never required here.
+    # locale and missing from another is a failure. Catalog-only keys (such as the
+    # settings-group title) are allowed; only the required HUD keys below are
+    # mandatory.
     all_keys = set()
     for language in supported:
         all_keys |= keys_by_language.get(language, set())
@@ -308,10 +316,11 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
 
     implemented_keys = all_keys
 
-    # GKSA-10 must implement the countdown keys.
-    for key in REQUIRED_COUNTDOWN_KEYS:
+    # Every required HUD key (countdown plus ready/done) must be implemented. A
+    # key absent from every catalog is a failure, never silently optional.
+    for key in REQUIRED_HUD_KEYS:
         if key not in implemented_keys:
-            localization["violations"].append(f"required countdown key not implemented: {key}")
+            localization["violations"].append(f"required HUD key not implemented: {key}")
 
     # Placeholder parity across every declared catalog that defines a key,
     # considering only validated non-empty string values.
@@ -391,10 +400,18 @@ def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="GKSA-10 source/resource guard.")
+    parser = argparse.ArgumentParser(description="GKSA-11 source/resource guard.")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--project", default="src/GK2.SermonReminder/GK2.SermonReminder.csproj")
-    parser.add_argument("--manifest", default="tests/e2e/gksa10.json")
+    parser.add_argument(
+        "--manifest",
+        default="tests/e2e/gksa11.json",
+        help=(
+            "Accepted ticket manifest used as the finalText source of truth. "
+            "Defaults to the latest implemented HUD specification (GKSA-11); pass "
+            "another ticket's manifest explicitly to guard that ticket instead."
+        ),
+    )
     parser.add_argument("--output", required=True)
     args = parser.parse_args(argv)
 

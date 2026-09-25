@@ -590,10 +590,6 @@
         {
           "observation": "save.isSermonDay",
           "equals": true
-        },
-        {
-          "observation": "hud.visible",
-          "equals": false
         }
       ],
       "evidence": {

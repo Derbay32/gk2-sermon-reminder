@@ -1,4 +1,6 @@
 {
+  "gksr.hud.sermonReminder": "布道日！",
+  "gksr.hud.sermonDone": "已完成本周布道！",
   "gksr.hud.sermonCountdown.one": "明天是布道日！",
   "gksr.hud.sermonCountdown.other": "距离下一次布道日还有{days}天。",
   "gksr.settings.group.title": "GK2布道提醒"

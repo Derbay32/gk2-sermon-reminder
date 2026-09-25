@@ -1,4 +1,6 @@
 {
+  "gksr.hud.sermonReminder": "Sermon Day!",
+  "gksr.hud.sermonDone": "This week’s sermon is complete!",
   "gksr.hud.sermonCountdown.one": "Sermon Day is Tomorrow!",
   "gksr.hud.sermonCountdown.other": "{days} days before the Sermon Day.",
   "gksr.settings.group.title": "GK2 Sermon Reminder"
