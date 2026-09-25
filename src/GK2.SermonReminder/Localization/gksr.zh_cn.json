@@ -3,5 +3,11 @@
   "gksr.hud.sermonDone": "已完成本周布道！",
   "gksr.hud.sermonCountdown.one": "明天是布道日！",
   "gksr.hud.sermonCountdown.other": "距离下一次布道日还有{days}天。",
-  "gksr.settings.group.title": "GK2布道提醒"
+  "gksr.settings.group.title": "GK2布道提醒",
+  "gksr.settings.beacon.label": "开启教堂信标提醒",
+  "gksr.settings.beacon.description": "在布道日来临、且当日未布道时，设置一个永远追踪到教堂的信标点，默认值为开启。",
+  "gksr.status.reminderUnavailable": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。",
+  "gksr.status.hudUnavailable": "[布道提醒] 角落信息栏提醒不可用。",
+  "gksr.diagnostics.reminderUnavailable": "[布道提醒] 必要游戏状态读取失败。查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。",
+  "gksr.diagnostics.hudUnavailable": "[布道提醒] 提醒信息无法在角落信息栏显示，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
 }

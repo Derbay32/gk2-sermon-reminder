@@ -3,5 +3,11 @@
   "gksr.hud.sermonDone": "This week’s sermon is complete!",
   "gksr.hud.sermonCountdown.one": "Sermon Day is Tomorrow!",
   "gksr.hud.sermonCountdown.other": "{days} days before the Sermon Day.",
-  "gksr.settings.group.title": "GK2 Sermon Reminder"
+  "gksr.settings.group.title": "GK2 Sermon Reminder",
+  "gksr.settings.beacon.label": "Enable church beacon",
+  "gksr.settings.beacon.description": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default.",
+  "gksr.status.reminderUnavailable": "[Sermon Reminder] Unable to read the required game state. Reminders are temporarily unavailable.",
+  "gksr.status.hudUnavailable": "[Sermon Reminder] The corner HUD reminder is unavailable.",
+  "gksr.diagnostics.reminderUnavailable": "[Sermon Reminder] Failed to read the required game state. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
+  "gksr.diagnostics.hudUnavailable": "[Sermon Reminder] The reminder cannot be displayed in the corner HUD. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub."
 }
