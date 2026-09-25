@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    GKSA-10: GK2 Sermon Reminder.
+    GKSA-10 / GKSA-11: GK2 Sermon Reminder.
     Builds one deterministic managed BepInEx plugin DLL. Native game, BepInEx and
     framework assemblies are referenced only, never copied (all Private=false).
     No self-contained publish, no AOT, no dependency assembly copying.
@@ -26,7 +26,7 @@
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
     <Authors>derbay32</Authors>
-    <Description>Non-sermon-day integer countdown shown beneath the native Graveyard Keeper 2 clock.</Description>
+    <Description>Sermon-day Ready/Done corner text and a non-sermon-day integer countdown shown beneath the native Graveyard Keeper 2 clock.</Description>
 
     <!--
       Explicit reference roots. Local verification passes these on the command
@@ -49,6 +49,10 @@
            Text="GK2 Sermon Reminder: native game assembly not found at '$(GameManagedDir)/Assembly-CSharp.dll'. Pass -p:GameDir=&lt;install root&gt; (the folder containing GraveyardKeeper2_Data/Managed)." />
     <Error Condition="!Exists('$(GameManagedDir)/LazyBearTechnology.dll')"
            Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/LazyBearTechnology.dll'. Pass -p:GameDir=&lt;install root&gt;." />
+    <Error Condition="!Exists('$(GameManagedDir)/Unity.Addressables.dll')"
+           Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/Unity.Addressables.dll'. Pass -p:GameDir=&lt;install root&gt;." />
+    <Error Condition="!Exists('$(GameManagedDir)/Unity.ResourceManager.dll')"
+           Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/Unity.ResourceManager.dll'. Pass -p:GameDir=&lt;install root&gt;." />
     <Error Condition="!Exists('$(BepInExDir)/core/BepInEx.dll')"
            Text="GK2 Sermon Reminder: BepInEx not found at '$(BepInExDir)/core/BepInEx.dll'. Pass -p:BepInExDir=&lt;BepInEx folder&gt;." />
     <Error Condition="!Exists('$(BepInExDir)/core/0Harmony.dll')"
@@ -104,6 +108,14 @@
     </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>$(GameManagedDir)/Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.Addressables">
+      <HintPath>$(GameManagedDir)/Unity.Addressables.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.ResourceManager">
+      <HintPath>$(GameManagedDir)/Unity.ResourceManager.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

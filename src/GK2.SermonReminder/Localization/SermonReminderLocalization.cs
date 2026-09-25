@@ -14,6 +14,8 @@ namespace GK2.SermonReminder.Localization
     /// </summary>
     internal static class SermonReminderLocalization
     {
+        internal const string SermonReminderKey = "gksr.hud.sermonReminder";
+        internal const string SermonDoneKey = "gksr.hud.sermonDone";
         internal const string CountdownOneKey = "gksr.hud.sermonCountdown.one";
         internal const string CountdownOtherKey = "gksr.hud.sermonCountdown.other";
         internal const string SettingsGroupTitleKey = "gksr.settings.group.title";

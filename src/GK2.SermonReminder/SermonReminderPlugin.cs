@@ -7,6 +7,7 @@ using GK2.SermonReminder.Hud;
 using GK2.SermonReminder.Localization;
 using GK2.SermonReminder.State;
 using HarmonyLib;
+using UnityEngine;
 
 namespace GK2.SermonReminder
 {
@@ -32,8 +33,8 @@ namespace GK2.SermonReminder
     }
 
     /// <summary>
-    /// Owns the non-sermon-day countdown lifecycle: readiness, fresh per-tick
-    /// state reads and the single mod-owned HUD label.
+    /// Owns the sermon-corner lifecycle: readiness, a fresh per-tick state read,
+    /// the single mod-owned display, and the owned native icon request.
     /// </summary>
     internal sealed class SermonReminderMod : Gk2ModBase
     {
@@ -41,7 +42,8 @@ namespace GK2.SermonReminder
 
         private readonly IReadOnlyList<Gk2ModDependency> dependencies;
         private readonly SermonStateReader reader = new SermonStateReader();
-        private readonly CountdownHudAdapter hud = new CountdownHudAdapter();
+        private readonly SermonHudAdapter hud = new SermonHudAdapter();
+        private readonly NativeCheckSprite checkSprite = new NativeCheckSprite();
 
         private Gk2ModMetadata metadata;
         private string metadataLanguage;
@@ -55,6 +57,8 @@ namespace GK2.SermonReminder
         private GameSave activeSave;
 
         private string lastDiagnostic;
+        private SermonDisplayState loggedDisplay;
+        private bool hasLoggedDisplay;
 
         internal SermonReminderMod()
         {
@@ -185,8 +189,7 @@ namespace GK2.SermonReminder
                 GameSave save = MainGame.Instance?.GameSave;
                 if (save == null)
                 {
-                    ResetReadiness();
-                    hud.Teardown();
+                    ResetReadinessSafely();
                     LogTransition("no-save-after-start", "GKSR_READY_FAILED: no active save after OnGameStarted");
                     return;
                 }
@@ -198,8 +201,7 @@ namespace GK2.SermonReminder
             }
             catch (Exception ex)
             {
-                ResetReadiness();
-                hud.Teardown();
+                ResetReadinessSafely();
                 LogTransition("game-started:" + ex.GetType().Name,
                     "GKSR_READY_FAILED: " + ex.GetType().Name);
             }
@@ -212,17 +214,9 @@ namespace GK2.SermonReminder
         /// new save becomes authoritative. Contained so a Harmony prefix can never
         /// throw into the native method.
         /// </summary>
-        internal void HandleNativeLoadStarting()
-        {
-            ResetReadinessSafely();
-            lastDiagnostic = null;
-        }
+        internal void HandleNativeLoadStarting() => ResetReadinessSafely();
 
-        internal void HandleReturnedToMenu()
-        {
-            ResetReadinessSafely();
-            lastDiagnostic = null;
-        }
+        internal void HandleReturnedToMenu() => ResetReadinessSafely();
 
         internal void Tick()
         {
@@ -239,6 +233,7 @@ namespace GK2.SermonReminder
             catch (Exception ex)
             {
                 hud.Teardown();
+                checkSprite.Release();
                 LogTransition("tick:" + ex.GetType().Name,
                     "GKSR_TICK_FAILED: " + ex.GetType().Name);
             }
@@ -249,6 +244,7 @@ namespace GK2.SermonReminder
             if (!ready || activeSave == null)
             {
                 hud.Teardown();
+                checkSprite.Release();
                 return;
             }
 
@@ -256,6 +252,7 @@ namespace GK2.SermonReminder
             if (current == null)
             {
                 hud.Teardown();
+                checkSprite.Release();
                 return;
             }
 
@@ -265,53 +262,99 @@ namespace GK2.SermonReminder
                 // Hide and wait for OnGameStarted rather than reuse stale data.
                 ResetReadiness();
                 hud.Teardown();
-                LogTransition("save-reference-changed", "GKSR_STATE_UNREADABLE: active save reference changed unexpectedly");
+                checkSprite.Release();
+                LogTransition("save-reference-changed",
+                    "GKSR_STATE_UNREADABLE: active save reference changed unexpectedly");
                 return;
             }
 
             SermonStateSnapshot snapshot = reader.Read(activeSave);
             if (!snapshot.Readable)
             {
-                hud.Hide();
-                LogTransition("unreadable:" + snapshot.Failure, "GKSR_STATE_UNREADABLE: " + snapshot.Failure);
+                // No assumed business state: fail closed, hide and drop the owned
+                // resources so a fault can never reuse the previous judgement.
+                hud.Teardown();
+                checkSprite.Release();
+                LogTransition("unreadable:" + snapshot.Failure,
+                    "GKSR_STATE_UNREADABLE: " + snapshot.Failure);
                 return;
             }
+
+            LogDisplayTransition(snapshot);
 
             if (!snapshot.GatesSatisfied)
             {
-                // Gates not complete is a normal hidden state, not a fault.
+                // Gates not complete is a normal hidden state, not a fault. The
+                // owned sprite request is not needed while the gates are closed.
                 hud.Hide();
-                lastDiagnostic = null;
+                checkSprite.Release();
+                ClearDiagnostic();
                 return;
             }
 
-            int delta = snapshot.Delta;
-            if (delta <= 0 || delta > snapshot.DaysInWeek - 1)
+            SermonDisplayState state = snapshot.Display;
+
+            // Preload and retain the single owned sprite while the sermon day is
+            // Ready or Done, so consuming the sermon does not start a cold load.
+            // Off the sermon day the handle is released.
+            bool spriteEligible = state == SermonDisplayState.Ready || state == SermonDisplayState.Done;
+            NativeCheckSpritePoll icon = checkSprite.Poll(spriteEligible);
+
+            if (icon.Status == NativeCheckSpriteStatus.Failed)
             {
-                // delta 0 is the sermon day itself: hide completely in this ticket.
-                hud.Hide();
-                lastDiagnostic = null;
-                return;
+                LogTransition("icon-failed:" + checkSprite.LastFailure,
+                    "GKSR_ICON_FAILED: native done sprite unavailable (" + checkSprite.LastFailure + ")");
             }
 
-            string text = BuildCountdownText(delta);
+            string text = ResolveText(state, snapshot.Delta);
             if (string.IsNullOrEmpty(text))
             {
                 // A missing/empty localized sentence is an unreadable resource,
                 // not a reason to show an empty active label. We never substitute
                 // a replacement sentence.
                 hud.Hide();
-                LogTransition("missing-text", "GKSR_TEXT_UNAVAILABLE: localized countdown text is empty; countdown suppressed");
+                LogTransition("missing-text:" + state,
+                    "GKSR_TEXT_UNAVAILABLE: localized " + state + " text is empty");
                 return;
             }
 
-            if (!hud.Update(text))
+            if (state == SermonDisplayState.Done && icon.Status != NativeCheckSpriteStatus.Ready)
             {
-                LogTransition("hud-unavailable", "GKSR_HUD_UNAVAILABLE: native HUD label host not ready; countdown suppressed");
+                // The icon is still pending or failed: suppress the whole dependent
+                // Done presentation (text and icon) while the business state stays
+                // a readable Done. The owned in-flight handle is retained, so we do
+                // not reload on every frame.
+                hud.Hide();
+                LogTransition("done-icon-suppressed:" + icon.Status,
+                    "GKSR_DONE_ICON_PENDING: Done presentation suppressed (" + icon.Status + ")");
                 return;
             }
 
-            lastDiagnostic = null;
+            Sprite sprite = state == SermonDisplayState.Done ? icon.Sprite : null;
+            SermonHudResult result = hud.Update(state, text, sprite);
+
+            if (result.Rebound)
+            {
+                // The native HUD was rebuilt: the pre-rebuild owned sprite
+                // reference is released here and the new binding re-requests it.
+                checkSprite.Release();
+            }
+
+            if (result.Status == SermonHudStatus.Failed)
+            {
+                LogTransition("hud-failed:" + result.Failure, "GKSR_HUD_FAILED: " + result.Failure);
+                return;
+            }
+
+            if (result.Status == SermonHudStatus.Pending)
+            {
+                // The native HUD is simply not live right now (loading, menu or a
+                // rebuild): ordinary unreadiness, never reported as a fault.
+                ClearDiagnostic();
+                return;
+            }
+
+            ClearDiagnostic();
         }
 
         internal void Shutdown()
@@ -320,8 +363,24 @@ namespace GK2.SermonReminder
             SafeCleanup();
         }
 
+        private static string ResolveText(SermonDisplayState state, int delta)
+        {
+            switch (state)
+            {
+                case SermonDisplayState.Countdown:
+                    return BuildCountdownText(delta);
+                case SermonDisplayState.Ready:
+                    return SermonReminderLocalization.Get(SermonReminderLocalization.SermonReminderKey);
+                case SermonDisplayState.Done:
+                    return SermonReminderLocalization.Get(SermonReminderLocalization.SermonDoneKey);
+                default:
+                    return string.Empty;
+            }
+        }
+
         private static string BuildCountdownText(int delta)
         {
+            if (delta < 1) return string.Empty;
             if (delta == 1)
                 return SermonReminderLocalization.Get(SermonReminderLocalization.CountdownOneKey);
 
@@ -388,11 +447,19 @@ namespace GK2.SermonReminder
             if (ReferenceEquals(Active, this)) Active = null;
         }
 
+        /// <summary>
+        /// Drop readiness and fully release the owned display and sprite handle.
+        /// Used whenever the authoritative save may be replaced or the mod is torn
+        /// down, so no stale presentation or resource can survive.
+        /// </summary>
         private void ResetReadinessSafely()
         {
             ResetReadiness();
             try { hud.Teardown(); }
             catch (Exception) { }
+            try { checkSprite.Release(); }
+            catch (Exception) { }
+            hasLoggedDisplay = false;
         }
 
         private void ResetReadiness()
@@ -401,11 +468,45 @@ namespace GK2.SermonReminder
             activeSave = null;
         }
 
+        /// <summary>
+        /// One bounded diagnostic per distinct problem, cleared once the display
+        /// recovers, so a persistent condition never spams the log per frame.
+        /// </summary>
         private void LogTransition(string key, string message)
         {
             if (string.Equals(lastDiagnostic, key, StringComparison.Ordinal)) return;
             lastDiagnostic = key;
             log?.Warning(message);
+        }
+
+        private void ClearDiagnostic() => lastDiagnostic = null;
+
+        /// <summary>
+        /// One bounded diagnostic per display-state change, carrying the actual
+        /// absolute day and frame so a transition (e.g. Ready to Done after the
+        /// sermon is consumed) is traceable without per-frame logging.
+        /// </summary>
+        private void LogDisplayTransition(SermonStateSnapshot snapshot)
+        {
+            if (hasLoggedDisplay && loggedDisplay == snapshot.Display) return;
+            hasLoggedDisplay = true;
+            loggedDisplay = snapshot.Display;
+            log?.Info("GKSR_DISPLAY: state=" + snapshot.Display
+                + " day=" + snapshot.AbsoluteDay
+                + " weekday=" + snapshot.DayOfWeek
+                + " frame=" + SafeFrameCount());
+        }
+
+        private static int SafeFrameCount()
+        {
+            try
+            {
+                return Time.frameCount;
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
         }
     }
 }
