@@ -60,6 +60,7 @@ jobs:
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
+          test ! -e tests/e2e/no-such-capture.json
           set +e
           python3 tests/e2e/verify.py \
             --manifest tests/e2e/gksa10.json \
