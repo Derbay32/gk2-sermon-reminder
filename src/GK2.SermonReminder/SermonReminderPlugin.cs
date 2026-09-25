@@ -58,7 +58,8 @@ namespace GK2.SermonReminder
 
         // Independently deduplicated diagnostic channels: state read, native HUD
         // binding, and the icon module. Each holds its own last-logged episode so
-        // the healthy channels never clear or toggle another channel.
+        // the healthy channels never clear or toggle another channel, and each is
+        // cleared only when that channel's own work actually completes.
         private string lastStateDiagnostic;
         private string lastHudDiagnostic;
         private string lastIconDiagnostic;
@@ -242,7 +243,7 @@ namespace GK2.SermonReminder
                 // A failure this broad is not attributable to the icon module, so
                 // it tears down the display and drops the sprite we own.
                 hud.Teardown();
-                checkSprite.Release();
+                ResetEligibility();
                 LogStateDiagnostic("tick:" + ex.GetType().Name, "GKSR_TICK_FAILED: " + ex.GetType().Name);
             }
         }
@@ -252,7 +253,7 @@ namespace GK2.SermonReminder
             if (!ready || activeSave == null)
             {
                 hud.Teardown();
-                checkSprite.Release();
+                ResetEligibility();
                 return;
             }
 
@@ -260,7 +261,7 @@ namespace GK2.SermonReminder
             if (current == null)
             {
                 hud.Teardown();
-                checkSprite.Release();
+                ResetEligibility();
                 return;
             }
 
@@ -270,7 +271,7 @@ namespace GK2.SermonReminder
                 // Hide and wait for OnGameStarted rather than reuse stale data.
                 ResetReadiness();
                 hud.Teardown();
-                checkSprite.Release();
+                ResetEligibility();
                 LogStateDiagnostic("save-reference-changed",
                     "GKSR_STATE_UNREADABLE: active save reference changed unexpectedly");
                 return;
@@ -282,38 +283,45 @@ namespace GK2.SermonReminder
                 // No assumed business state: fail closed, hide and drop the owned
                 // resources so a fault can never reuse the previous judgement.
                 hud.Teardown();
-                checkSprite.Release();
+                ResetEligibility();
                 LogStateDiagnostic("unreadable:" + snapshot.Failure,
                     "GKSR_STATE_UNREADABLE: " + snapshot.Failure);
                 return;
             }
-
-            LogDisplayTransition(snapshot);
-            ClearStateDiagnostic();
 
             SermonDisplayState state = snapshot.Display;
             string text = snapshot.GatesSatisfied ? ResolveText(state, snapshot.Delta) : string.Empty;
 
             if (!snapshot.GatesSatisfied)
             {
-                // Gates not complete is a normal hidden state, not a fault. The
-                // owned sprite request is not needed while the gates are closed.
+                // Gates not complete is a normal hidden state, not a fault. It is
+                // also the explicit end of this resource-eligibility episode: the
+                // owned sprite request is not needed while the gates are closed, and
+                // the state channel is reset here because there is no text work.
+                ClearStateDiagnostic();
                 hud.Suppress();
-                checkSprite.Release();
+                ResetEligibility();
                 return;
             }
 
+            // The state/text channel only completes once a real sentence exists.
+            // Clearing it on the readable snapshot alone would drop the episode and
+            // re-log the same missing-text warning on every following frame.
             if (string.IsNullOrEmpty(text))
             {
                 // A missing/empty localized sentence is an unreadable resource,
-                // not a reason to show an empty active label. We never substitute
-                // a replacement sentence.
+                // not a reason to show an empty active label. We never substitute a
+                // replacement sentence, and any stale ownership is still dropped so
+                // it cannot survive the resource-unavailable transition.
                 hud.Suppress();
+                ResetEligibility();
                 LogStateDiagnostic("missing-text:" + state,
                     "GKSR_TEXT_UNAVAILABLE: localized " + state + " text is empty");
                 return;
             }
 
+            ClearStateDiagnostic();
+            LogDisplayTransition(snapshot);
             // Phase 1: resolve and validate the native host and style BEFORE any
             // sprite work. This detects a replaced or destroyed binding and runs
             // even while the Done icon is pending or failed, so a HUD rebuild is
@@ -324,14 +332,16 @@ namespace GK2.SermonReminder
                 // The previous binding is gone: drop the old sprite ownership before
                 // acquiring one for the new binding, so its sprite can never be
                 // assigned to the replacement display.
-                checkSprite.Release();
+                ResetEligibility();
             }
 
             if (binding.Status == SermonHudStatus.Failed)
             {
                 // The binding failure already removed the owned presentation. The
-                // sprite request is not needed without a host to render into.
-                checkSprite.Release();
+                // sprite request is not needed without a host to render into. The
+                // icon episode is kept: a broken asset stays broken across a rebind,
+                // so the same warning is not repeated for it.
+                ResetEligibility(preserveIconDiagnostic: true);
                 LogHudDiagnostic("hud-failed:" + binding.Failure, "GKSR_HUD_FAILED: " + binding.Failure);
                 return;
             }
@@ -339,12 +349,11 @@ namespace GK2.SermonReminder
             if (binding.Status != SermonHudStatus.Healthy)
             {
                 // The native HUD is simply not live right now (menu, loading or a
-                // rebuild): ordinary unreadiness, never reported as a fault.
-                checkSprite.Release();
+                // rebuild): ordinary unreadiness, never reported as a fault, and an
+                // explicit end of the eligibility episode (the host is absent).
+                ResetEligibility();
                 return;
             }
-
-            ClearHudDiagnostic();
 
             // Phase 2: bind is healthy, so poll the owned sprite. Off the sermon day
             // it is released; on the sermon day it is preloaded and retained while
@@ -352,7 +361,14 @@ namespace GK2.SermonReminder
             bool spriteEligible = state == SermonDisplayState.Ready || state == SermonDisplayState.Done;
             NativeCheckSpritePoll icon = checkSprite.Poll(spriteEligible);
 
-            if (icon.Status == NativeCheckSpriteStatus.Ready)
+            if (!spriteEligible)
+            {
+                // Countdown day: no icon is expected, so this is an explicit end of
+                // the eligibility episode. The released asset closes its episode
+                // here instead of carrying a failure into the next sermon day.
+                ClearIconDiagnostic();
+            }
+            else if (icon.Status == NativeCheckSpriteStatus.Ready)
             {
                 ClearIconDiagnostic();
             }
@@ -370,7 +386,9 @@ namespace GK2.SermonReminder
             SermonHudResult result = hud.Update(state, text, sprite);
             if (result.Status == SermonHudStatus.Failed)
             {
-                // A render failure removed the owned presentation synchronously.
+                // A render failure removed the owned presentation synchronously. The
+                // channel stays on its own episode key, so a persisting failure is
+                // logged once and only a real recovery clears it.
                 LogHudDiagnostic("hud-render-failed:" + result.Failure, "GKSR_HUD_FAILED: " + result.Failure);
                 return;
             }
@@ -379,8 +397,13 @@ namespace GK2.SermonReminder
             {
                 // Suppressed because the Done icon is unavailable: the business
                 // state stays a readable Done and the in-flight handle is retained.
+                // Ordinary asset pending must not clear a prior render-failure
+                // episode, so the HUD channel is intentionally left untouched.
                 return;
             }
+
+            // Healthy render: the only point where the binding channel is complete.
+            ClearHudDiagnostic();
         }
 
         internal void Shutdown()
@@ -484,8 +507,7 @@ namespace GK2.SermonReminder
             ResetDiagnostics();
             try { hud.Teardown(); }
             catch (Exception) { }
-            try { checkSprite.Release(); }
-            catch (Exception) { }
+            ResetEligibility();
         }
 
         private void ResetReadiness()
@@ -533,6 +555,26 @@ namespace GK2.SermonReminder
         }
 
         private void ClearIconDiagnostic() => lastIconDiagnostic = null;
+
+        /// <summary>
+        /// End the current resource-eligibility episode: release the owned sprite
+        /// handle and drop its failure/backoff state. Called on every path where the
+        /// mod stops needing the asset (gates closed, off-day, unreadable state, a
+        /// replaced or failed host, readiness loss, shutdown), so a stale ownership
+        /// and an old failure episode can never survive into unrelated work.
+        ///
+        /// <paramref name="preserveIconDiagnostic"/> keeps the icon channel's
+        /// episode (used for a host failure: a broken asset stays broken across a
+        /// rebind, so its warning must not be re-emitted as a new episode).
+        /// </summary>
+        private void ResetEligibility(bool preserveIconDiagnostic = false)
+        {
+            try { checkSprite.Release(); }
+            catch (Exception) { }
+
+            if (!preserveIconDiagnostic)
+                lastIconDiagnostic = null;
+        }
 
         /// <summary>Reset every diagnostic channel for a newly authoritative save.</summary>
         private void ResetDiagnostics()
