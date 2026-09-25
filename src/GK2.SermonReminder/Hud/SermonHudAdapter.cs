@@ -281,6 +281,15 @@ namespace GK2.SermonReminder.Hud
         }
 
         /// <summary>
+        /// Detach the owned conditional Image's sprite reference right now, without
+        /// tearing anything else down. Used immediately before the caller releases its
+        /// sprite handle on a path where the display has not been re-rendered yet (an
+        /// off-sermon-day rollover), so the handle is never released while a live
+        /// Image still references the sprite it belonged to.
+        /// </summary>
+        internal void DetachOwnedIcon() => DestroyOwnedIcon();
+
+        /// <summary>
         /// Suppress the presentation while a dependency is unavailable: remove the
         /// conditional icon and hide the label, but keep the binding and the cached
         /// style so a later tick can render again without a rebind.

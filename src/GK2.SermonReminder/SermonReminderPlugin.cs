@@ -329,9 +329,10 @@ namespace GK2.SermonReminder
             SermonBindingResult binding = hud.PrepareBinding();
             if (binding.Rebound)
             {
-                // The previous binding is gone: drop the old sprite ownership before
-                // acquiring one for the new binding, so its sprite can never be
-                // assigned to the replacement display.
+                // The previous binding is gone: the old display (and its Image) was
+                // destroyed during preparation, so the old sprite reference is dropped
+                // before acquiring one for the new binding and can never be assigned
+                // to the replacement display.
                 ResetEligibility();
             }
 
@@ -359,13 +360,21 @@ namespace GK2.SermonReminder
             // it is released; on the sermon day it is preloaded and retained while
             // Ready or Done so consuming the sermon does not start a cold load.
             bool spriteEligible = state == SermonDisplayState.Ready || state == SermonDisplayState.Done;
+            if (!spriteEligible)
+            {
+                // Countdown day: no icon is expected, so this is an explicit end of
+                // the eligibility episode. Detach the live Image's sprite reference
+                // before polling releases the handle, so the handle is never released
+                // while our Image still references that sprite.
+                hud.DetachOwnedIcon();
+            }
+
             NativeCheckSpritePoll icon = checkSprite.Poll(spriteEligible);
 
             if (!spriteEligible)
             {
-                // Countdown day: no icon is expected, so this is an explicit end of
-                // the eligibility episode. The released asset closes its episode
-                // here instead of carrying a failure into the next sermon day.
+                // The released asset closes its eligibility episode here instead of
+                // carrying a failure into the next sermon day.
                 ClearIconDiagnostic();
             }
             else if (icon.Status == NativeCheckSpriteStatus.Ready)
