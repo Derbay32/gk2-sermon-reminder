@@ -3,5 +3,7 @@
   "gksr.hud.sermonDone": "This week’s sermon is complete!",
   "gksr.hud.sermonCountdown.one": "Sermon Day is Tomorrow!",
   "gksr.hud.sermonCountdown.other": "{days} days before the Sermon Day.",
-  "gksr.settings.group.title": "GK2 Sermon Reminder"
+  "gksr.settings.group.title": "GK2 Sermon Reminder",
+  "gksr.settings.beacon.label": "Enable church beacon",
+  "gksr.settings.beacon.description": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default."
 }
