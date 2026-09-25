@@ -53,6 +53,8 @@
            Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/Unity.Addressables.dll'. Pass -p:GameDir=&lt;install root&gt;." />
     <Error Condition="!Exists('$(GameManagedDir)/Unity.ResourceManager.dll')"
            Text="GK2 Sermon Reminder: native assembly not found at '$(GameManagedDir)/Unity.ResourceManager.dll'. Pass -p:GameDir=&lt;install root&gt;." />
+    <Error Condition="!Exists('$(GameManagedDir)/DOTween.dll')"
+           Text="GK2 Sermon Reminder: DOTween not found at '$(GameManagedDir)/DOTween.dll'. It ships with the game under GraveyardKeeper2_Data/Managed; pass -p:GameDir=&lt;install root&gt;." />
     <Error Condition="!Exists('$(BepInExDir)/core/BepInEx.dll')"
            Text="GK2 Sermon Reminder: BepInEx not found at '$(BepInExDir)/core/BepInEx.dll'. Pass -p:BepInExDir=&lt;BepInEx folder&gt;." />
     <Error Condition="!Exists('$(BepInExDir)/core/0Harmony.dll')"
@@ -116,6 +118,10 @@
     </Reference>
     <Reference Include="Unity.ResourceManager">
       <HintPath>$(GameManagedDir)/Unity.ResourceManager.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="DOTween">
+      <HintPath>$(GameManagedDir)/DOTween.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
