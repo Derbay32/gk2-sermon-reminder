@@ -1,13 +1,14 @@
 name: ci
 
-# Repository source/structural CI for GKSA-10 and GKSA-11.
+# Repository source/structural CI for GKSA-10, GKSA-11 and GKSA-12.
 #
 # This workflow only runs Python-standard-library source, manifest/structure and
 # negative CLI checks on hosted runners. It does NOT build native code, does NOT
 # build the plugin against game assemblies, and does NOT run or validate the
 # game. The native reference assemblies are deliberately unavailable here, so no
 # compile or fake-assembly build is attempted. Every uploaded report is a
-# source/structure/negative report and must never be read as a game passing.
+# source/structure/negative report and must never be read as a game passing, and
+# no scenario in any ticket manifest is executed by this workflow.
 on:
   pull_request:
     branches:
@@ -40,33 +41,220 @@ jobs:
             tools/package.py \
             tests/e2e/verify.py
 
-      - name: Source and resource guard (GKSA-11 manifest)
+      # Source-tool CLI acceptance cases run BEFORE the source guard is relied on.
+      # Every case indexes a disposable COPY of this repository's own versioned
+      # files inside the runner temp directory, because the CLI enumerates
+      # git ls-files. The fixtures are source-policy negative inputs only: they are
+      # not native/game stubs, not runtime captures, not unit tests and not a game
+      # harness, and they are never committed or uploaded. The matrix proves the
+      # narrow technical-registration exemption cannot mask any other duplicate copy
+      # (same file, another file, another constant, a duplicated declaration, a
+      # declaration without its BepInPlugin reference, another approved sentence, or
+      # a trailing comment), while the unchanged canonical declaration passes.
+      - name: Source-tool CLI acceptance matrix (GKSA-12)
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import shutil
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          repo = Path.cwd().resolve()
+          script = repo / "tools" / "source_check.py"
+          reports = repo / "artifacts" / "ci"
+          reports.mkdir(parents=True, exist_ok=True)
+          fixture_root = Path(os.environ.get("RUNNER_TEMP") or "/tmp") / "gksa-source-fixtures"
+          shutil.rmtree(fixture_root, ignore_errors=True)
+          fixture_root.mkdir(parents=True, exist_ok=True)
+
+          plugin_rel = "src/GK2.SermonReminder/SermonReminderPlugin.cs"
+          project_rel = "src/GK2.SermonReminder/GK2.SermonReminder.csproj"
+          manifest_rel = "tests/e2e/gksa12.json"
+          locale_rels = (
+              "src/GK2.SermonReminder/Localization/gksr.en.json",
+              "src/GK2.SermonReminder/Localization/gksr.zh_cn.json",
+          )
+          base_rels = (plugin_rel, project_rel, *locale_rels, manifest_rel)
+
+          attribute = "[BepInPlugin(PluginGuid, PluginName, PluginVersion)]"
+          title = "GK2 Sermon Reminder"
+          ready_copy = "Sermon Day!"
+
+
+          def read(rel):
+              return (repo / rel).read_text(encoding="utf-8")
+
+
+          def inject(text, block):
+              index = text.rstrip().rfind("}")
+              return text[:index] + block + "\n" + text[index:]
+
+
+          def extra_file_text():
+              return (
+                  "internal static class ExtraCopy\n"
+                  "{\n"
+                  '    internal const string Title = "' + title + '";\n'
+                  "}\n"
+              )
+
+
+          def mutate_other_file(text):
+              return text
+
+
+          def mutate_inline_title(text):
+              return inject(text, '        private string Title() { return "' + title + '"; }')
+
+
+          def mutate_other_constant(text):
+              return inject(text, '        private const string DisplayTitle = "' + title + '";')
+
+
+          def mutate_duplicate_declaration(text):
+              return inject(text, '        public const string PluginName = "' + title + '";')
+
+
+          def mutate_drop_attribute(text):
+              return text.replace(attribute, "")
+
+
+          def mutate_other_approved_copy(text):
+              return inject(text, '        private const string ReadyCopy = "' + ready_copy + '";')
+
+
+          def mutate_comment_copy(text):
+              return inject(text, "        // manifest copy illustrated here only: " + ready_copy)
+
+
+          extra_other_file = {
+              "src/GK2.SermonReminder/ExtraCopy.cs": extra_file_text(),
+          }
+
+          cases = (
+              ("a", None, None, True, None),
+              ("b", mutate_inline_title, None, False, title),
+              ("c", mutate_other_file, extra_other_file, False, title),
+              ("d", mutate_other_constant, None, False, title),
+              ("e", mutate_duplicate_declaration, None, False, title),
+              ("f", mutate_drop_attribute, None, False, title),
+              ("g", mutate_other_approved_copy, None, False, ready_copy),
+              ("h", mutate_comment_copy, None, False, ready_copy),
+          )
+
+          results = []
+          failures = []
+          for case, mutate, extra, expect_pass, expected_sentence in cases:
+              fixture = fixture_root / case
+              shutil.rmtree(fixture, ignore_errors=True)
+              for rel in base_rels:
+                  target = fixture / rel
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_text(read(rel), encoding="utf-8")
+              plugin_text = read(plugin_rel)
+              if mutate is not None:
+                  plugin_text = mutate(plugin_text)
+              (fixture / plugin_rel).write_text(plugin_text, encoding="utf-8")
+              for rel, text in (extra or {}).items():
+                  target = fixture / rel
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_text(text, encoding="utf-8")
+              subprocess.run(["git", "init", "-q", str(fixture)], check=True)
+              subprocess.run(["git", "-C", str(fixture), "add", "-A"], check=True)
+
+              output = reports / ("source-check-matrix-%s.json" % case)
+              completed = subprocess.run(
+                  [
+                      sys.executable, str(script),
+                      "--repo-root", str(fixture),
+                      "--project", project_rel,
+                      "--manifest", manifest_rel,
+                      "--output", str(output),
+                  ],
+                  capture_output=True, text=True,
+              )
+              report = json.loads(output.read_text(encoding="utf-8"))
+              hits = report.get("sentencesInCode") or []
+              ok = report.get("ok") is True
+              if expect_pass:
+                  passed = completed.returncode == 0 and ok
+              else:
+                  passed = completed.returncode == 2 and not ok and any(
+                      expected_sentence in hit for hit in hits
+                  )
+              results.append({
+                  "case": case,
+                  "expectation": "pass" if expect_pass else "fail",
+                  "exit": completed.returncode,
+                  "ok": ok,
+                  "sentencesInCode": hits,
+                  "expectedSentence": expected_sentence,
+                  "passed": passed,
+              })
+              if not passed:
+                  failures.append("case %s: exit=%s ok=%s hits=%s" % (case, completed.returncode, ok, hits))
+
+          summary = {
+              "artifactVersion": 1,
+              "kind": "gksa12-source-tool-acceptance-matrix",
+              "assertion": "source-policy-only",
+              "e2eVerdict": None,
+              "ok": not failures,
+              "cases": results,
+              "failures": failures,
+              "note": (
+                  "Source-policy CLI acceptance cases only. No native build, no game "
+                  "execution and no E2E verdict; every fixture is a disposable copy of this "
+                  "repository's own versioned files under the runner temp directory."
+              ),
+          }
+          (reports / "source-check-matrix.json").write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+
+          if failures:
+              for failure in failures:
+                  sys.stderr.write("FAIL [matrix] " + failure + "\n")
+              sys.stderr.write("RESULT: FAIL (source-tool acceptance matrix, fail-closed)\n")
+              raise SystemExit(1)
+
+          sys.stderr.write(
+              "RESULT: PASS (source-tool acceptance matrix; %d cases; no game execution asserted)\n"
+              % len(results)
+          )
+          PY
+
+      - name: Source and resource guard (GKSA-12 manifest)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           python3 tools/source_check.py \
             --repo-root . \
-            --manifest tests/e2e/gksa11.json \
-            --output artifacts/ci/source-check-gksa11.json
+            --manifest tests/e2e/gksa12.json \
+            --output artifacts/ci/source-check-gksa12.json
 
-      - name: Manifest structural check (GKSA-10 and GKSA-11)
+      - name: Manifest structural check (GKSA-10, GKSA-11 and GKSA-12)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for ticket in gksa10 gksa11; do
+          for ticket in gksa10 gksa11 gksa12; do
             python3 tests/e2e/verify.py \
               --manifest "tests/e2e/${ticket}.json" \
               --check-manifest \
               --output "artifacts/ci/manifest-${ticket}.json"
           done
 
-      - name: Negative check - missing capture is rejected (both tickets)
+      - name: Negative check - missing capture is rejected (three tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for ticket in gksa10 gksa11; do
+          for ticket in gksa10 gksa11 gksa12; do
             capture="tests/e2e/no-such-capture-${ticket}.json"
             test ! -e "$capture"
             set +e
@@ -81,12 +269,12 @@ jobs:
             python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-missing-${ticket}.json')); sys.exit(0 if d.get('ok') is False else 1)"
           done
 
-      - name: Negative check - example capture is rejected (both tickets)
+      - name: Negative check - example capture is rejected (three tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for pair in "gksa10 capture.example.json" "gksa11 capture.gksa11.example.json"; do
+          for pair in "gksa10 capture.example.json" "gksa11 capture.gksa11.example.json" "gksa12 capture.gksa12.example.json"; do
             set -- $pair
             ticket=$1
             example=$2
@@ -102,52 +290,64 @@ jobs:
             python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-example-${ticket}.json')); sys.exit(0 if d.get('ok') is False else 1)"
           done
 
-      # Bounded negative CLI checks that prove ticket binding, not game support:
-      # each manifest is fed a minimal malformed capture whose supported kind
-      # belongs to the opposite ticket. A plain '-example' kind would be rejected
-      # for being unsupported, which would not exercise the ticket mismatch, so the
-      # opposite ticket's real kind is used deliberately. The inputs live outside
-      # the uploaded report paths, are labelled negative-only, and model no game
-      # execution whatsoever.
-      - name: Negative check - cross-ticket capture is rejected (both directions)
+      # Bounded negative CLI checks that prove ticket binding, not game support.
+      # Each manifest is fed a minimal malformed capture whose supported kind (a real
+      # '-e2e-capture' kind) belongs to a different ticket. A plain '-example' kind
+      # would be rejected as unsupported, which would not exercise the ticket
+      # mismatch, so the opposite ticket's real kind is used deliberately. The six
+      # ordered pairs among GKSA-10/11/12 are covered. The inputs live outside the
+      # uploaded report paths, are explicitly labelled negative-only, and model no
+      # game execution whatsoever.
+      - name: Negative check - cross-ticket capture is rejected (six ordered pairs)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          mkdir -p artifacts/ci/negative-inputs
           negative_dir="artifacts/ci/negative-inputs"
-          python3 -c "import json; json.dump({'kind': 'gksa11-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding, describes no game execution'}, open('${negative_dir}/cross-gksa11.json', 'w'), indent=2, sort_keys=True)"
-          python3 -c "import json; json.dump({'kind': 'gksa10-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding, describes no game execution'}, open('${negative_dir}/cross-gksa10.json', 'w'), indent=2, sort_keys=True)"
-          for pair in "gksa10 ${negative_dir}/cross-gksa11.json" "gksa11 ${negative_dir}/cross-gksa10.json"; do
+          mkdir -p "$negative_dir"
+          for source in gksa10 gksa11 gksa12; do
+            python3 -c "import json,sys; json.dump({'kind': sys.argv[1] + '-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding and describes no game execution'}, open(sys.argv[2], 'w'), indent=2, sort_keys=True)" "$source" "${negative_dir}/negative-${source}.json"
+          done
+          for pair in \
+            "gksa10 gksa11" "gksa10 gksa12" \
+            "gksa11 gksa10" "gksa11 gksa12" \
+            "gksa12 gksa10" "gksa12 gksa11"; do
             set -- $pair
-            ticket=$1
-            capture=$2
+            target=$1
+            source=$2
+            report="artifacts/ci/reject-cross-${target}-from-${source}.json"
             set +e
             python3 tests/e2e/verify.py \
-              --manifest "tests/e2e/${ticket}.json" \
-              --capture "$capture" \
-              --output "artifacts/ci/reject-cross-${ticket}.json" 2>/dev/null
+              --manifest "tests/e2e/${target}.json" \
+              --capture "${negative_dir}/negative-${source}.json" \
+              --output "$report" 2>/dev/null
             status=$?
             set -e
-            echo "reject-cross-${ticket} exit code: $status"
+            echo "reject-cross-${target}-from-${source} exit code: $status"
             test "$status" -eq 2
-            # The report keeps ok=false and the mismatch reason, so the negative
-            # result and its cause travel together in the uploaded artifact.
-            python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-cross-${ticket}.json')); msg=(d.get('error') or {}).get('message',''); sys.exit(0 if d.get('ok') is False and 'does not match manifest ticket' in msg else 1)"
+            python3 -c "import json,sys; d=json.load(open(sys.argv[1])); msg=(d.get('error') or {}).get('message',''); sys.exit(0 if d.get('ok') is False and 'does not match manifest ticket' in msg else 1)" "$report"
           done
 
       - name: Upload structural reports (not a game pass)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: gksa10-gksa11-source-structure-reports
+          name: gksa10-gksa11-gksa12-source-structure-reports
           path: |
-            artifacts/ci/source-check-gksa11.json
+            artifacts/ci/source-check-matrix.json
+            artifacts/ci/source-check-gksa12.json
             artifacts/ci/manifest-gksa10.json
             artifacts/ci/manifest-gksa11.json
+            artifacts/ci/manifest-gksa12.json
             artifacts/ci/reject-missing-gksa10.json
             artifacts/ci/reject-missing-gksa11.json
+            artifacts/ci/reject-missing-gksa12.json
             artifacts/ci/reject-example-gksa10.json
             artifacts/ci/reject-example-gksa11.json
-            artifacts/ci/reject-cross-gksa10.json
-            artifacts/ci/reject-cross-gksa11.json
+            artifacts/ci/reject-example-gksa12.json
+            artifacts/ci/reject-cross-gksa10-from-gksa11.json
+            artifacts/ci/reject-cross-gksa10-from-gksa12.json
+            artifacts/ci/reject-cross-gksa11-from-gksa10.json
+            artifacts/ci/reject-cross-gksa11-from-gksa12.json
+            artifacts/ci/reject-cross-gksa12-from-gksa10.json
+            artifacts/ci/reject-cross-gksa12-from-gksa11.json
           if-no-files-found: error

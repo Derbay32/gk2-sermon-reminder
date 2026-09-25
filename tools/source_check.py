@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GKSA-11 source and resource guard.
+"""GKSA-12 source and resource guard.
 
 Structural / source inspection only. This helper never installs or runs the
 game, never compiles native code, and never asserts a game E2E verdict. It is
@@ -16,7 +16,21 @@ Checks:
     catalog carries an identical key set, every required HUD key is present,
     every value is a nonempty string, placeholder parity holds, and every
     implemented HUD sentence matches the accepted manifest finalText;
-  * no final localized sentence is duplicated inside C# source.
+  * no final localized sentence is duplicated inside C# source, with one narrow
+    documented technical-registration-metadata exception (see below).
+
+Technical registration-metadata exception: the mod's public BepInEx display
+name is declared exactly once as ``public const string PluginName = "...";``
+and referenced by the actual ``[BepInPlugin(PluginGuid, PluginName,
+PluginVersion)]`` attribute. That single declaration's exact string-literal span
+is registration metadata, not localized copy. Solely in
+``src/GK2.SermonReminder/SermonReminderPlugin.cs``, and solely when exactly one
+such declaration plus its attribute are present, that literal span is excluded
+from the duplicate scan. It is never a whole-file, whole-line, arbitrary-field
+or all-copies exemption: an ambiguous shape (zero or multiple declarations, a
+missing attribute) is rejected rather than masked, and every other copy of the
+sentence still fails. This is one documented exception, not a localized-copy
+allowlist and not a compatibility fallback.
 
 Only the Python 3 standard library is used.
 """
@@ -62,6 +76,19 @@ REQUIRED_HUD_KEYS = (
     "gksr.hud.sermonReminder",
     "gksr.hud.sermonDone",
 )
+
+# Default accepted manifest used as the finalText source of truth. The latest
+# implemented specification is GKSA-12; ``--manifest`` overrides it (for example
+# to guard an earlier ticket explicitly).
+DEFAULT_MANIFEST = "tests/e2e/gksa12.json"
+
+# Narrow technical-registration-metadata exception, scoped to the one plugin file
+# that declares the BepInEx plugin registration. See the module docstring.
+REGISTRATION_FILE = "src/GK2.SermonReminder/SermonReminderPlugin.cs"
+PLUGIN_NAME_DECLARATION = re.compile(
+    r'public\s+const\s+string\s+PluginName\s*=\s*"(?P<value>[^"]*)"\s*;'
+)
+PLUGIN_ATTRIBUTE = "[BepInPlugin(PluginGuid, PluginName, PluginVersion)]"
 
 
 def strip_ns(tag: str) -> str:
@@ -376,8 +403,30 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
     return localization, implemented_keys, manifest_text
 
 
+def registration_metadata_span(text: str):
+    """Exact (start, end) span of the one canonical registration declaration.
+
+    Returns ``None`` unless exactly one ``public const string PluginName = "...";``
+    declaration AND exactly one real ``[BepInPlugin(...)]`` attribute referencing
+    ``PluginName`` are present, so an ambiguous or partial shape is rejected
+    rather than masked.
+    """
+    if text.count(PLUGIN_ATTRIBUTE) != 1:
+        return None
+
+    matches = list(PLUGIN_NAME_DECLARATION.finditer(text))
+    if len(matches) != 1:
+        return None
+
+    return matches[0].span("value")
+
+
 def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
-    """No accepted final sentence may be duplicated inside C# source."""
+    """No accepted final sentence may be duplicated inside C# source.
+
+    The single BepInEx registration declaration in the plugin file is excluded by
+    its exact literal span only; see :func:`registration_metadata_span`.
+    """
     sentences = set()
     for translations in manifest_text.values():
         if isinstance(translations, dict):
@@ -393,6 +442,13 @@ def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
         if not relative.endswith(".cs"):
             continue
         text = read_text(root / relative)
+        if relative == REGISTRATION_FILE:
+            span = registration_metadata_span(text)
+            if span is not None:
+                start, end = span
+                # Blank only the exact literal span; surrounding and trailing
+                # content stays scannable so any other duplicate copy still fails.
+                text = text[:start] + (" " * (end - start)) + text[end:]
         for sentence in sorted(sentences):
             if sentence in text:
                 violations.append(f"{relative}: contains final sentence {sentence!r}")
@@ -400,16 +456,19 @@ def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="GKSA-11 source/resource guard.")
+    parser = argparse.ArgumentParser(description="GKSA-12 source/resource guard.")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--project", default="src/GK2.SermonReminder/GK2.SermonReminder.csproj")
     parser.add_argument(
         "--manifest",
-        default="tests/e2e/gksa11.json",
+        default=DEFAULT_MANIFEST,
         help=(
             "Accepted ticket manifest used as the finalText source of truth. "
-            "Defaults to the latest implemented HUD specification (GKSA-11); pass "
-            "another ticket's manifest explicitly to guard that ticket instead."
+            "Defaults to the latest implemented specification (GKSA-12); pass "
+            "another ticket's manifest explicitly to guard that ticket instead. "
+            "The plugin file's single BepInEx registration declaration literal is "
+            "the only documented technical-metadata exception to the duplicate-"
+            "copy scan."
         ),
     )
     parser.add_argument("--output", required=True)
