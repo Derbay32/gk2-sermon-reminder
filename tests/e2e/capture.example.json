@@ -7,7 +7,11 @@
     "rejects it as an unsupported schema. Replace the placeholder paths with real",
     "artifacts produced by an actual Proton run and copy it to a capture file whose",
     "kind is 'gksa10-e2e-capture'.",
-    "The validator never generates a capture and never marks a scenario passed."
+    "The validator never generates a capture and never marks a scenario passed.",
+    "Day-of-week model: dayOfWeek = rawDay % 6 with remainder 0 mapped to 6 (Build25509347",
+    "DAYS_IN_WEEK = 6); the sermon weekday is ConstDef.Get(\"day_wrath\").IntValue; the",
+    "countdown is (sermonWeekday - dayOfWeek + 6) % 6.",
+    "The style source field is the verified identifier HUD.happinessLabel."
   ],
   "environment": {
     "game.name": "Graveyard Keeper 2 (Steam Windows build)",
@@ -44,6 +48,25 @@
       "save.churchUnlocked": false,
       "hud.visible": false,
       "language.active": "zh_cn"
+    },
+    "countdown-one-day-zh": {
+      "hud.visible": true,
+      "save.dayOfWeek": 1,
+      "save.sermonWeekday": 2,
+      "save.daysInWeek": 6,
+      "hud.countdownDays": 1,
+      "language.active": "zh_cn",
+      "hud.text": "明天是布道日！"
+    },
+    "cycle-wrap": {
+      "save.priorDayOfWeek": 6,
+      "save.dayOfWeek": 1,
+      "save.sermonWeekday": 2,
+      "save.daysInWeek": 6,
+      "hud.visible": true,
+      "hud.countdownDays": 1,
+      "hud.textKey": "gksr.hud.sermonCountdown.one",
+      "hud.text": "明天是布道日！"
     }
   },
   "results": [
@@ -55,6 +78,24 @@
       },
       "measurement": false,
       "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+    },
+    {
+      "scenarioId": "countdown-one-day-zh",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/countdown-one-day-zh.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes."
+    },
+    {
+      "scenarioId": "cycle-wrap",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/cycle-wrap.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes."
     }
   ]
 }

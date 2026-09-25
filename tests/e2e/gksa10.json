@@ -12,7 +12,9 @@
     "布局结论必须附带实测测量值或操作者明确观察记录，并附截图；仅日志不能作为布局证据。",
     "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
     "requiredEnvironmentPaths 的路径相对 capture.environment 解析。",
-    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。"
+    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
+    "天数按 (sermonWeekday - dayOfWeek + 6) % 6 计算，其中 dayOfWeek 为 day % 6 且余数 0 记为 6，sermonWeekday 取自 ConstDef.Get(\"day_wrath\").IntValue。",
+    "hud.style.nativeSource 记录已验证的来源字段标识 HUD.happinessLabel，而非猜测的 GameObject 名称。"
   ],
   "baselineCommit": "7b2a77271bd94bafb9236e2a0076ba4fbb057970",
   "specRefs": [
@@ -60,7 +62,7 @@
     "hud.instanceCount": "int: 模组自有的角落文字显示实例数量",
     "hud.nonSermonCountdownShown": "bool: 布道日当天是否仍显示非布道日倒计时",
     "hud.style.clonedFromNative": "bool: 字体、字号、材质、描边与颜色是否自原生幸福度文字复制",
-    "hud.style.nativeSource": "string: 样式复制来源标识，例如 happiness_text",
+    "hud.style.nativeSource": "string: 样式复制来源的已验证字段标识 HUD.happinessLabel（表示来源字段，不是未经核实的 GameObject 名称）",
     "hud.style.fontMatchesNative": "bool: 字体一致",
     "hud.style.fontSizeMatchesNative": "bool: 字号一致",
     "hud.style.materialMatchesNative": "bool: 材质一致",
@@ -80,8 +82,7 @@
     "save.churchUnlocked": "bool: 教堂开启任务是否 Completed",
     "save.tutorialCompleted": "bool: 首次布道教学任务是否 Completed",
     "save.isSermonDay": "bool: 当前游戏日是否为布道日",
-    "save.gameDayNumber": "int: 当前游戏日期编号",
-    "save.priorGameDayNumber": "int: 跨日或周期边界前的游戏日期编号",
+    "save.gameDayNumber": "int: 当前存档的绝对游戏日期编号（EnvironmentData.CurrentDayNumber），正整数",
     "save.afterDayNumber": "int: 跨日后游戏日期编号",
     "save.beforeDayNumber": "int: 跨日前游戏日期编号",
     "save.dayAdvanced": "bool: 操作期间游戏日期是否变化",
@@ -95,7 +96,11 @@
     "fault.reported": "bool: 是否上报了故障",
     "items.count": "int: 当前背包或基地物品数量",
     "plugin.loaded": "bool: 插件是否在真实 Proton 环境中实际加载",
-    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载"
+    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载",
+    "save.dayOfWeek": "int: 由原始 day 计算的星期编号；CurrentDayNumber = day % 6，余数 0 记为 6，Build25509347 DAYS_IN_WEEK = 6",
+    "save.priorDayOfWeek": "int: 周期边界或跨日前一天的星期编号",
+    "save.sermonWeekday": "int: 游戏自身 ConstDef.Get(\"day_wrath\").IntValue 的布道日星期编号",
+    "save.daysInWeek": "int: EnvironmentData.DAYS_IN_WEEK 常量值，Build25509347 为 6"
   },
   "validation": {
     "supportedCaptureVersions": [
@@ -280,7 +285,7 @@
       "category": "countdown-text",
       "prerequisites": [
         "教堂开启任务与首次布道教学任务均为 Completed。",
-        "当前游戏日的下一游戏日为布道日。",
+        "具体非边界日期：星期编号为 1，布道日星期编号为 2，二者均在六日循环内且不跨越周期边界。",
         "游戏语言为简体中文。"
       ],
       "steps": [
@@ -289,8 +294,35 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "hud.visible",
           "equals": true
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equals": 1
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 2
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.countdownDays",
@@ -318,7 +350,7 @@
       "category": "countdown-text",
       "prerequisites": [
         "教堂开启任务与首次布道教学任务均为 Completed。",
-        "当前游戏日的下一游戏日为布道日。",
+        "具体非边界日期：星期编号为 1，布道日星期编号为 2，二者均在六日循环内且不跨越周期边界。",
         "游戏语言为英语。"
       ],
       "steps": [
@@ -327,8 +359,35 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "hud.visible",
           "equals": true
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equals": 1
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 2
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.countdownDays",
@@ -356,7 +415,7 @@
       "category": "countdown-text",
       "prerequisites": [
         "教堂开启任务与首次布道教学任务均为 Completed。",
-        "当前游戏日距离下一布道日大于 1 天。",
+        "具体非边界日期：星期编号为 3，布道日星期编号为 5，二者均在六日循环内且不跨越周期边界。",
         "游戏语言为简体中文。"
       ],
       "steps": [
@@ -365,12 +424,46 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "hud.visible",
           "equals": true
         },
         {
+          "observation": "save.dayOfWeek",
+          "equals": 3
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 5
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
           "observation": "hud.countdownDays",
-          "integerGreaterThan": 1
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerBetween": {
+            "min": 1,
+            "max": 5
+          }
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equals": 2
         },
         {
           "observation": "language.active",
@@ -395,7 +488,7 @@
       "category": "countdown-text",
       "prerequisites": [
         "教堂开启任务与首次布道教学任务均为 Completed。",
-        "当前游戏日距离下一布道日大于 1 天。",
+        "具体非边界日期：星期编号为 3，布道日星期编号为 5，二者均在六日循环内且不跨越周期边界。",
         "游戏语言为英语。"
       ],
       "steps": [
@@ -404,12 +497,46 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "hud.visible",
           "equals": true
         },
         {
+          "observation": "save.dayOfWeek",
+          "equals": 3
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 5
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
           "observation": "hud.countdownDays",
-          "integerGreaterThan": 1
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerBetween": {
+            "min": 1,
+            "max": 5
+          }
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equals": 2
         },
         {
           "observation": "language.active",
@@ -434,7 +561,7 @@
       "category": "countdown-time",
       "prerequisites": [
         "解锁条件与教学条件均已满足的当前存档。",
-        "当前为非布道日。"
+        "具体非边界日期：星期编号为 3，布道日星期编号为 5，二者均在六日循环内且不跨越周期边界。"
       ],
       "steps": [
         "记录当前整数天数。",
@@ -443,16 +570,43 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "save.dayAdvanced",
           "equals": false
         },
         {
+          "observation": "save.dayOfWeek",
+          "equals": 3
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 5
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
           "observation": "countdown.afterDays",
-          "integerGreaterThan": 1
+          "equals": 2
         },
         {
           "observation": "countdown.afterDays",
           "equalsObservation": "countdown.beforeDays"
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.text",
@@ -473,7 +627,7 @@
       "category": "countdown-time",
       "prerequisites": [
         "解锁条件与教学条件均已满足的当前存档。",
-        "跨日后仍为非布道日且距离下一布道日大于 1 天。"
+        "具体连续非边界日期：跨日前星期编号为 2，跨日后星期编号为 3，布道日星期编号为 5，整个过程不跨越周期边界。"
       ],
       "steps": [
         "记录跨日前的游戏日期编号与倒计时天数。",
@@ -482,16 +636,71 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.beforeDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "save.afterDayNumber",
-          "greaterThanObservation": "save.beforeDayNumber"
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.beforeDayNumber",
+          "equalsObservation": "save.priorDayOfWeek"
+        },
+        {
+          "observation": "save.afterDayNumber",
+          "equalsObservation": "save.dayOfWeek"
+        },
+        {
+          "observation": "save.priorDayOfWeek",
+          "equals": 2
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equals": 3
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 5
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
         },
         {
           "observation": "hud.countdownDays",
-          "integerGreaterThan": 1
+          "integerBetween": {
+            "min": 1,
+            "max": 5
+          }
         },
         {
           "observation": "hud.countdownDays",
-          "notEqualsObservation": "countdown.beforeDays"
+          "equalsObservationMinus": {
+            "otherObservation": "countdown.beforeDays",
+            "delta": -1
+          }
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.text",
@@ -512,7 +721,7 @@
       "category": "countdown-time",
       "prerequisites": [
         "解锁条件与教学条件均已满足的当前存档。",
-        "跨入布道日当天。"
+        "跨入布道日当天：星期编号等于布道日星期编号。"
       ],
       "steps": [
         "推进游戏时间进入布道日。",
@@ -520,8 +729,23 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "save.isSermonDay",
           "equals": true
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equalsObservation": "save.sermonWeekday"
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
         },
         {
           "observation": "hud.nonSermonCountdownShown",
@@ -536,11 +760,11 @@
     },
     {
       "id": "cycle-wrap",
-      "title": "跨越六日周期边界时日期差保持正确正整数",
+      "title": "跨越六日周期边界（星期 6 到星期 1）时倒计时按数学差值正确回到 1 天",
       "category": "countdown-time",
       "prerequisites": [
         "解锁条件与教学条件均已满足的当前存档。",
-        "游戏日期编号位于调查基线六日循环的末尾附近。"
+        "具体周期边界：跨日前星期编号为 6，跨日后星期编号为 1，布道日星期编号为 2。"
       ],
       "steps": [
         "记录周期边界前的游戏日期编号。",
@@ -549,12 +773,27 @@
       ],
       "expect": [
         {
-          "observation": "save.priorGameDayNumber",
-          "present": true
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
         },
         {
-          "observation": "save.gameDayNumber",
-          "present": true
+          "observation": "save.priorDayOfWeek",
+          "equals": 6
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equals": 1
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 2
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
         },
         {
           "observation": "hud.visible",
@@ -562,7 +801,15 @@
         },
         {
           "observation": "hud.countdownDays",
-          "integerGreaterThan": 0
+          "equals": 1
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.text",
@@ -597,6 +844,13 @@
       ],
       "expect": [
         {
+          "observation": "save.gameDayNumber",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
           "observation": "language.active",
           "notEquals": "zh_cn"
         },
@@ -605,8 +859,28 @@
           "notEquals": "en"
         },
         {
+          "observation": "save.dayOfWeek",
+          "equals": 3
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equals": 5
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
           "observation": "hud.visible",
           "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equalsWeekDelta": {
+            "targetObservation": "save.sermonWeekday",
+            "currentObservation": "save.dayOfWeek",
+            "daysInWeekObservation": "save.daysInWeek"
+          }
         },
         {
           "observation": "hud.text",
@@ -631,7 +905,7 @@
       ],
       "steps": [
         "载入该存档并等待加载完成。",
-        "对比倒计时文字与原生幸福度文字的字体、字号、材质、描边与颜色。"
+        "对比倒计时文字与 HUD.happinessLabel 所标识的原生幸福度文字来源的字体、字号、材质、描边与颜色。"
       ],
       "expect": [
         {
@@ -644,7 +918,7 @@
         },
         {
           "observation": "hud.style.nativeSource",
-          "equals": "happiness_text"
+          "equals": "HUD.happinessLabel"
         },
         {
           "observation": "hud.style.fontMatchesNative",

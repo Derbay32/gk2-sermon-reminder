@@ -27,6 +27,7 @@ from datetime import datetime
 from pathlib import Path
 
 SUPPORTED_CAPTURE_VERSIONS = (1,)
+SUPPORTED_MANIFEST_VERSIONS = (1,)
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GIT_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 ISO_RE = re.compile(
@@ -68,8 +69,32 @@ def is_number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def is_int(value):
+    """Strict JSON integer: bool is not an integer, float is not an integer."""
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def is_positive_int(value):
-    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+    return is_int(value) and value > 0
+
+
+def json_type_kind(value):
+    """Strict JSON type identity so 1, 1.0, true and 'true' never alias."""
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int):
+        return "integer"
+    if isinstance(value, float):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "array"
+    if value is None:
+        return "null"
+    if isinstance(value, dict):
+        return "object"
+    return type(value).__name__
 
 
 # --------------------------------------------------------------------------
@@ -147,22 +172,33 @@ def validate_manifest(manifest):
 
     This is structural validation only: it proves the manifest can be used by
     the full evidence validator. It never asserts that any game scenario passed.
+    Every malformed shape raises Fail (never an uncaught AttributeError,
+    KeyError or TypeError), so the caller can emit a deterministic artifact.
     """
+    if not isinstance(manifest, dict):
+        raise Fail(f"manifest root must be a JSON object, got {type(manifest).__name__}")
     if manifest.get("kind") != "gksa10-e2e-manifest":
         raise Fail(f"unsupported manifest kind: {manifest.get('kind')!r}")
-    if not is_positive_int(manifest.get("manifestVersion")):
-        raise Fail("manifestVersion must be a positive integer")
+    manifest_version = manifest.get("manifestVersion")
+    if not is_int(manifest_version) or manifest_version not in SUPPORTED_MANIFEST_VERSIONS:
+        raise Fail(
+            f"manifestVersion must be exactly integer {list(SUPPORTED_MANIFEST_VERSIONS)}; "
+            f"got {manifest_version!r} ({json_type_kind(manifest_version)})"
+        )
     final_text = manifest.get("finalText")
     if not isinstance(final_text, dict) or not final_text:
         raise Fail("manifest must declare finalText for every required key")
     for key, translations in final_text.items():
+        if not isinstance(key, str) or not key.strip():
+            raise Fail(f"finalText key {key!r} must be a non-empty string")
         if not isinstance(translations, dict) or not translations:
             raise Fail(f"finalText[{key!r}] must map languages to complete sentences")
         for language, text in translations.items():
             if not isinstance(text, str) or not text.strip():
                 raise Fail(f"finalText[{key!r}][{language!r}] must be a non-empty sentence")
-        if "{" in translations.get("en", ""):
-            en_params = set(re.findall(r"\{(\w+)\}", translations["en"]))
+        en_placeholders = re.findall(r"\{(\w+)\}", translations.get("en", ""))
+        if en_placeholders:
+            en_params = set(en_placeholders)
             zh_params = set(re.findall(r"\{(\w+)\}", translations.get("zh-CN", "")))
             if en_params != zh_params:
                 raise Fail(
@@ -173,12 +209,25 @@ def validate_manifest(manifest):
     language_mapping = manifest.get("languageMapping")
     if not isinstance(language_mapping, dict) or not language_mapping:
         raise Fail("manifest must declare languageMapping between catalog labels and raw game ids")
+    label_map = language_mapping.get("catalogLabelToRawGameLanguageId")
+    if not isinstance(label_map, dict) or not label_map:
+        raise Fail(
+            "languageMapping.catalogLabelToRawGameLanguageId must be a non-empty object"
+        )
+    for label, raw_id in label_map.items():
+        if not isinstance(label, str) or not isinstance(raw_id, str) or not raw_id.strip():
+            raise Fail(
+                f"languageMapping entry {label!r} -> {raw_id!r} must map a string "
+                "catalog label to a non-empty raw game language id"
+            )
 
     scenarios = manifest.get("scenarios")
     if not isinstance(scenarios, list) or not scenarios:
         raise Fail("manifest must declare a non-empty scenarios array")
     seen = set()
     for scenario in scenarios:
+        if not isinstance(scenario, dict):
+            raise Fail(f"each scenario must be an object, got {type(scenario).__name__}")
         sid = scenario.get("id")
         if not isinstance(sid, str) or not sid.strip():
             raise Fail(f"scenario without a usable id: {scenario!r}")
@@ -189,10 +238,14 @@ def validate_manifest(manifest):
         if not isinstance(expect, list) or not expect:
             raise Fail(f"scenario {sid} has no expectations")
         for condition in expect:
-            if not isinstance(condition, dict) or not condition.get("observation"):
-                raise Fail(f"scenario {sid} has a malformed expectation")
+            if not isinstance(condition, dict) or not isinstance(condition.get("observation"), str) \
+                    or not condition["observation"].strip():
+                raise Fail(f"scenario {sid} has a malformed expectation: {condition!r}")
             if "equals" not in condition and not (
                 "integerGreaterThan" in condition
+                or "integerBetween" in condition
+                or "equalsObservationMinus" in condition
+                or "equalsWeekDelta" in condition
                 or "greaterThanObservation" in condition
                 or "notEquals" in condition
                 or "notEqualsObservation" in condition
@@ -202,6 +255,11 @@ def validate_manifest(manifest):
                 or "finalTextKeyFromObservation" in condition
             ):
                 raise Fail(f"scenario {sid} expectation without a check: {condition!r}")
+            if "finalTextKey" in condition and "finalTextKeyFromObservation" in condition:
+                raise Fail(
+                    f"scenario {sid} expectation must use either finalTextKey or "
+                    "finalTextKeyFromObservation, not both"
+                )
             if ("finalTextKey" in condition or "finalTextKeyFromObservation" in condition):
                 language = condition.get("language")
                 if language not in ("zh-CN", "en"):
@@ -210,7 +268,6 @@ def validate_manifest(manifest):
                         "finalText languages are catalog labels (zh-CN, en)"
                     )
             if condition["observation"] == "language.active":
-                label_map = language_mapping["catalogLabelToRawGameLanguageId"]
                 raw_ids = set(label_map.values())
                 for key in ("equals", "notEquals"):
                     value = condition.get(key)
@@ -259,62 +316,111 @@ def check_language_observations(capture, manifest):
 
 def validate_capture_shape(capture, manifest):
     if not isinstance(capture, dict):
-        raise Fail("capture root must be a JSON object")
+        raise Fail(f"capture root must be a JSON object, got {type(capture).__name__}")
     if capture.get("kind") != "gksa10-e2e-capture":
         raise Fail(f"unsupported capture kind: {capture.get('kind')!r}")
     version = capture.get("captureVersion")
-    supported = tuple(manifest.get("validation", {}).get("supportedCaptureVersions", SUPPORTED_CAPTURE_VERSIONS))
-    if version not in supported:
-        raise Fail(f"unsupported captureVersion {version!r}; supported: {list(supported)}")
-    if not isinstance(capture.get("environment"), dict):
+    supported = tuple(
+        manifest.get("validation", {}).get("supportedCaptureVersions", SUPPORTED_CAPTURE_VERSIONS)
+    )
+    # Strict integer identity: True == 1 and 1.0 == 1 in Python, so a bare
+    # membership test would accept boolean or float aliases of a valid version.
+    if not is_int(version) or version not in supported:
+        raise Fail(
+            f"unsupported captureVersion {version!r} ({json_type_kind(version)}); "
+            f"supported integer versions: {list(supported)}"
+        )
+    environment = capture.get("environment")
+    if not isinstance(environment, dict):
         raise Fail("capture.environment must be an object")
-    if not isinstance(capture.get("observations"), dict) or not capture["observations"]:
+    observations = capture.get("observations")
+    if not isinstance(observations, dict) or not observations:
         raise Fail("capture.observations must be a non-empty object keyed by scenario id")
-    if not isinstance(capture.get("results"), list):
+    for sid, observation in observations.items():
+        if not isinstance(sid, str) or not sid.strip():
+            raise Fail(f"capture.observations has a non-string scenario key {sid!r}")
+        if not isinstance(observation, dict) or not observation:
+            raise Fail(f"capture.observations[{sid!r}] must be a non-empty object")
+    results = capture.get("results")
+    if not isinstance(results, list):
         raise Fail("capture.results must be an array of executed scenario records")
-    for record in capture["results"]:
+    seen_ids = set()
+    for record in results:
         if not isinstance(record, dict):
             raise Fail(f"each capture result must be an object, got {record!r}")
         if not isinstance(record.get("scenarioId"), str) or not record["scenarioId"].strip():
             raise Fail("each capture result must carry a non-empty scenarioId")
-        if not isinstance(record.get("status"), str):
-            raise Fail(f"capture result {record.get('scenarioId')!r} must carry a status string")
+        scenario_id = record["scenarioId"]
+        if scenario_id in seen_ids:
+            raise Fail(
+                f"duplicate capture result scenarioId {scenario_id!r}; "
+                "results must not overwrite each other"
+            )
+        seen_ids.add(scenario_id)
+        if not isinstance(record.get("status"), str) or not record["status"].strip():
+            raise Fail(f"capture result {scenario_id!r} must carry a status string")
         evidence = record.get("evidence", {})
         if not isinstance(evidence, dict):
             raise Fail(
-                f"capture result {record['scenarioId']!r} evidence must be an object "
+                f"capture result {scenario_id!r} evidence must be an object "
                 "mapping the evidence category (screenshot/log/video) to a path"
             )
         for category, paths in evidence.items():
             if not isinstance(category, str) or not category.strip():
-                raise Fail(f"capture result {record['scenarioId']!r} has a malformed evidence category")
+                raise Fail(f"capture result {scenario_id!r} has a malformed evidence category")
             if isinstance(paths, str):
                 paths = [paths]
-            if not isinstance(paths, list) or not all(
-                isinstance(p, str) and p.strip() for p in paths
-            ):
+            if not isinstance(paths, list) or not paths:
                 raise Fail(
-                    f"capture result {record['scenarioId']!r} category {category!r} "
-                    "must map to a path or a list of paths"
+                    f"capture result {scenario_id!r} category {category!r} must list at "
+                    "least one evidence path; empty lists are not evidence"
                 )
+            if not all(isinstance(p, str) and p.strip() for p in paths):
+                raise Fail(
+                    f"capture result {scenario_id!r} category {category!r} must map to "
+                    "non-empty path strings"
+                )
+        measurement = record.get("measurement", False)
+        if measurement is not False and not isinstance(measurement, dict):
+            raise Fail(
+                f"capture result {scenario_id!r} measurement must be false or an object"
+            )
 
 
 def validate_environment(env, manifest, capture_dir):
     validation = manifest.get("validation", {})
-    for spec in validation.get("requiredEnvironmentPaths", []):
+    if not isinstance(validation, dict):
+        raise Fail("manifest.validation must be an object")
+    required = validation.get("requiredEnvironmentPaths", [])
+    if not isinstance(required, list):
+        raise Fail("manifest.validation.requiredEnvironmentPaths must be an array")
+    for spec in required:
+        if not isinstance(spec, dict) or not isinstance(spec.get("path"), str):
+            raise Fail(f"malformed requiredEnvironmentPaths entry: {spec!r}")
         path = spec["path"]
         if not has_path(env, path):
             raise Fail(f"environment is missing required field {path!r}")
         value = get_path(env, path)
         check_type(value, spec["type"])
-        if "equals" in spec and value != spec["equals"]:
+        if "equals" in spec and (
+            json_type_kind(value) != json_type_kind(spec["equals"])
+            or value != spec["equals"]
+        ):
             raise Fail(
-                f"environment field {path!r} must equal {spec['equals']!r}, got {value!r}"
+                f"environment field {path!r} must equal {spec['equals']!r} "
+                f"({json_type_kind(spec['equals'])}), got {value!r} ({json_type_kind(value)})"
             )
 
-    for group in validation.get("buildPluginHashConsistency", []):
+    groups = validation.get("buildPluginHashConsistency", [])
+    if not isinstance(groups, list):
+        raise Fail("manifest.validation.buildPluginHashConsistency must be an array")
+    for group in groups:
+        if not isinstance(group, list) or not group:
+            raise Fail(f"malformed buildPluginHashConsistency group: {group!r}")
         values = {}
         for path in group:
+            if not isinstance(path, str):
+                raise Fail(f"malformed buildPluginHashConsistency path: {path!r}")
             if not has_path(env, path):
                 raise Fail(f"environment is missing consistency field {path!r}")
             values[path] = get_path(env, path)
@@ -326,6 +432,8 @@ def validate_environment(env, manifest, capture_dir):
     if not isinstance(evidence_files, dict) or not evidence_files:
         raise Fail("environment.evidenceFiles must be a non-empty object of sha256 hashes")
     for name, digest in evidence_files.items():
+        if not isinstance(name, str) or not name.strip():
+            raise Fail(f"evidenceFiles has a non-string file key {name!r}")
         if not isinstance(digest, str) or not SHA256_RE.match(digest):
             raise Fail(f"evidenceFiles[{name!r}] must be a lowercase 64-hex sha256")
     return evidence_files
@@ -366,26 +474,32 @@ def evaluate_expectation(condition, observations, final_text):
     value = get_path(observations, obs_path)
 
     if "equals" in condition:
-        if isinstance(condition["equals"], bool) and isinstance(value, bool):
-            if value is not condition["equals"]:
-                return False, f"{obs_path} = {value!r}, expected {condition['equals']!r}"
-        elif value != condition["equals"]:
-            return False, f"{obs_path} = {value!r}, expected {condition['equals']!r}"
+        # Strict JSON value type semantics: expected bool/int/str must match the
+        # observed JSON type exactly. Python treats 0 == False and 1 == True, so
+        # an unchecked equality would let numeric 0/1 satisfy an expected boolean.
+        expected = condition["equals"]
+        if json_type_kind(value) != json_type_kind(expected):
+            return False, (
+                f"{obs_path} = {value!r} ({json_type_kind(value)}), expected "
+                f"{expected!r} ({json_type_kind(expected)}); strict JSON type match required"
+            )
+        if value != expected:
+            return False, f"{obs_path} = {value!r}, expected {expected!r}"
 
     if "equalsObservation" in condition:
         other = condition["equalsObservation"]
         if not has_path(observations, other):
             return False, f"comparison observation {other!r} was not captured"
         other_value = get_path(observations, other)
-        if value != other_value:
-            return False, f"{obs_path} = {value!r} != {other} = {other_value!r}"
+        if json_type_kind(value) != json_type_kind(other_value) or value != other_value:
+            return False, f"{obs_path} = {value!r} != {other} = {other_value!r} (strict JSON type match)"
 
     if "notEqualsObservation" in condition:
         other = condition["notEqualsObservation"]
         if not has_path(observations, other):
             return False, f"comparison observation {other!r} was not captured"
         other_value = get_path(observations, other)
-        if value == other_value:
+        if json_type_kind(value) == json_type_kind(other_value) and value == other_value:
             return False, f"{obs_path} = {value!r} unexpectedly equals {other}"
 
     if "greaterThanObservation" in condition:
@@ -397,12 +511,84 @@ def evaluate_expectation(condition, observations, final_text):
             return False, f"{obs_path} = {value!r} is not greater than {other} = {other_value!r}"
 
     if "notEquals" in condition:
-        if value == condition["notEquals"]:
-            return False, f"{obs_path} = {value!r} must differ from {condition['notEquals']!r}"
+        expected = condition["notEquals"]
+        if json_type_kind(value) == json_type_kind(expected) and value == expected:
+            return False, (
+                f"{obs_path} = {value!r} must differ from {expected!r} "
+                f"(strict JSON type match)"
+            )
 
     if "integerGreaterThan" in condition:
-        if not is_number(value) or not value > condition["integerGreaterThan"]:
-            return False, f"{obs_path} = {value!r} is not an integer greater than {condition['integerGreaterThan']}"
+        threshold = condition["integerGreaterThan"]
+        if not is_int(threshold):
+            return False, f"manifest threshold {threshold!r} must be an integer"
+        if not is_int(value) or not value > threshold:
+            return False, (
+                f"{obs_path} = {value!r} is not a strict integer greater than {threshold}; "
+                "floats and booleans do not qualify"
+            )
+
+    if "integerBetween" in condition:
+        bounds = condition["integerBetween"]
+        if not isinstance(bounds, dict) or not is_int(bounds.get("min")) or not is_int(bounds.get("max")):
+            return False, f"malformed integerBetween bounds: {bounds!r}"
+        low, high = bounds["min"], bounds["max"]
+        if not is_int(value) or not (low <= value <= high):
+            return False, (
+                f"{obs_path} = {value!r} outside required integer range [{low}, {high}]; "
+                "floats and booleans do not qualify"
+            )
+
+    if "equalsObservationMinus" in condition:
+        spec = condition["equalsObservationMinus"]
+        if not isinstance(spec, dict) or not isinstance(spec.get("otherObservation"), str) \
+                or not is_int(spec.get("delta")):
+            return False, f"malformed equalsObservationMinus spec: {spec!r}"
+        other = spec["otherObservation"]
+        if not has_path(observations, other):
+            return False, f"comparison observation {other!r} was not captured"
+        other_value = get_path(observations, other)
+        if not (is_int(value) and is_int(other_value)):
+            return False, f"{obs_path} = {value!r} and {other} = {other_value!r} must both be integers"
+        if value != other_value + spec["delta"]:
+            return False, (
+                f"{obs_path} = {value!r} != {other} {spec['delta']:+d} = "
+                f"{other_value + spec['delta']}"
+            )
+
+    if "equalsWeekDelta" in condition:
+        spec = condition["equalsWeekDelta"]
+        if not isinstance(spec, dict):
+            return False, f"malformed equalsWeekDelta spec: {spec!r}"
+        names = ("targetObservation", "currentObservation", "daysInWeekObservation")
+        if not all(isinstance(spec.get(n), str) for n in names):
+            return False, f"malformed equalsWeekDelta spec: {spec!r}"
+        for name in names:
+            if not has_path(observations, spec[name]):
+                return False, f"equalsWeekDelta observation {spec[name]!r} was not captured"
+        target = get_path(observations, spec["targetObservation"])
+        current = get_path(observations, spec["currentObservation"])
+        week = get_path(observations, spec["daysInWeekObservation"])
+        if not (is_int(target) and is_int(current) and is_int(week)):
+            return False, "equalsWeekDelta inputs must be strict integers"
+        if week <= 0:
+            return False, f"daysInWeekObservation = {week!r} must be a positive integer"
+        if not (1 <= current <= week) or not (1 <= target <= week):
+            return False, (
+                f"day-of-week values must be in 1..{week}; got current={current!r}, "
+                f"target={target!r}"
+            )
+        expected_delta = (target - current + week) % week
+        if expected_delta == 0:
+            return False, (
+                "equalsWeekDelta is only for non-sermon countdowns; target and current "
+                "day-of-week coincide, so no countdown should be shown"
+            )
+        if not is_int(value) or value != expected_delta:
+            return False, (
+                f"{obs_path} = {value!r} != mathematical delta {expected_delta} "
+                f"(target {target}, current {current}, week {week})"
+            )
 
     if "present" in condition:
         want = condition["present"]
@@ -442,9 +628,12 @@ def evaluate_expectation(condition, observations, final_text):
             if not days_path or not has_path(observations, days_path):
                 return False, f"multi-day text requires {days_path!r} to interpolate {{days}}"
             days = get_path(observations, days_path)
-            if not is_number(days) or not float(days).is_integer() or days <= 1:
-                return False, f"{days_path} = {days!r} must be an integer greater than 1"
-            rendered = expected_text.replace("{days}", str(int(days)))
+            if not is_int(days) or days <= 1:
+                return False, (
+                    f"{days_path} = {days!r} must be a strict integer greater than 1; "
+                    "floats and booleans do not qualify"
+                )
+            rendered = expected_text.replace("{days}", str(days))
             if value != rendered:
                 return False, f"{obs_path} = {value!r}, expected rendered {rendered!r}"
 
@@ -506,6 +695,15 @@ def check_manifest_only(manifest_path, output_path):
         artifact["error"] = str(exc)
         emit()
         sys.stderr.write(f"FAIL [manifest] {exc}\n")
+        sys.stderr.write("RESULT: FAIL (manifest structure)\n")
+        return 2
+    except (KeyError, TypeError, AttributeError, ValueError) as exc:
+        # Defensive net: malformed JSON shapes must fail closed with a
+        # deterministic artifact, never escape as an uncaught interpreter error.
+        message = f"malformed manifest structure: {type(exc).__name__}: {exc}"
+        artifact["error"] = message
+        emit()
+        sys.stderr.write(f"FAIL [manifest] {message}\n")
         sys.stderr.write("RESULT: FAIL (manifest structure)\n")
         return 2
 
@@ -590,6 +788,10 @@ def main(argv=None):
         return fail_early("manifest", str(exc))
     except OSError as exc:
         return fail_early("manifest", str(exc))
+    except (KeyError, TypeError, AttributeError, ValueError) as exc:
+        return fail_early(
+            "manifest", f"malformed manifest structure: {type(exc).__name__}: {exc}"
+        )
 
     validation = manifest.get("validation", {})
     require_load_log = bool(validation.get("requireLoadEvidenceLog", False))
@@ -606,10 +808,18 @@ def main(argv=None):
         return fail_early("capture", str(exc))
     except OSError as exc:
         return fail_early("capture", str(exc))
+    except (KeyError, TypeError, AttributeError, ValueError) as exc:
+        # Defensive net: malformed capture shapes must fail closed with a
+        # deterministic artifact, never escape as an uncaught interpreter error.
+        return fail_early(
+            "capture", f"malformed capture structure: {type(exc).__name__}: {exc}"
+        )
 
     results = []
     executed = {}
     for record in capture["results"]:
+        # Shape validation already rejected duplicates and non-string ids, so this
+        # mapping is unambiguous; keep the guard defensive anyway.
         if isinstance(record, dict) and isinstance(record.get("scenarioId"), str):
             executed[record["scenarioId"]] = record
 
@@ -626,7 +836,8 @@ def main(argv=None):
         entry = {
             "scenarioId": sid,
             "title": scenario.get("title", ""),
-            "executed": record is None,
+            # executed is True exactly when a result record exists for the id.
+            "executed": record is not None,
         }
         if record is None:
             entry["status"] = "failed"
@@ -643,7 +854,12 @@ def main(argv=None):
         scenario_evidence = []
         recorded_evidence = record.get("evidence", {})
         for required in ("screenshot", "log"):
-            if scenario["evidence"].get(required) and required not in recorded_evidence:
+            if not scenario["evidence"].get(required):
+                continue
+            paths = recorded_evidence.get(required)
+            if isinstance(paths, str):
+                paths = [paths]
+            if not isinstance(paths, list) or not paths:
                 entry.setdefault("failures", []).append(
                     f"required {required} evidence not recorded for the scenario"
                 )
@@ -669,7 +885,7 @@ def main(argv=None):
 
         if scenario["evidence"].get("measurement") or record.get("measurement", False):
             ok_measure, message = evaluate_measurement(
-                scenario, capture["observations"].get(sid, {}), record
+                scenario, capture["observations"].get(sid, {}), record, validated_evidence
             )
             if not ok_measure:
                 entry.setdefault("failures", []).append(message)
@@ -746,19 +962,41 @@ def main(argv=None):
     return 0
 
 
-def evaluate_measurement(scenario, observations, record):
+def evaluate_measurement(scenario, observations, record, validated_evidence):
     """A measurement-backed scenario must carry a concrete measurement or an
-    explicit operator observation, plus a screenshot. Logs alone never qualify."""
+    explicit operator observation, plus at least one verified screenshot path.
+    Logs alone never qualify."""
     recorded = record.get("evidence", {})
-    if "screenshot" not in recorded:
+    screenshots = recorded.get("screenshot")
+    if isinstance(screenshots, str):
+        screenshots = [screenshots]
+    if not isinstance(screenshots, list) or not screenshots:
         return False, "measurement scenario requires a screenshot evidence category"
+    if not any(path in validated_evidence for path in screenshots):
+        return False, (
+            "measurement scenario requires at least one verified screenshot path; "
+            "an unverified or empty screenshot category is not proof"
+        )
+
     measurement = record.get("measurement")
     if measurement is False or measurement is None:
         return False, "measurement evidence required but not recorded"
     if not isinstance(measurement, dict) or not measurement:
         return False, "measurement object is missing or empty"
-    if not measurement.get("values") and not measurement.get("operatorObservation"):
-        return False, "measurement must include measured values or an operator observation"
+
+    values = measurement.get("values")
+    has_values = (
+        isinstance(values, dict)
+        and bool(values)
+        and all(is_number(v) for v in values.values())
+    )
+    observation = measurement.get("operatorObservation")
+    has_observation = isinstance(observation, str) and bool(observation.strip())
+    if not has_values and not has_observation:
+        return False, (
+            "measurement must include a non-empty numeric values object or a "
+            "non-empty operatorObservation string"
+        )
     return True, ""
 
 
