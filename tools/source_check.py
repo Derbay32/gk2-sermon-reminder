@@ -20,17 +20,21 @@ Checks:
     documented technical-registration-metadata exception (see below).
 
 Technical registration-metadata exception: the mod's public BepInEx display
-name is declared exactly once as ``public const string PluginName = "...";``
-and referenced by the actual ``[BepInPlugin(PluginGuid, PluginName,
-PluginVersion)]`` attribute. That single declaration's exact string-literal span
-is registration metadata, not localized copy. Solely in
-``src/GK2.SermonReminder/SermonReminderPlugin.cs``, and solely when exactly one
-such declaration plus its attribute are present, that literal span is excluded
-from the duplicate scan. It is never a whole-file, whole-line, arbitrary-field
-or all-copies exemption: an ambiguous shape (zero or multiple declarations, a
-missing attribute) is rejected rather than masked, and every other copy of the
-sentence still fails. This is one documented exception, not a localized-copy
-allowlist and not a compatibility fallback.
+name is declared exactly once, in real code, as
+``public const string PluginName = "GK2 Sermon Reminder";`` and referenced by
+the actual ``[BepInPlugin(PluginGuid, PluginName, PluginVersion)]`` attribute
+attached to the unique ``public sealed class SermonReminderPlugin``. That single
+declaration's exact value-literal span is registration metadata, not localized
+copy. The guard recognises real C# code lexically (comment spans and ordinary,
+verbatim, interpolated and raw string literals are never treated as code, and
+unmodeled shapes are refused rather than guessed) and requires exactly one
+attribute, one class and one canonical declaration; it then masks only that one
+literal span in this one file. It is never a whole-file, whole-line,
+arbitrary-field or all-copies exemption: a commented or string-borne attribute,
+a commented or absent declaration, a non-canonical PluginName value, an
+attribute attached to another class, or any other duplicate copy of the sentence
+still fails. This is one documented exception, not a localized-copy allowlist and
+not a compatibility fallback.
 
 Only the Python 3 standard library is used.
 """
@@ -85,10 +89,21 @@ DEFAULT_MANIFEST = "tests/e2e/gksa12.json"
 # Narrow technical-registration-metadata exception, scoped to the one plugin file
 # that declares the BepInEx plugin registration. See the module docstring.
 REGISTRATION_FILE = "src/GK2.SermonReminder/SermonReminderPlugin.cs"
-PLUGIN_NAME_DECLARATION = re.compile(
-    r'public\s+const\s+string\s+PluginName\s*=\s*"(?P<value>[^"]*)"\s*;'
+REGISTRATION_CLASS = "SermonReminderPlugin"
+
+# The one canonical BepInEx technical registration name. This is registration
+# metadata compiled into the assembly, never localized copy; the exemption is
+# tied to this exact value so changing PluginName to any other sentence (even
+# another approved sentence) cannot hide that copy.
+CANONICAL_PLUGIN_NAME = "GK2 Sermon Reminder"
+
+_PLUGIN_ATTRIBUTE = re.compile(
+    r"\[BepInPlugin\s*\(\s*PluginGuid\s*,\s*PluginName\s*,\s*PluginVersion\s*\)\]"
 )
-PLUGIN_ATTRIBUTE = "[BepInPlugin(PluginGuid, PluginName, PluginVersion)]"
+_PLUGIN_CLASS = re.compile(
+    r"\bpublic\s+sealed\s+class\s+" + REGISTRATION_CLASS + r"\b"
+)
+_PLUGIN_NAME_STUB = re.compile(r"public\s+const\s+string\s+PluginName\s*=\s*")
 
 
 def strip_ns(tag: str) -> str:
@@ -403,29 +418,230 @@ def check_manifest_and_localization(root: Path, manifest_path: Path, entries: li
     return localization, implemented_keys, manifest_text
 
 
-def registration_metadata_span(text: str):
-    """Exact (start, end) span of the one canonical registration declaration.
+def _scan_csharp(text: str) -> tuple:
+    """Bounded C# lexical scan: comment spans and real string literals.
 
-    Returns ``None`` unless exactly one ``public const string PluginName = "...";``
-    declaration AND exactly one real ``[BepInPlugin(...)]`` attribute referencing
-    ``PluginName`` are present, so an ambiguous or partial shape is rejected
-    rather than masked.
+    Returns ``(masked, literals, supported)``:
+
+      * ``masked`` -- same-length text with every comment span and every string
+        literal span blanked to a non-whitespace sentinel, so code tokens can be
+        matched positionally while comments and strings never read as code and a
+        trailing ``\s*`` in a code pattern can never swallow a blanked span;
+      * ``literals`` -- real string literals as ``(start, end, value)`` in
+        original coordinates, delimiters included in the span;
+      * ``supported`` -- ``False`` when an unmodeled lexical shape (raw or
+        interpolated string, or a char literal in code) appears, so the caller
+        refuses the exemption instead of guessing.
     """
-    if text.count(PLUGIN_ATTRIBUTE) != 1:
+    length = len(text)
+    # A sentinel that is not whitespace: blanked spans keep their exact length so
+    # real-code matches stay positionally aligned, while a trailing regex ``\s*``
+    # can never swallow a blanked string/comment and read it back as code.
+    filler = "\x00"
+    masked = list(text)
+    literals = []
+    index = 0
+    while index < length:
+        ch = text[index]
+        nxt = text[index + 1] if index + 1 < length else ""
+
+        if ch == "/" and nxt == "/":
+            end = text.find("\n", index)
+            end = length if end == -1 else end
+            for blank in range(index, end):
+                masked[blank] = filler
+            index = end
+            continue
+
+        if ch == "/" and nxt == "*":
+            end = text.find("*/", index + 2)
+            end = length if end == -1 else end + 2
+            for blank in range(index, end):
+                masked[blank] = filler
+            index = end
+            continue
+
+        if ch == '"':
+            if text.startswith('\"\"\"', index):
+                return "".join(masked), literals, False
+            start = index
+            index += 1
+            while index < length:
+                if text[index] == "\\":
+                    index += 2
+                    continue
+                if text[index] == '"':
+                    index += 1
+                    break
+                index += 1
+            literals.append((start, index, text[start + 1:index - 1]))
+            for blank in range(start, index):
+                masked[blank] = filler
+            continue
+
+        if ch == "@" and nxt == '"':
+            start = index
+            index += 2
+            while index < length:
+                if text[index] == '"':
+                    if index + 1 < length and text[index + 1] == '"':
+                        index += 2
+                        continue
+                    index += 1
+                    break
+                index += 1
+            raw = text[start + 2:index - 1]
+            literals.append((start, index, raw.replace('""', '"')))
+            for blank in range(start, index):
+                masked[blank] = filler
+            continue
+
+        if ch == "$" and (nxt == '"' or (nxt == "@" and index + 2 < length and text[index + 2] == '"')):
+            return "".join(masked), literals, False
+
+        if ch == "@" and nxt == "$" and index + 2 < length and text[index + 2] == '"':
+            return "".join(masked), literals, False
+
+        if ch == "'":
+            # A char literal in code is a shape this bounded scan does not model.
+            return "".join(masked), literals, False
+
+        index += 1
+
+    return "".join(masked), literals, True
+
+
+def _strip_leading_attribute_groups(fragment: str):
+    """Drop leading whitespace and balanced ``[...]`` attribute groups.
+
+    Returns the remaining text, or ``None`` for an unbalanced attribute group.
+    """
+    text = fragment.strip()
+    while text.startswith("["):
+        depth = 0
+        end = -1
+        for position, ch in enumerate(text):
+            if ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+                if depth == 0:
+                    end = position
+                    break
+        if end == -1:
+            return None
+        text = text[end + 1:].strip()
+    return text
+
+
+def _matching_brace(masked: str, open_index: int) -> int:
+    """Index of the ``}`` matching the ``{`` at ``open_index``, or -1."""
+    depth = 0
+    for index in range(open_index, len(masked)):
+        ch = masked[index]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return index
+    return -1
+
+
+def _brace_depth(masked: str, open_index: int, position: int) -> int:
+    """Brace depth between a class opening brace and a later position."""
+    depth = 0
+    for index in range(open_index, position):
+        ch = masked[index]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+    return depth
+
+
+def _literal_at(literals: list, position: int):
+    """The real string literal beginning exactly at ``position``, or None."""
+    for start, end, value in literals:
+        if start == position:
+            return (start, end, value)
+    return None
+
+
+def registration_metadata_span(text: str):
+    """Exact (start, end) span of the one canonical registration value literal.
+
+    Returns ``None`` unless, in real C# code (never a comment, char or string
+    literal), the plugin file has exactly one
+    ``[BepInPlugin(PluginGuid, PluginName, PluginVersion)]`` attribute attached to
+    the unique ``public sealed class SermonReminderPlugin``, and exactly one direct
+    ``public const string PluginName = "<canonical>";`` member of that class. The
+    returned span is only that one value literal; ambiguous, non-canonical or
+    unmodeled shapes are refused rather than masked.
+    """
+    masked, literals, supported = _scan_csharp(text)
+    if not supported:
         return None
 
-    matches = list(PLUGIN_NAME_DECLARATION.finditer(text))
-    if len(matches) != 1:
+    attributes = list(_PLUGIN_ATTRIBUTE.finditer(masked))
+    if len(attributes) != 1:
+        return None
+    classes = list(_PLUGIN_CLASS.finditer(masked))
+    if len(classes) != 1:
         return None
 
-    return matches[0].span("value")
+    attribute = attributes[0]
+    declared_class = classes[0]
+
+    # The attribute must be attached to the plugin class: it must precede the
+    # class, and only whitespace and other attribute groups may sit between them.
+    if attribute.end() > declared_class.start():
+        return None
+    if _strip_leading_attribute_groups(masked[attribute.end():declared_class.start()]) != "":
+        return None
+
+    open_brace = masked.find("{", declared_class.end())
+    if open_brace == -1:
+        return None
+    close_brace = _matching_brace(masked, open_brace)
+    if close_brace == -1:
+        return None
+
+    # Exactly one direct canonical PluginName declaration inside the class body.
+    span = None
+    for stub in _PLUGIN_NAME_STUB.finditer(masked, open_brace, close_brace):
+        if _brace_depth(masked, open_brace, stub.start()) != 1:
+            continue
+
+        position = stub.end()
+        while position < len(text) and text[position] in " \t\r\n":
+            position += 1
+        literal = _literal_at(literals, position)
+        if literal is None:
+            continue
+
+        start, end, value = literal
+        after = end
+        while after < len(text) and text[after] in " \t\r\n":
+            after += 1
+        if after >= len(text) or text[after] != ";":
+            continue
+        if value != CANONICAL_PLUGIN_NAME:
+            continue
+        if span is not None:
+            return None
+        span = (start, end)
+
+    return span
 
 
 def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
     """No accepted final sentence may be duplicated inside C# source.
 
-    The single BepInEx registration declaration in the plugin file is excluded by
-    its exact literal span only; see :func:`registration_metadata_span`.
+    Only the one canonical BepInEx registration value literal in the plugin file
+    is excluded, by its exact span and only when it is real code; see
+    :func:`registration_metadata_span`. Comments are never normalized away, so
+    approved text inside a comment still fails.
     """
     sentences = set()
     for translations in manifest_text.values():
@@ -466,9 +682,10 @@ def main(argv=None) -> int:
             "Accepted ticket manifest used as the finalText source of truth. "
             "Defaults to the latest implemented specification (GKSA-12); pass "
             "another ticket's manifest explicitly to guard that ticket instead. "
-            "The plugin file's single BepInEx registration declaration literal is "
-            "the only documented technical-metadata exception to the duplicate-"
-            "copy scan."
+            "The only documented technical-metadata exception is the one canonical "
+            "BepInEx PluginName value literal in the plugin registration file, "
+            "recognised as real code (never a comment or string) and masked by its "
+            "exact span only."
         ),
     )
     parser.add_argument("--output", required=True)

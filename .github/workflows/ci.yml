@@ -47,10 +47,13 @@ jobs:
       # git ls-files. The fixtures are source-policy negative inputs only: they are
       # not native/game stubs, not runtime captures, not unit tests and not a game
       # harness, and they are never committed or uploaded. The matrix proves the
-      # narrow technical-registration exemption cannot mask any other duplicate copy
-      # (same file, another file, another constant, a duplicated declaration, a
-      # declaration without its BepInPlugin reference, another approved sentence, or
-      # a trailing comment), while the unchanged canonical declaration passes.
+      # narrow technical-registration exemption cannot mask any other duplicate copy:
+      # same file, another file, another constant, a duplicated declaration, a
+      # declaration or attribute dropped or turned into a line/block comment or an
+      # ordinary/verbatim string, an attribute moved to another class, and a
+      # non-canonical PluginName value all still fail; another approved sentence and
+      # a trailing comment still fail; and only the unchanged canonical registration
+      # attached to the plugin class passes.
       - name: Source-tool CLI acceptance matrix (GKSA-12)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
@@ -80,7 +83,8 @@ jobs:
           )
           base_rels = (plugin_rel, project_rel, *locale_rels, manifest_rel)
 
-          attribute = "[BepInPlugin(PluginGuid, PluginName, PluginVersion)]"
+          attribute_line = "    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]"
+          declaration_line = '        public const string PluginName = "GK2 Sermon Reminder";'
           title = "GK2 Sermon Reminder"
           ready_copy = "Sermon Day!"
 
@@ -94,56 +98,108 @@ jobs:
               return text[:index] + block + "\n" + text[index:]
 
 
-          def extra_file_text():
-              return (
-                  "internal static class ExtraCopy\n"
-                  "{\n"
-                  '    internal const string Title = "' + title + '";\n'
-                  "}\n"
-              )
-
-
-          def mutate_other_file(text):
-              return text
+          def replace_once(text, old, new):
+              if old not in text:
+                  raise SystemExit("fixture marker not found")
+              return text.replace(old, new, 1)
 
 
           def mutate_inline_title(text):
-              return inject(text, '        private string Title() { return "' + title + '"; }')
+              return inject(text, '        private string Title() { return "%s"; }' % title)
 
 
           def mutate_other_constant(text):
-              return inject(text, '        private const string DisplayTitle = "' + title + '";')
+              return inject(text, '        private const string DisplayTitle = "%s";' % title)
 
 
           def mutate_duplicate_declaration(text):
-              return inject(text, '        public const string PluginName = "' + title + '";')
+              return inject(text, '        public const string PluginName = "%s";' % title)
 
 
           def mutate_drop_attribute(text):
-              return text.replace(attribute, "")
+              return text.replace(attribute_line, "")
 
 
           def mutate_other_approved_copy(text):
-              return inject(text, '        private const string ReadyCopy = "' + ready_copy + '";')
+              return inject(text, '        private const string ReadyCopy = "%s";' % ready_copy)
 
 
           def mutate_comment_copy(text):
               return inject(text, "        // manifest copy illustrated here only: " + ready_copy)
 
 
+          def mutate_attribute_in_line_comment(text):
+              return replace_once(text, attribute_line, "    // " + attribute_line.strip())
+
+
+          def mutate_attribute_in_block_comment(text):
+              return replace_once(text, attribute_line, "    /* " + attribute_line.strip() + " */")
+
+
+          def mutate_attribute_in_string(text):
+              return replace_once(
+                  text,
+                  attribute_line,
+                  '    private readonly string registrationNote = "' + attribute_line.strip() + '";',
+              )
+
+
+          def mutate_attribute_in_verbatim_string(text):
+              return replace_once(
+                  text,
+                  attribute_line,
+                  '    private readonly string registrationNote = @"' + attribute_line.strip() + '";',
+              )
+
+
+          def mutate_commented_declaration(text):
+              return replace_once(text, declaration_line, "        // " + declaration_line.strip())
+
+
+          def mutate_noncanonical_value(text):
+              return replace_once(
+                  text,
+                  declaration_line,
+                  '        public const string PluginName = "%s";' % ready_copy,
+              )
+
+
+          def mutate_attribute_on_other_class(text):
+              text = replace_once(text, attribute_line + "\n", "")
+              return inject(
+                  text,
+                  "    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]\n"
+                  "    internal sealed class OtherRegistration\n"
+                  "    {\n"
+                  "    }",
+              )
+
+
           extra_other_file = {
-              "src/GK2.SermonReminder/ExtraCopy.cs": extra_file_text(),
+              "src/GK2.SermonReminder/ExtraCopy.cs": (
+                  "internal static class ExtraCopy\n"
+                  "{\n"
+                  '    internal const string Title = "%s";\n'
+                  "}\n" % title
+              ),
           }
 
           cases = (
               ("a", None, None, True, None),
               ("b", mutate_inline_title, None, False, title),
-              ("c", mutate_other_file, extra_other_file, False, title),
+              ("c", None, extra_other_file, False, title),
               ("d", mutate_other_constant, None, False, title),
               ("e", mutate_duplicate_declaration, None, False, title),
               ("f", mutate_drop_attribute, None, False, title),
               ("g", mutate_other_approved_copy, None, False, ready_copy),
               ("h", mutate_comment_copy, None, False, ready_copy),
+              ("i", mutate_attribute_in_line_comment, None, False, title),
+              ("j", mutate_attribute_in_block_comment, None, False, title),
+              ("k", mutate_attribute_in_string, None, False, title),
+              ("l", mutate_attribute_in_verbatim_string, None, False, title),
+              ("m", mutate_commented_declaration, None, False, title),
+              ("n", mutate_noncanonical_value, None, False, ready_copy),
+              ("o", mutate_attribute_on_other_class, None, False, title),
           )
 
           results = []
@@ -209,7 +265,10 @@ jobs:
               "note": (
                   "Source-policy CLI acceptance cases only. No native build, no game "
                   "execution and no E2E verdict; every fixture is a disposable copy of this "
-                  "repository's own versioned files under the runner temp directory."
+                  "repository's own versioned files under the runner temp directory. Cases "
+                  "i-o prove that only genuine C# registration code (never a comment, char "
+                  "or string literal) attached to the plugin class, and only the canonical "
+                  "technical name, earn the exemption."
               ),
           }
           (reports / "source-check-matrix.json").write_text(
