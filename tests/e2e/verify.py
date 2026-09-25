@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""GKSA-10 E2E evidence validator.
+"""GKSA-10..GKSA-15 E2E evidence validator.
 
 Validates a machine-readable capture of a real in-game observation run against
-the GKSA-10 scenario manifest. It is an evidence checker, not a game simulator:
-it never invents observations, never grades an unexecuted scenario as passed,
-and never treats logs alone as proof of a visual/layout outcome.
+the matching ticket scenario manifest. It is an evidence checker, not a game
+simulator: it never invents observations, never grades an unexecuted scenario
+as passed, and never treats logs alone as proof of a visual/layout outcome.
 
 Fail-closed: any missing file, hash mismatch, unsupported schema, unexecuted
 scenario, wrong expected value, or absent required evidence file fails the run.
@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import sys
 from datetime import datetime
@@ -34,6 +35,21 @@ ISO_RE = re.compile(
     r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?"
     r"(Z|[+-]\d{2}:?\d{2})?$"
 )
+
+# Ticket kinds this validator accepts: exactly 'gksa10'..'gksa15' (lowercase
+# ticket id without a dash) followed by '-e2e-manifest' or '-e2e-capture'. The
+# kind is the only trusted source of the ticket identity; a capture whose kind
+# does not match the manifest ticket fails closed.
+TICKET_NUMBER_MIN = 10
+TICKET_NUMBER_MAX = 15
+TICKET_STEM_RE = re.compile(r"^gksa(\d{1,4})$")
+
+# Fixed native icon aspect 20:18 and its small comparison tolerance for the one
+# bounded measuredRatio check. No other ratio or general evaluation is offered.
+RATIO_EXPECTED_NUMERATOR = 20
+RATIO_EXPECTED_DENOMINATOR = 18
+RATIO_TOLERANCE = 0.001
+RATIO_TOLERANCE_MAX = 0.01
 
 
 class Fail(Exception):
@@ -76,6 +92,52 @@ def is_int(value):
 
 def is_positive_int(value):
     return is_int(value) and value > 0
+
+
+def _finite_number(value):
+    """True for a finite JSON int/float. Bools, strings, NaN and infinity are
+    rejected so a numeric check can never be satisfied by a non-number."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(value)
+
+
+def ticket_from_kind(kind, suffix):
+    """Return (stem, ticket_id) for a supported versioned kind, else None.
+
+    ``kind`` must be exactly ``<stem>-<suffix>`` where ``stem`` is a supported
+    lowercase ticket id without a dash (e.g. 'gksa11'), and ``ticket_id`` is the
+    display form (e.g. 'GKSA-11'). Nothing else is trusted.
+    """
+    if not isinstance(kind, str):
+        return None
+    tail = "-" + suffix
+    if not kind.endswith(tail):
+        return None
+    match = TICKET_STEM_RE.match(kind[: -len(tail)])
+    if not match:
+        return None
+    digits = match.group(1)
+    # Canonical form only: no leading zeros, so 'gksa011' is not 'gksa11'.
+    if str(int(digits)) != digits:
+        return None
+    number = int(digits)
+    if not (TICKET_NUMBER_MIN <= number <= TICKET_NUMBER_MAX):
+        return None
+    return match.group(0), "GKSA-%d" % number
+
+
+def result_kind(ticket_id, suffix):
+    """Artifact kind derives from the validated ticket, never from a literal."""
+    return ticket_id.lower().replace("-", "") + "-" + suffix
+
+
+def trusted_ticket_from_manifest(manifest):
+    """Best-effort ticket id from a manifest kind, or '' when untrusted."""
+    if not isinstance(manifest, dict):
+        return ""
+    parsed = ticket_from_kind(manifest.get("kind"), "e2e-manifest")
+    return parsed[1] if parsed else ""
 
 
 def json_type_kind(value):
@@ -229,6 +291,85 @@ def validate_date_check(sid, condition):
         )
 
 
+def _bounded_numeric(sid, label, value):
+    """Validate one finite int/float bound; bools and non-numbers are rejected."""
+    if not _finite_number(value):
+        raise Fail(
+            f"scenario {sid} {label} must be a finite int/float (bool and non-numbers "
+            f"are rejected); got {value!r} ({json_type_kind(value)})"
+        )
+
+
+def validate_number_range(sid, condition):
+    """One bounded numeric check: inclusive min/max or exclusive maxExclusive.
+
+    Deliberately narrow, not a general evaluation DSL. At least one bound is
+    required; an unrecognized bound key is rejected rather than ignored.
+    """
+    spec = condition["numberRange"]
+    if not isinstance(spec, dict) or not spec:
+        raise Fail(f"scenario {sid} numberRange must be a non-empty object")
+    allowed = {"min", "max", "maxExclusive"}
+    unknown = sorted(set(spec) - allowed)
+    if unknown:
+        raise Fail(f"scenario {sid} numberRange has unknown fields: {unknown}")
+    has_min = "min" in spec
+    has_max = "max" in spec
+    has_max_exclusive = "maxExclusive" in spec
+    if not (has_min or has_max or has_max_exclusive):
+        raise Fail(
+            f"scenario {sid} numberRange requires at least one bound "
+            "(min, max or maxExclusive)"
+        )
+    if has_max and has_max_exclusive:
+        raise Fail(
+            f"scenario {sid} numberRange must not declare both max and maxExclusive"
+        )
+    for key in ("min", "max", "maxExclusive"):
+        if key in spec:
+            _bounded_numeric(sid, "numberRange." + key, spec[key])
+    if has_min and (has_max or has_max_exclusive):
+        upper = spec["max"] if has_max else spec["maxExclusive"]
+        if spec["min"] > upper:
+            raise Fail(
+                f"scenario {sid} numberRange min {spec['min']!r} exceeds upper bound "
+                f"{upper!r}"
+            )
+
+
+def validate_measured_ratio(sid, condition):
+    """One bounded ratio check: observed width/height against the fixed 20:18 icon.
+
+    Requires raw width and height observations and an explicit finite, positive
+    denominator; a pre-asserted ratio flag is not accepted.
+    """
+    spec = condition["measuredRatio"]
+    if not isinstance(spec, dict) or not spec:
+        raise Fail(f"scenario {sid} measuredRatio must be a non-empty object")
+    allowed = {"numerator", "denominator", "tolerance"}
+    unknown = sorted(set(spec) - allowed)
+    if unknown:
+        raise Fail(f"scenario {sid} measuredRatio has unknown fields: {unknown}")
+    for field in ("numerator", "denominator"):
+        value = spec.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise Fail(
+                f"scenario {sid} measuredRatio requires the raw {field!r} observation "
+                f"path; got {value!r}"
+            )
+    tolerance = spec.get("tolerance", RATIO_TOLERANCE)
+    if not _finite_number(tolerance):
+        raise Fail(
+            f"scenario {sid} measuredRatio tolerance must be a finite int/float; "
+            f"got {tolerance!r} ({json_type_kind(tolerance)})"
+        )
+    if tolerance < 0 or tolerance > RATIO_TOLERANCE_MAX:
+        raise Fail(
+            f"scenario {sid} measuredRatio tolerance {tolerance!r} must be within "
+            f"0..{RATIO_TOLERANCE_MAX}"
+        )
+
+
 def validate_manifest(manifest):
     """Strictly check the manifest shape and return the scenario list.
 
@@ -239,8 +380,19 @@ def validate_manifest(manifest):
     """
     if not isinstance(manifest, dict):
         raise Fail(f"manifest root must be a JSON object, got {type(manifest).__name__}")
-    if manifest.get("kind") != "gksa10-e2e-manifest":
-        raise Fail(f"unsupported manifest kind: {manifest.get('kind')!r}")
+    parsed_kind = ticket_from_kind(manifest.get("kind"), "e2e-manifest")
+    if parsed_kind is None:
+        raise Fail(
+            "unsupported manifest kind: %r (accepted: gksa10..gksa15 followed by "
+            "'-e2e-manifest', lowercase ticket id without a dash)" % (manifest.get("kind"),)
+        )
+    manifest_ticket = parsed_kind[1]
+    declared_ticket = manifest.get("ticket")
+    if "ticket" in manifest and declared_ticket != manifest_ticket:
+        raise Fail(
+            f"manifest ticket {declared_ticket!r} does not match kind {manifest.get('kind')!r} "
+            f"(expected {manifest_ticket!r})"
+        )
     manifest_version = manifest.get("manifestVersion")
     if not is_int(manifest_version) or manifest_version not in SUPPORTED_MANIFEST_VERSIONS:
         raise Fail(
@@ -341,8 +493,14 @@ def validate_manifest(manifest):
                 or "present" in condition
                 or "finalTextKey" in condition
                 or "finalTextKeyFromObservation" in condition
+                or "numberRange" in condition
+                or "measuredRatio" in condition
             ):
                 raise Fail(f"scenario {sid} expectation without a check: {condition!r}")
+            if "numberRange" in condition:
+                validate_number_range(sid, condition)
+            if "measuredRatio" in condition:
+                validate_measured_ratio(sid, condition)
             if "finalTextKey" in condition and "finalTextKeyFromObservation" in condition:
                 raise Fail(
                     f"scenario {sid} expectation must use either finalTextKey or "
@@ -405,8 +563,26 @@ def check_language_observations(capture, manifest):
 def validate_capture_shape(capture, manifest):
     if not isinstance(capture, dict):
         raise Fail(f"capture root must be a JSON object, got {type(capture).__name__}")
-    if capture.get("kind") != "gksa10-e2e-capture":
-        raise Fail(f"unsupported capture kind: {capture.get('kind')!r}")
+    manifest_kind = ticket_from_kind(manifest.get("kind"), "e2e-manifest")
+    if manifest_kind is None:
+        # Unreachable via main(), which validates the manifest first; kept so this
+        # function can never trust a capture against an untrusted manifest.
+        raise Fail(
+            f"capture cannot be validated: untrusted manifest kind "
+            f"{manifest.get('kind')!r}"
+        )
+    capture_kind = ticket_from_kind(capture.get("kind"), "e2e-capture")
+    if capture_kind is None:
+        raise Fail(
+            "unsupported capture kind: %r (accepted: gksa10..gksa15 followed by "
+            "'-e2e-capture', lowercase ticket id without a dash)" % (capture.get("kind"),)
+        )
+    if capture_kind[0] != manifest_kind[0]:
+        raise Fail(
+            f"capture kind {capture.get('kind')!r} does not match manifest ticket "
+            f"{manifest_kind[1]}; a capture may only be validated against its own "
+            "ticket manifest"
+        )
     version = capture.get("captureVersion")
     supported = tuple(
         manifest.get("validation", {}).get("supportedCaptureVersions", SUPPORTED_CAPTURE_VERSIONS)
@@ -581,6 +757,7 @@ date_check_modes = (
     "midnight",
     "cycle-wrap",
     "sermon-day",
+    "after-sermon-day",
 )
 
 date_check_required_fields = {
@@ -609,6 +786,13 @@ date_check_required_fields = {
         "dayOfWeekAfter",
     ),
     "sermon-day": ("absoluteDay", "dayOfWeek"),
+    "after-sermon-day": (
+        "absoluteDayBefore",
+        "absoluteDayAfter",
+        "dayOfWeekBefore",
+        "dayOfWeekAfter",
+        "countdownAfter",
+    ),
 }
 
 DATE_CHECK_OPTIONAL_STRING_FIELDS = (
@@ -865,6 +1049,29 @@ def evaluate_date_check(condition, observations, final_text):
             f"{after_abs_path} = {after_abs!r} != {before_abs_path} + 1 = {before_abs + 1}"
         )
 
+    if mode == "after-sermon-day":
+        # The day after the observed sermon day: before weekday == observed T,
+        # after weekday is one absolute day later, and the delta returns to a
+        # full cycle-1 (the next sermon). Works for a T==week wrap without any
+        # invented target constant.
+        if before_dow != target:
+            failures.append(
+                f"after-sermon-day requires {before_dow_path} = {before_dow!r} to equal "
+                f"the observed sermon weekday {target_path} = {target!r}"
+            )
+        expected_after_delta = week - 1
+        if after_delta != expected_after_delta:
+            failures.append(
+                f"after-sermon-day requires afterDelta = week - 1 = {expected_after_delta}: "
+                f"{target_path} = {target!r} with {after_dow_path} = {after_dow!r} gives "
+                f"{after_delta}"
+            )
+        _date_check_countdown_equals(
+            observations, spec["countdownAfter"], "countdown.afterDays", after_delta, failures
+        )
+        _date_check_text(observations, final_text, spec, after_delta, failures)
+        return failures
+
     if mode == "midnight":
         if not (1 <= before_dow <= week - 1):
             failures.append(
@@ -1030,6 +1237,51 @@ def evaluate_expectation(condition, observations, final_text, environment):
                 "floats and booleans do not qualify"
             )
 
+    if "numberRange" in condition:
+        spec = condition["numberRange"]
+        if not _finite_number(value):
+            return False, (
+                f"{obs_path} = {value!r} ({json_type_kind(value)}) is not a finite int/float; "
+                "a numeric range cannot be satisfied by a non-number"
+            )
+        if "min" in spec and not (value >= spec["min"]):
+            return False, f"{obs_path} = {value!r} is below min {spec['min']!r}"
+        if "max" in spec and not (value <= spec["max"]):
+            return False, f"{obs_path} = {value!r} exceeds max {spec['max']!r}"
+        if "maxExclusive" in spec and not (value < spec["maxExclusive"]):
+            return False, (
+                f"{obs_path} = {value!r} must be strictly below maxExclusive "
+                f"{spec['maxExclusive']!r}"
+            )
+
+    if "measuredRatio" in condition:
+        spec = condition["measuredRatio"]
+        num_path = spec["numerator"]
+        den_path = spec["denominator"]
+        if not has_path(observations, num_path):
+            return False, f"measuredRatio numerator observation {num_path!r} was not captured"
+        if not has_path(observations, den_path):
+            return False, f"measuredRatio denominator observation {den_path!r} was not captured"
+        numerator = get_path(observations, num_path)
+        denominator = get_path(observations, den_path)
+        if not _finite_number(numerator):
+            return False, (
+                f"{num_path} = {numerator!r} must be a finite int/float measurement"
+            )
+        if not _finite_number(denominator) or denominator <= 0:
+            return False, (
+                f"{den_path} = {denominator!r} must be a finite positive int/float measurement"
+            )
+        observed = numerator / denominator
+        expected = RATIO_EXPECTED_NUMERATOR / RATIO_EXPECTED_DENOMINATOR
+        tolerance = spec.get("tolerance", RATIO_TOLERANCE)
+        if abs(observed - expected) > tolerance:
+            return False, (
+                f"{num_path}/{den_path} = {numerator!r}/{denominator!r} = {observed!r} "
+                f"differs from {RATIO_EXPECTED_NUMERATOR}:{RATIO_EXPECTED_DENOMINATOR} "
+                f"({expected!r}) by more than tolerance {tolerance!r}"
+            )
+
     if "present" in condition:
         want = condition["present"]
         is_present = value is not None and value != ""
@@ -1098,9 +1350,16 @@ def check_manifest_only(manifest_path, output_path):
     validator. It NEVER asserts that any game scenario passed and is not an
     E2E verdict; the artifact records assertion="structure" explicitly.
     """
+    ticket = ""
+    try:
+        manifest_probe = load_json(manifest_path)
+        ticket = trusted_ticket_from_manifest(manifest_probe)
+    except (Fail, OSError):
+        ticket = ""
     artifact = {
         "artifactVersion": 1,
-        "kind": "gksa10-manifest-check-result",
+        "kind": result_kind(ticket, "manifest-check-result") if ticket
+        else "gksa-manifest-check-error-result",
         "assertion": "structure-only",
         "e2eVerdict": None,
         "ok": False,
@@ -1161,7 +1420,7 @@ def check_manifest_only(manifest_path, output_path):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Validate a GKSA-10 E2E capture.")
+    parser = argparse.ArgumentParser(description="Validate a GKSA-10..GKSA-15 E2E capture.")
     parser.add_argument("--manifest", required=True)
     parser.add_argument(
         "--check-manifest",
@@ -1197,17 +1456,23 @@ def main(argv=None):
 
     capture_path = Path(args.capture)
 
-    def fail_early(stage, message, code=2):
+    def fail_early(stage, message, code=2, ticket=""):
         """Always emit a deterministic artifact, even when the run fails closed
-        before any scenario can be evaluated."""
+        before any scenario can be evaluated. The artifact kind derives from the
+        validated ticket; a generic error kind is used when the manifest ticket
+        cannot be trusted."""
+        artifact_kind = (
+            result_kind(ticket, "validation-result") if ticket
+            else "gksa-validation-error-result"
+        )
         artifact = {
             "artifactVersion": 1,
-            "kind": "gksa10-validation-result",
+            "kind": artifact_kind,
             "ok": False,
             "manifest": str(manifest_path),
             "capture": str(capture_path),
             "captureSha256": None,
-            "ticket": "",
+            "ticket": ticket,
             "capturedAt": "",
             "scenarios": [],
             "summary": {"total": 0, "passed": 0, "failed": 0, "unexecuted": 0},
@@ -1221,16 +1486,25 @@ def main(argv=None):
         sys.stderr.write(f"FAIL [{stage}] {message}\n")
         return code
 
+    trusted_ticket = ""
     try:
         manifest = load_json(manifest_path)
-        scenarios = validate_manifest(manifest)
     except Fail as exc:
         return fail_early("manifest", str(exc))
     except OSError as exc:
         return fail_early("manifest", str(exc))
+    trusted_ticket = trusted_ticket_from_manifest(manifest)
+    try:
+        scenarios = validate_manifest(manifest)
+    except Fail as exc:
+        return fail_early("manifest", str(exc), ticket=trusted_ticket)
+    except OSError as exc:
+        return fail_early("manifest", str(exc), ticket=trusted_ticket)
     except (KeyError, TypeError, AttributeError, ValueError) as exc:
         return fail_early(
-            "manifest", f"malformed manifest structure: {type(exc).__name__}: {exc}"
+            "manifest",
+            f"malformed manifest structure: {type(exc).__name__}: {exc}",
+            ticket=trusted_ticket,
         )
 
     validation = manifest.get("validation", {})
@@ -1245,14 +1519,16 @@ def main(argv=None):
         evidence_files = validate_environment(env, manifest, capture_path.parent)
         validated_evidence = validate_evidence_files(env, evidence_files, capture_path.parent)
     except Fail as exc:
-        return fail_early("capture", str(exc))
+        return fail_early("capture", str(exc), ticket=trusted_ticket)
     except OSError as exc:
-        return fail_early("capture", str(exc))
+        return fail_early("capture", str(exc), ticket=trusted_ticket)
     except (KeyError, TypeError, AttributeError, ValueError) as exc:
         # Defensive net: malformed capture shapes must fail closed with a
         # deterministic artifact, never escape as an uncaught interpreter error.
         return fail_early(
-            "capture", f"malformed capture structure: {type(exc).__name__}: {exc}"
+            "capture",
+            f"malformed capture structure: {type(exc).__name__}: {exc}",
+            ticket=trusted_ticket,
         )
 
     results = []
@@ -1267,6 +1543,7 @@ def main(argv=None):
         return fail_early(
             "capture",
             "requireLoadEvidenceLog is set but no log-like evidence file is declared",
+            ticket=trusted_ticket,
         )
 
     any_failed = False
@@ -1364,12 +1641,12 @@ def main(argv=None):
     ok = not any_failed
     artifact = {
         "artifactVersion": 1,
-        "kind": "gksa10-validation-result",
+        "kind": result_kind(trusted_ticket, "validation-result"),
         "ok": ok,
         "manifest": str(manifest_path),
         "capture": str(capture_path),
         "captureSha256": sha256_file(capture_path),
-        "ticket": manifest.get("ticket", ""),
+        "ticket": trusted_ticket,
         "capturedAt": env.get("capturedAt", ""),
         "scenarios": results,
         "summary": {
