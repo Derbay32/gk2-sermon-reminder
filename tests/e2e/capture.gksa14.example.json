@@ -19,6 +19,9 @@
     "logs only and never consumes eligibility; a queued notice is cleared if the",
     "fault recovers before display or the load ends; recovery adds no success",
     "message.",
+    "observationVocabulary keys are an evidence schema, not a mandatory production",
+    "telemetry API; real facts may be collected by operator observation, logs, or an",
+    "authorized future test facility.",
     "Every visual scenario requires a screenshot plus a measurement or an",
     "explicit operatorObservation."
   ],
@@ -59,12 +62,15 @@
   "observations": {
     "state-unreadable-hides-dependent": {
       "save.sermonWeekday": 2,
+      "state.readinessObservedBeforeInjection": true,
       "state.readable": false,
       "state.defaultValueUsed": false,
       "state.staleDateReused": false,
       "fault.staleValueReused": false,
       "fault.defaultValueUsed": false,
       "hud.visible": false,
+      "hud.selectedTextKeyPresent": false,
+      "hud.tmpTextCleared": true,
       "notice.stateReadDisplayedCount": 1,
       "notice.cornerHudDisplayedCount": 0,
       "notice.totalDisplayedCount": 1,
@@ -88,9 +94,27 @@
       "icon.dependentPresentationSuppressed": true,
       "state.readable": true,
       "state.sermonReadyValue": 0,
+      "hud.textKey": "gksr.hud.sermonDone",
       "hud.visible": false,
+      "hud.tmpTextCleared": true,
       "notice.cornerHudDisplayedCount": 1,
       "notice.stateReadDisplayedCount": 0
+    },
+    "recovery-before-display-cancels-queue": {
+      "notice.surfaceAvailableBefore": false,
+      "notice.queuePendingBefore": true,
+      "notice.surfaceAvailableAfter": true,
+      "notice.queuePendingAfter": false,
+      "notice.queueCountAfter": 0,
+      "notice.totalDisplayedCount": 0,
+      "notice.stateReadBudgetConsumed": false
+    },
+    "independent-category-budgets": {
+      "notice.stateReadDisplayedCount": 1,
+      "notice.cornerHudDisplayedCount": 1,
+      "notice.totalDisplayedCount": 2,
+      "notice.causalOrderRespected": true,
+      "notice.cornerEvaluatedOnlyAfterStateRecovered": true
     }
   },
   "results": [
@@ -126,7 +150,7 @@
         "log": "logs/BepInEx-load.log"
       },
       "measurement": {
-        "operatorObservation": "REPLACE with the observed icon failure isolation and corner-hud notice count."
+        "operatorObservation": "REPLACE with the observed icon failure isolation, cleared TMP text and corner-hud notice count."
       },
       "notes": "REPLACE with the observed run notes."
     }

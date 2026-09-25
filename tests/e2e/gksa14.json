@@ -7,7 +7,7 @@
   "notes": [
     "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
     "本票只交付状态读取与角落文字两类故障消息、载入内去重与恢复机制。",
-    "本票不依赖信标或正常弹窗实现，也不断言 GKSA-15 的信标或弹窗集成。",
+    "本票不依赖信标或正常弹窗实现，也不要求 GKSA-12、GKSA-13 或 GKSA-15 的集成。",
     "未执行场景不得标记为通过。",
     "验收边界为 CachyOS x86-64 上的 Steam Proton、真实游戏、完整加载模组。",
     "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
@@ -17,17 +17,16 @@
     "同类故障在一次存档载入内最多实际显示一次。",
     "仅在故障消息实际显示后消耗该类别的提示机会。",
     "故障消息显示失败只记录日志，且不消耗提示机会。",
-    "消息组件不可用时排队等待；恢复或退出后清除排队消息。",
-    "正常加载期间原生 HUD 尚未出现属于 Pending，不是故障。",
-    "HUD 已存在但缺少必需角落文字或必需资源属于故障。",
-    "打勾资源加载失败时抑制整个依赖的 Done 呈现，但业务状态仍可读。",
-    "无关图标故障不得抑制 Ready 或倒计时。",
-    "恢复过程不显示成功消息。",
+    "消息组件或显示失败时不泄漏自有池化对象，也不残留部分消息。",
+    "状态读取故障必须在注入前已成功读取过一次就绪，以区分异常状态丢失与普通加载或退出。",
+    "原生访问器文档定义的缺键默认 0 不是故障，不得把它改述为伪造回退。",
+    "观察键是证据 schema，不是强制性的生产遥测 API；真实事实可由操作者观察、日志或未来获授权的测试设施采集，本票不发明也不实现采集工具。",
+    "每个步骤只包含一个动作，并给出预期结果与可观察检查。",
     "每个视觉场景要求截图与实测值或操作者明确观察记录。",
     "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
     "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
     "原生消息使用 titleless、iconless、非阻塞的纯文字形式，沿用原生位置、样式、时长与自动消失行为。",
-    "日志抑制逐帧重复噪声但保留初始诊断；中间健康绑定不得重置同一故障回合。",
+    "日志抑制逐帧重复噪声但保留初始诊断；中间健康绑定不得重置角落故障回合。",
     "新载入重新计算各类别提示机会；不进行进程级去重。"
   ],
   "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
@@ -41,6 +40,15 @@
     "GKSA-14"
   ],
   "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
+  "evidenceSchemaNote": "observationVocabulary 中的点号键是证据 schema，用于记录可观察事实，不构成强制性的生产遥测 API。真实事实可由操作者观察记录、日志，或未来获授权的测试设施采集；本票不发明也不实现采集工具。",
+  "defaultPositiveSetup": {
+    "description": "本票的默认正向前置：存档加载完成后，两个门槛任务均为 Completed，必要状态可可靠读取，原生消息表面处于安全可操作画面且可用，受影响类别的提示机会尚未消耗，受影响显示条件成立。",
+    "afterReadiness": true,
+    "safePlayableNoticeSurface": true,
+    "categoryBudgetUnspent": true,
+    "affectedDisplayEligible": true,
+    "noticesNeverForced": "在过场、对话、菜单或消息表面不可用时不得强制显示故障消息；应延后或排队。"
+  },
   "noticeCategories": {
     "state-read": {
       "statusKey": "gksr.status.reminderUnavailable",
@@ -111,21 +119,29 @@
     "save.priorDayOfWeek": "int: 操作前的星期编号",
     "state.readable": "bool: 必要业务状态是否可可靠读取",
     "state.readException": "bool: 原生读取是否抛出异常（不可读）",
-    "state.missingPlayerOrSave": "bool: 是否缺失原生玩家或存档（不可读）",
+    "state.missingPlayer": "bool: 是否缺失原生玩家",
+    "state.missingCurrentSave": "bool: 已完成一次成功就绪读取后当前存档是否意外缺失",
+    "state.missingPlayerOrSave": "bool: 是否缺失原生玩家或当前存档（不可读）",
     "state.nativeReadyNonFinite": "bool: 原生 sermon_ready 数值是否为非有限值（NaN/Infinity），属于不可读",
     "state.sermonReadyValue": "number: 原生 playerData.GetRes(\"sermon_ready\") 的实际数值；>=1 为 Ready，<1 为 Done",
-    "state.sermonReadyValueBefore": "number: 恢复前起始状态的原生 sermon_ready 数值",
-    "state.defaultValueUsed": "bool: 是否用默认值把未知状态解释为未布道或已布道（必须为 false）",
+    "state.sermonReadyValueBefore": "number: 故障或恢复前起始状态的原生 sermon_ready 数值",
+    "state.defaultValueUsed": "bool: 是否在不可读时伪造回退值把未知状态解释为未布道或已布道（必须为 false）；访问器文档定义的缺键默认 0 不属于伪造回退",
     "state.staleDateReused": "bool: 是否沿用故障前的旧日期判定（必须为 false）",
     "state.gatesSatisfied": "bool: 两个解锁门槛是否均满足",
+    "state.readyKeyAbsent": "bool: 本次观察中原生 sermon_ready 键是否缺失（缺失按访问器文档默认 0 处理，不是故障）",
+    "state.readinessObservedBeforeInjection": "bool: 注入前是否已成功观察到一次原生 sermon_ready 就绪读取",
+    "state.exceptionalStateLoss": "bool: 失败是否为加载完成并成功就绪后的异常状态丢失",
+    "state.ordinaryLoadingOrExit": "bool: 是否只是普通加载、卸载或退出过程（不是异常状态丢失）",
     "hud.visible": "bool: 角落文字当前是否可见",
     "hud.text": "string: 角落文字当前显示的完整内容",
-    "hud.textKey": "string: 当前选用的角落文案键",
+    "hud.textKey": "string: 逻辑上选用的业务角落文案键；不等于实际赋给 TMP 的文本，呈现被抑制时仍可保留业务选择",
     "hud.instanceCount": "int: 模组自有的角落显示实例数量",
     "hud.cornerTextInstanceCount": "int: 同一角落同时存在的文字状态数量",
-    "hud.subscriptionCount": "int: 模组对原生 HUD 重建持有的订阅或绑定数量（必须为 1）",
     "hud.liveNativeHudPresent": "bool: 原生 HUD 是否已在运行中实际存在",
     "hud.pending": "bool: 原生 HUD 尚未出现而处于正常加载待定状态",
+    "hud.pendingPhaseObserved": "bool: 是否观察到原生 HUD 待定阶段",
+    "hud.livePhaseObserved": "bool: 是否观察到原生 HUD 已存在阶段",
+    "hud.nativeHudAppearedAfterLoad": "bool: 待定后原生 HUD 是否在加载完成时自然出现",
     "hud.requiredCornerResourcePresent": "bool: 角落文字依赖的必需资源（含打勾图标）是否可用",
     "hud.requiredTextResolved": "bool: 当前语言或英语回退能否解析出必需角落文案",
     "hud.dependentPresentationSuppressed": "bool: 依赖故障组件的呈现是否被抑制",
@@ -135,7 +151,7 @@
     "hud.readyCountdownSuppressed": "bool: Ready 或倒计时是否被无关图标故障抑制",
     "hud.nonSermonCountdownShown": "bool: 当前是否显示非布道日倒计时",
     "hud.visibleAfterRecovery": "bool: 恢复后角落文字是否可见",
-    "hud.textKeyAfterRecovery": "string: 恢复后选用的角落文案键",
+    "hud.textKeyAfterRecovery": "string: 恢复后逻辑选用的角落文案键",
     "hud.instanceCountAfterRecovery": "int: 恢复后模组自有角落显示实例数量",
     "hud.staleTextPresent": "bool: 恢复后是否残留故障前或上一存档的文字",
     "hud.staleSpritePresent": "bool: 恢复后是否残留故障前的打勾 Sprite",
@@ -145,6 +161,15 @@
     "hud.textKeyBefore": "string: 连续观察中的前一文案键",
     "hud.textAfter": "string: 连续观察中的后一文字内容",
     "hud.textKeyAfter": "string: 连续观察中的后一文案键",
+    "hud.selectedTextKeyPresent": "bool: 是否逻辑选定了业务角落文案键（不可读状态应为 false）",
+    "hud.tmpText": "string: 实际赋给 TMP 组件的字符串；依赖呈现被抑制时为空",
+    "hud.tmpTextCleared": "bool: 依赖呈现被抑制时实际赋给 TMP 的文本是否已清空",
+    "hud.duplicateSubscriptions": "bool: 是否出现重复订阅（必须为 false）",
+    "hud.duplicateCallbacks": "bool: 是否出现重复回调绑定（必须为 false）",
+    "hud.staleOldBindingPresent": "bool: 恢复或重建后是否残留旧绑定（必须为 false）",
+    "hud.countsConsistentWithHealthyBaseline": "bool: 显示实例与绑定计数是否与健康基线一致",
+    "hud.healthyBaselineInstanceCount": "int: 健康基线下的模组自有显示实例数量",
+    "hud.healthyBaselineCornerTextInstanceCount": "int: 健康基线下的角落文字状态数量",
     "icon.addressablesReady": "bool: 游戏 Addressables 是否已初始化",
     "icon.spriteLoaded": "bool: 打勾图标请求是否返回可用 Sprite",
     "icon.loadPending": "bool: 打勾图标异步加载是否处于进行中（尚未完成）",
@@ -153,16 +178,22 @@
     "icon.dependentPresentationSuppressed": "bool: 打勾资源不可用时依赖它的整个 Done 呈现（文字与图标）是否被抑制",
     "icon.staleReadyShownWhilePending": "bool: 打勾加载待定期间是否仍显示陈旧的 Ready（必须为 false）",
     "icon.retryAttemptedAfterFailure": "bool: 失败后是否进行了重试",
-    "icon.spriteLoadedAfterRetry": "bool: 重试后是否成功返回 Sprite",
+    "icon.spriteLoadedAfterRetry": "bool: 失败重试后是否成功返回 Sprite",
+    "icon.spriteLoadedAfterResolve": "bool: 待定解除后是否成功返回 Sprite",
     "icon.ownImagePresentAfterRecovery": "bool: 恢复后自有打勾 Image 是否存在",
     "icon.spaceReservedWhenReady": "bool: Ready 状态是否预留了图标空间（必须为 false）",
     "icon.spaceReservedWhenCountdown": "bool: 非布道日倒计时状态是否预留了图标空间（必须为 false）",
     "icon.phantomGapCountdown": "bool: 倒计时状态是否出现图标空位（必须为 false）",
     "icon.phantomGapReady": "bool: Ready 状态是否出现图标空位（必须为 false）",
     "notice.surfaceAvailable": "bool: 原生纯文字非阻塞消息组件当前是否可用",
+    "notice.surfaceAvailableBefore": "bool: 故障或排队阶段原生消息组件是否可用",
+    "notice.surfaceAvailableAfter": "bool: 恢复后原生消息组件是否可用",
     "notice.queuedWhileSurfaceUnavailable": "bool: 消息组件不可用时是否把待显示故障消息排队",
     "notice.queuePending": "bool: 是否存在尚未显示且仍有效的排队故障消息",
+    "notice.queuePendingBefore": "bool: 恢复前是否存在排队预警消息",
+    "notice.queuePendingAfter": "bool: 恢复后是否仍存在排队消息",
     "notice.queueCount": "int: 同次载入同类故障的待显示消息数量（不得累计多条）",
+    "notice.queueCountAfter": "int: 恢复后同类故障的待显示消息数量（应为 0）",
     "notice.queueClearedOnRecovery": "bool: 故障在显示前恢复时是否清除排队消息",
     "notice.queueClearedOnLoadExit": "bool: 退出或切档时是否丢弃旧存档排队消息",
     "notice.queuedNoticeCarriedToNextLoad": "bool: 是否把排队消息带入下一次载入（必须为 false）",
@@ -192,6 +223,15 @@
     "notice.deferredWhileMenuOccupied": "bool: 菜单、对话或过场占用界面时是否延后故障消息",
     "notice.displayedAfterScreenPlayable": "bool: 返回可操作画面后是否显示了仍存在的故障消息",
     "notice.successMessageShown": "bool: 恢复过程是否额外显示成功消息（必须为 false）",
+    "notice.notifierObjectAbsent": "bool: 原生消息组件对象是否缺失",
+    "notice.showFailed": "bool: 消息组件存在但实际显示是否失败",
+    "notice.leakedPooledItem": "bool: 是否泄漏自有池化消息对象（必须为 false）",
+    "notice.partialMessageLeft": "bool: 是否残留部分消息对象（必须为 false）",
+    "notice.retriedRealDisplayAfterRecovery": "bool: 恢复后是否重试真实显示一次",
+    "notice.retryRealDisplayCount": "int: 恢复后真实显示重试并成功的次数",
+    "notice.causalOrderRespected": "bool: 是否先处理状态读取故障再处理角落文字故障",
+    "notice.cornerEvaluatedOnlyAfterStateRecovered": "bool: 是否仅在共享状态恢复可读后才评估角落文字故障",
+    "notice.phase": "string: 本次观察所处阶段（pending、displayed、recovered、queued-before、queued-after）",
     "notice.operatorObservation": "string: 无法数值化时的操作者明确观察记录",
     "recovery.autoRecovered": "bool: 状态或资源恢复后是否无需重载或重启即自动恢复判定",
     "recovery.requiresReload": "bool: 恢复是否要求重新读档（必须为 false）",
@@ -200,11 +240,14 @@
     "load.transition": "string: 本场景的载入转换（first-load、reload、switch-save、exit-to-menu）",
     "log.initialDiagnosticPresent": "bool: 是否保留首次故障的有用初始诊断日志",
     "log.perFrameRepeatCount": "int: 持续相同故障的逐帧重复日志条数（必须为 0）",
-    "log.failureEpisodeCount": "int: 同次载入内同一故障被记录的回合数（中间健康绑定不得重置）",
-    "log.healthyBindingResetEpisode": "bool: 中间健康绑定后再次失败是否被当作新回合（必须为 false）",
+    "log.cornerEpisodeCount": "int: 同次载入内角落文字故障被记录的回合数",
+    "log.healthyBindingResetCornerEpisode": "bool: 中间健康绑定后角落渲染或文本再次失败是否被当作新回合（必须为 false）",
+    "log.healthyBindingObserved": "bool: 该回合内是否观察到一次健康绑定",
+    "log.cornerRenderFailureContinued": "bool: 健康绑定后角落渲染或文本故障是否继续",
+    "log.channelsObservedInCausalOrder": "bool: 是否按先状态读取后角落文字的因果顺序观察两个日志通道",
     "log.userFacingDiagnosticKey": "string: 面向用户的故障日志说明键",
     "log.stackSeparatedFromUserFacing": "bool: 异常调用栈是否与面向用户的日志说明分开",
-    "log.notifierFailureLogged": "bool: 消息组件或显示失败是否仅记录日志",
+    "log.notifierFailureLogged": "bool: 消息组件缺失或显示失败是否仅记录日志",
     "log.stateReadChannelPresent": "bool: 是否存在状态读取故障日志通道",
     "log.cornerHudChannelPresent": "bool: 是否存在角落文字故障日志通道",
     "log.channelsSeparated": "bool: 状态读取与角落文字日志是否分离",
@@ -212,7 +255,7 @@
     "log.frameworkFaultedState": "bool: 是否把可恢复故障逃逸为框架 Faulted 状态（必须为 false）",
     "fault.reported": "bool: 是否报告了故障",
     "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定（必须为 false）",
-    "fault.defaultValueUsed": "bool: 故障后是否用默认值掩盖未知状态（必须为 false）",
+    "fault.defaultValueUsed": "bool: 故障后是否用伪造回退值掩盖未知状态（必须为 false）",
     "language.active": "string: 游戏原始语言标识，例如 zh_cn、en、fr；使用 zh_cn 而非文案目录标签 zh-CN",
     "layout.measurement": "object: 实测数值（由测量探针或操作者记录，字段由设施定义）",
     "layout.operatorObservation": "string: 无法数值化时的操作者明确观察记录",
@@ -346,17 +389,38 @@
       "category": "state-read",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
+        "布道日当天已成功观察到一次原生 sermon_ready 就绪读取。",
         "测试设施可受控使必要状态读取失败。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入必要状态读取故障。",
-        "记录状态可读性、角落文字可见性与两类故障消息显示次数。"
+        "载入该存档并等待加载完成。预期：进入可操作画面。检查：两个门槛任务均 Completed 且原生 sermon_ready 成功读取一次。",
+        "注入必要状态读取故障。预期：必要状态不可读。检查：state.readable=false。",
+        "观察角落区域与消息计数。预期：依赖显示被抑制且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
         {
           "observation": "save.sermonWeekday",
           "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
         },
         {
           "observation": "state.readable",
@@ -383,12 +447,12 @@
           "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonReminder"
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
+          "observation": "hud.tmpTextCleared",
+          "equals": true
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -411,21 +475,152 @@
     },
     {
       "id": "state-unreadable-missing-player",
-      "title": "玩家或存档缺失时隐藏且不解释为未布道或已布道",
+      "title": "就绪后玩家意外缺失时隐藏且不解释为未布道或已布道",
       "category": "state-read",
       "prerequisites": [
-        "两个门槛任务均为 Completed 的存档。",
-        "测试设施可受控使原生玩家或存档缺失。"
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使原生玩家在就绪后意外缺失。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入玩家或存档缺失。",
-        "记录状态可读性与状态读取类别消息次数。"
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入原生玩家意外缺失。预期：属于异常状态丢失而非普通加载。检查：state.exceptionalStateLoss=true 且 state.ordinaryLoadingOrExit=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
         {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
+        },
+        {
+          "observation": "state.missingPlayer",
+          "equals": true
+        },
+        {
+          "observation": "state.missingCurrentSave",
+          "equals": false
+        },
+        {
           "observation": "state.missingPlayerOrSave",
           "equals": true
+        },
+        {
+          "observation": "state.exceptionalStateLoss",
+          "equals": true
+        },
+        {
+          "observation": "state.ordinaryLoadingOrExit",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "state.defaultValueUsed",
+          "equals": false
+        },
+        {
+          "observation": "state.staleDateReused",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "equals": 1
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "state-unreadable-missing-save",
+      "title": "就绪后当前存档意外缺失时隐藏且不解释为已布道",
+      "category": "state-read",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使当前存档在就绪后意外缺失。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入当前存档意外缺失。预期：属于异常状态丢失而非普通退出。检查：state.exceptionalStateLoss=true 且 state.ordinaryLoadingOrExit=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
+        },
+        {
+          "observation": "state.missingCurrentSave",
+          "equals": true
+        },
+        {
+          "observation": "state.missingPlayer",
+          "equals": false
+        },
+        {
+          "observation": "state.missingPlayerOrSave",
+          "equals": true
+        },
+        {
+          "observation": "state.exceptionalStateLoss",
+          "equals": true
+        },
+        {
+          "observation": "state.ordinaryLoadingOrExit",
+          "equals": false
         },
         {
           "observation": "state.readable",
@@ -440,8 +635,8 @@
           "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -456,18 +651,43 @@
     },
     {
       "id": "state-unreadable-read-exception",
-      "title": "原生读取抛出异常时隐藏且不显示 Done",
+      "title": "就绪后原生读取抛出异常时隐藏且不显示 Done",
       "category": "state-read",
       "prerequisites": [
-        "两个门槛任务均为 Completed 的存档。",
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
         "测试设施可受控使原生状态读取抛出异常。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入原生读取异常。",
-        "记录状态可读性与状态读取类别消息次数。"
+        "载入该存档并等待加载完成。预期：就绪且业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入原生读取异常。预期：必要状态不可读。检查：state.readException=true 且 state.readable=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
+        },
         {
           "observation": "state.readException",
           "equals": true
@@ -481,8 +701,8 @@
           "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
         },
         {
           "observation": "fault.staleValueReused",
@@ -501,18 +721,43 @@
     },
     {
       "id": "state-unreadable-nonfinite-ready",
-      "title": "原生 ready 浮点为非有限值时视为不可读而非 Done",
+      "title": "就绪后原生 ready 浮点为非有限值时视为不可读而非 Done",
       "category": "state-read",
       "prerequisites": [
-        "两个门槛任务均为 Completed 的存档。",
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
         "测试设施可受控使原生 sermon_ready 返回非有限值。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入原生 ready 非有限值。",
-        "记录状态可读性、选中文案键与状态读取类别消息次数。"
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入原生 ready 非有限值。预期：视为不可读。检查：state.nativeReadyNonFinite=true 且 state.readable=false。",
+        "观察角落与消息计数。预期：隐藏且未显示 Done，状态读取类别消息显示一次。检查：hud.selectedTextKeyPresent=false 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
+        },
         {
           "observation": "state.nativeReadyNonFinite",
           "equals": true
@@ -530,12 +775,75 @@
           "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
         },
         {
           "observation": "notice.stateReadDisplayedCount",
           "equals": 1
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "state-missing-ready-key-not-a-fault",
+      "title": "原生缺键按文档默认 0 判定为已布道且不是故障",
+      "category": "state-read",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "当前存档中不存在原生 sermon_ready 键（访问器文档默认 0）。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：缺键按文档默认 0 得到可读 Done，而不是伪造回退。检查：state.readyKeyAbsent=true 且 state.readable=true。",
+        "观察角落与故障报告。预期：正常显示 Done 且不报告故障。检查：hud.textKey=gksr.hud.sermonDone 且 fault.reported=false。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "state.readyKeyAbsent",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.defaultValueUsed",
+          "equals": false
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "fault.reported",
+          "equals": false
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "equals": 0
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
         }
       ],
       "evidence": {
@@ -553,9 +861,9 @@
         "无需重新读档或重启游戏。"
       ],
       "steps": [
-        "解除故障使必要状态恢复可读。",
-        "记录角落显示实例、订阅数量与恢复相关标志。",
-        "确认未显示恢复成功消息且未重复消耗提示机会。"
+        "解除故障使必要状态恢复可读。预期：自动恢复判定。检查：state.readable=true 且 recovery.autoRecovered=true。",
+        "观察显示实例与绑定。预期：唯一实例且与健康基线一致。检查：hud.instanceCount=1 且 hud.countsConsistentWithHealthyBaseline=true。",
+        "观察消息计数与成功消息。预期：不显示恢复成功消息且不重复消耗提示机会。检查：recovery.successMessageShown=false 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -575,8 +883,20 @@
           "equals": 1
         },
         {
-          "observation": "hud.subscriptionCount",
-          "equals": 1
+          "observation": "hud.duplicateSubscriptions",
+          "equals": false
+        },
+        {
+          "observation": "hud.duplicateCallbacks",
+          "equals": false
+        },
+        {
+          "observation": "hud.staleOldBindingPresent",
+          "equals": false
+        },
+        {
+          "observation": "hud.countsConsistentWithHealthyBaseline",
+          "equals": true
         },
         {
           "observation": "hud.staleTextPresent",
@@ -626,20 +946,94 @@
       }
     },
     {
+      "id": "unreadable-state-no-default-ready-done",
+      "title": "不可读状态不得被伪造回退解释为未布道或已布道",
+      "category": "state-read",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使必要状态不可读。"
+      ],
+      "steps": [
+        "注入必要状态不可读。预期：不伪造回退值。检查：state.defaultValueUsed=false 且 fault.defaultValueUsed=false。",
+        "观察角落。预期：未显示 Ready 或 Done。检查：hud.visible=false 且 hud.selectedTextKeyPresent=false。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readinessObservedBeforeInjection",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "state.defaultValueUsed",
+          "equals": false
+        },
+        {
+          "observation": "fault.defaultValueUsed",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.selectedTextKeyPresent",
+          "equals": false
+        },
+        {
+          "observation": "hud.tmpTextCleared",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
       "id": "corner-hud-resource-missing",
       "title": "角落文字必需资源缺失时仅抑制依赖呈现",
       "category": "corner-hud",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
         "原生 HUD 已在运行中存在。",
         "测试设施可受控使角落文字必需资源缺失。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入角落文字必需资源缺失。",
-        "记录依赖呈现抑制标志与角落文字类别消息次数。"
+        "载入该存档并等待加载完成。预期：业务状态可读且原生 HUD 已存在。检查：state.readable=true 且 hud.liveNativeHudPresent=true。",
+        "注入角落文字必需资源缺失。预期：仅抑制依赖呈现。检查：hud.dependentPresentationSuppressed=true 且 hud.unrelatedPresentationPreserved=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次且状态读取类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
       ],
       "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
         {
           "observation": "state.readable",
           "equals": true
@@ -685,12 +1079,13 @@
       "category": "corner-hud",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
         "当前语言及其英语回退均无法解析必需角落文案。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "使必需角落文案在当前语言与英语回退下均缺失。",
-        "记录文案解析标志、依赖呈现抑制标志与角落文字类别消息次数。"
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "使必需角落文案在当前语言与英语回退下均缺失。预期：仅抑制依赖呈现。检查：hud.requiredTextResolved=false 且 hud.dependentPresentationSuppressed=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -726,12 +1121,13 @@
       "category": "corner-hud",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
         "测试设施可受控仅使角落文字组件局部故障。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入仅影响角落文字的局部故障。",
-        "确认不依赖故障组件的其他正常呈现仍保留。"
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "注入仅影响角落文字的局部故障。预期：故障被隔离且其他正常呈现保留。检查：hud.componentLocalFailureIsolated=true 且 hud.unrelatedPresentationPreserved=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -771,13 +1167,14 @@
       "category": "corner-hud",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
         "测试设施可受控使影响多个依赖项的原生共享组件缺失。",
         "信标与弹窗不在本票范围，本场景只观察角落文字。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入原生共享组件缺失。",
-        "记录依赖呈现抑制标志与角落文字类别消息次数。"
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "注入原生共享组件缺失。预期：停用依赖该组件的呈现。检查：hud.sharedComponentLoss=true 且 hud.dependentPresentationSuppressed=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -808,19 +1205,76 @@
       }
     },
     {
+      "id": "corner-resource-recovery-refailure-same-load",
+      "title": "同次载入角落资源恢复后再次失效不重复消耗角落提示机会",
+      "category": "corner-hud",
+      "prerequisites": [
+        "角落文字必需资源缺失且角落文字类别消息已实际显示一次。",
+        "同一次存档载入内可再次使该资源失效。"
+      ],
+      "steps": [
+        "解除角落资源故障。预期：自动恢复呈现且无成功消息。检查：hud.visibleAfterRecovery=true 且 recovery.successMessageShown=false。",
+        "在同次载入内再次使角落资源失效。预期：不重复提示且已消耗机会保持。检查：notice.cornerHudDisplayedCount=1 且 notice.cornerHudBudgetConsumed=true。",
+        "观察残留与消息总数。预期：无残留文字且总显示次数为一。检查：hud.staleTextPresent=false 且 notice.totalDisplayedCount=1。"
+      ],
+      "expect": [
+        {
+          "observation": "recovery.autoRecovered",
+          "equals": true
+        },
+        {
+          "observation": "recovery.successMessageShown",
+          "equals": false
+        },
+        {
+          "observation": "notice.successMessageShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.visibleAfterRecovery",
+          "equals": true
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "equals": 1
+        },
+        {
+          "observation": "notice.cornerHudBudgetConsumed",
+          "equals": true
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "equals": 1
+        },
+        {
+          "observation": "hud.staleTextPresent",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
       "id": "notifier-unavailable-logs-only",
-      "title": "消息组件不可用时仅记录日志且不消耗提示机会",
+      "title": "消息组件对象缺失时仅记录日志且不消耗提示机会",
       "category": "notifier",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
-        "测试设施可受控使原生消息组件不可用并同时使必要状态不可读。"
+        "测试设施可受控使原生消息组件对象缺失并同时使必要状态不可读。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "注入原生消息组件不可用与必要状态不可读。",
-        "确认未显示消息、仅记录日志且提示机会未被消耗。"
+        "载入该存档并等待加载完成。预期：业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入原生消息组件对象缺失与必要状态不可读。预期：仅记录日志，不显示消息且不消耗机会。检查：notice.notifierObjectAbsent=true 且 notice.stateReadBudgetConsumed=false。",
+        "观察池化对象与部分消息。预期：无泄漏。检查：notice.leakedPooledItem=false 且 notice.partialMessageLeft=false。"
       ],
       "expect": [
+        {
+          "observation": "notice.notifierObjectAbsent",
+          "equals": true
+        },
         {
           "observation": "notice.surfaceAvailable",
           "equals": false
@@ -835,6 +1289,14 @@
         },
         {
           "observation": "notice.stateReadBudgetConsumed",
+          "equals": false
+        },
+        {
+          "observation": "notice.leakedPooledItem",
+          "equals": false
+        },
+        {
+          "observation": "notice.partialMessageLeft",
           "equals": false
         },
         {
@@ -853,7 +1315,68 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
+      }
+    },
+    {
+      "id": "notifier-present-show-fails-logs-only",
+      "title": "消息组件存在但实际显示失败时仅记录日志且不消耗提示机会",
+      "category": "notifier",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生消息组件存在但实际显示失败并同时使必要状态不可读。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入消息组件显示失败与必要状态不可读。预期：仅记录日志，不显示消息且不消耗机会。检查：notice.showFailed=true 且 notice.stateReadBudgetConsumed=false。",
+        "观察池化对象与部分消息。预期：无泄漏且无部分消息残留。检查：notice.leakedPooledItem=false 且 notice.partialMessageLeft=false。"
+      ],
+      "expect": [
+        {
+          "observation": "notice.notifierObjectAbsent",
+          "equals": false
+        },
+        {
+          "observation": "notice.surfaceAvailable",
+          "equals": true
+        },
+        {
+          "observation": "notice.showFailed",
+          "equals": true
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "equals": 0
+        },
+        {
+          "observation": "notice.budgetConsumedWithoutDisplay",
+          "equals": false
+        },
+        {
+          "observation": "notice.stateReadBudgetConsumed",
+          "equals": false
+        },
+        {
+          "observation": "notice.leakedPooledItem",
+          "equals": false
+        },
+        {
+          "observation": "notice.partialMessageLeft",
+          "equals": false
+        },
+        {
+          "observation": "log.notifierFailureLogged",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
       }
     },
     {
@@ -861,13 +1384,12 @@
       "title": "消息组件恢复后按仍存在的未提示故障显示一次",
       "category": "notifier",
       "prerequisites": [
-        "原生消息组件不可用且状态读取故障尚未提示。",
+        "原生消息组件不可用或显示失败且状态读取故障尚未提示。",
         "状态读取故障在消息组件恢复后仍然存在。"
       ],
       "steps": [
-        "恢复原生消息组件。",
-        "确认仍存在的状态读取故障显示一次且消耗该类提示机会。",
-        "确认故障呈现仍按不可读状态保持隐藏。"
+        "恢复原生消息组件。预期：仍存在的状态读取故障显示一次。检查：notice.stateReadDisplayedCount=1 且 notice.retriedRealDisplayAfterRecovery=true。",
+        "观察提示机会与呈现。预期：消耗该类机会且故障呈现保持隐藏。检查：notice.stateReadBudgetConsumed=true 且 hud.visible=false。"
       ],
       "expect": [
         {
@@ -881,6 +1403,25 @@
         {
           "observation": "notice.stateReadBudgetConsumed",
           "equals": true
+        },
+        {
+          "observation": "notice.retriedRealDisplayAfterRecovery",
+          "equals": true
+        },
+        {
+          "observation": "notice.retryRealDisplayCount",
+          "numberRange": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.leakedPooledItem",
+          "equals": false
+        },
+        {
+          "observation": "notice.partialMessageLeft",
+          "equals": false
         },
         {
           "observation": "state.readable",
@@ -906,8 +1447,8 @@
         "菜单、对话或过场占用界面使故障消息需要延后。"
       ],
       "steps": [
-        "在消息组件不可用且界面被占用期间注入同类故障。",
-        "记录排队消息数量与显示次数。"
+        "在消息组件不可用且界面被占用期间注入同类故障。预期：排一条待显示消息。检查：notice.queuedWhileSurfaceUnavailable=true 且 notice.queuePending=true。",
+        "记录排队数量与显示次数。预期：不累计多条且未实际显示。检查：notice.queueCount 介于 0..1 且 notice.totalDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -941,11 +1482,12 @@
       "title": "同类故障实际提示后持续或复发不再增加提示",
       "category": "dedup",
       "prerequisites": [
-        "状态读取故障已实际显示一次状态读取类别消息。"
+        "状态读取故障已实际显示一次状态读取类别消息。",
+        "同类故障随后持续存在。"
       ],
       "steps": [
-        "保持同类故障持续存在。",
-        "记录状态读取类别与总显示次数。"
+        "保持同类故障持续存在。预期：不重复提示。检查：notice.stateReadDisplayedCount=1。",
+        "观察总数与去重方式。预期：无额外提示且非进程级去重。检查：notice.totalDisplayedCount=1 且 notice.processWideDedup=false。"
       ],
       "expect": [
         {
@@ -980,9 +1522,8 @@
         "状态随后恢复可读并再次失效。"
       ],
       "steps": [
-        "使必要状态恢复可读。",
-        "再次使必要状态不可读。",
-        "记录状态读取类别与总显示次数。"
+        "使必要状态恢复可读。预期：自动恢复。检查：recovery.autoRecovered=true。",
+        "再次使必要状态不可读。预期：不重复提示。检查：notice.stateReadDisplayedCount=1 且 notice.totalDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -1017,8 +1558,8 @@
         "同一状态读取功能的底层错误细节发生变化。"
       ],
       "steps": [
-        "在状态读取类别已提示后把底层错误细节从缺失变为异常。",
-        "记录状态读取类别与总显示次数。"
+        "在状态读取类别已提示后把底层错误细节从缺失变为异常。预期：归入同类且不重复提示。检查：state.readException=true 且 notice.stateReadDisplayedCount=1。",
+        "观察总数。预期：总显示次数不变。检查：notice.totalDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -1042,16 +1583,17 @@
     },
     {
       "id": "independent-category-budgets",
-      "title": "两个故障类别各有独立提示机会",
+      "title": "两个故障类别各有独立提示机会且按因果顺序评估",
       "category": "dedup",
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
-        "测试设施可受控在同一载入内分别使状态读取与角落文字故障。"
+        "状态读取与角落文字故障可在同次载入内按先后顺序注入。",
+        "角落文字故障仅在共享状态恢复可读后才注入。"
       ],
       "steps": [
-        "注入必要状态读取故障。",
-        "注入角落文字组件故障。",
-        "记录两个类别各自与总的显示次数。"
+        "先注入必要状态读取故障。预期：状态读取类别消息显示一次。检查：notice.stateReadDisplayedCount=1。",
+        "恢复必要状态可读。预期：业务状态可读。检查：state.readable=true。",
+        "随后在同次载入内注入角落文字组件故障。预期：角落文字类别消息显示一次且顺序正确。检查：notice.cornerHudDisplayedCount=1 且 notice.cornerEvaluatedOnlyAfterStateRecovered=true。"
       ],
       "expect": [
         {
@@ -1065,6 +1607,18 @@
         {
           "observation": "notice.totalDisplayedCount",
           "equals": 2
+        },
+        {
+          "observation": "notice.causalOrderRespected",
+          "equals": true
+        },
+        {
+          "observation": "notice.cornerEvaluatedOnlyAfterStateRecovered",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
         }
       ],
       "evidence": {
@@ -1082,9 +1636,9 @@
         "重新载入同一存档后同类故障仍然存在。"
       ],
       "steps": [
-        "重新载入同一存档并等待加载完成。",
-        "确认同类故障可在新载入内重新显示一次。",
-        "确认不存在进程级去重且排队消息未被带入。"
+        "重新载入同一存档并等待加载完成。预期：识别为重载。检查：load.transition=reload。",
+        "确认同类故障可在新载入内重新显示一次。预期：新载入新预算。检查：notice.stateReadDisplayedCount=1 且 notice.processWideDedup=false。",
+        "确认排队消息未被带入。预期：无跨载入残留。检查：notice.queuedNoticeCarriedToNextLoad=false。"
       ],
       "expect": [
         {
@@ -1123,9 +1677,9 @@
         "存档 B 需要重新判定且角落文字故障仍然存在。"
       ],
       "steps": [
-        "切换到存档 B 并等待加载完成。",
-        "确认旧存档排队消息未被带入。",
-        "记录存档 B 内两个类别显示次数。"
+        "切换到存档 B 并等待加载完成。预期：识别为切档。检查：load.transition=switch-save。",
+        "确认旧存档排队消息未被带入。预期：无跨存档残留。检查：notice.queuedNoticeCarriedToNextLoad=false 且 notice.staleNoticeInNextSave=false。",
+        "记录存档 B 内两个类别显示次数。预期：角落类别显示一次、状态类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -1160,20 +1714,34 @@
       "title": "显示前恢复时取消排队消息且不消耗提示机会",
       "category": "queue",
       "prerequisites": [
-        "故障消息已因消息组件不可用或界面被占用而排队。"
+        "故障消息已因消息组件不可用或界面被占用而排队。",
+        "在消息实际显示前可使故障恢复。"
       ],
       "steps": [
-        "在消息实际显示前使故障恢复。",
-        "记录排队清除标志、显示次数与提示机会消耗情况。"
+        "确认恢复前存在排队消息。预期：排队且尚未显示。检查：notice.queuePendingBefore=true 且 notice.queueCount 介于 0..1。",
+        "在消息实际显示前使故障恢复。预期：清除排队消息且无过期消息。检查：notice.queuePendingAfter=false 且 notice.queueCountAfter=0。",
+        "观察消息计数与提示机会。预期：即使组件随后可用也不显示消息且不消耗机会。检查：notice.totalDisplayedCount=0 且 notice.stateReadBudgetConsumed=false。"
       ],
       "expect": [
         {
-          "observation": "notice.queuePending",
+          "observation": "notice.surfaceAvailableBefore",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingBefore",
           "equals": true
         },
         {
-          "observation": "notice.queueClearedOnRecovery",
+          "observation": "notice.surfaceAvailableAfter",
           "equals": true
+        },
+        {
+          "observation": "notice.queuePendingAfter",
+          "equals": false
+        },
+        {
+          "observation": "notice.queueCountAfter",
+          "equals": 0
         },
         {
           "observation": "notice.totalDisplayedCount",
@@ -1206,9 +1774,8 @@
         "排队中的故障消息在显示前因恢复被取消。"
       ],
       "steps": [
-        "使故障在显示前恢复。",
-        "在同次载入内再次注入同类故障。",
-        "记录状态读取类别与总显示次数。"
+        "使故障在显示前恢复。预期：取消排队且不清空机会。检查：notice.queueClearedOnRecovery=true 且 notice.stateReadBudgetConsumed=false。",
+        "在同次载入内再次注入同类故障。预期：仍可显示一次。检查：notice.stateReadDisplayedCount=1 且 notice.totalDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -1231,11 +1798,12 @@
       "title": "退出存档丢弃旧存档待显示消息且不残留",
       "category": "queue",
       "prerequisites": [
-        "存在尚未显示的旧存档待显示故障消息。"
+        "存在尚未显示的旧存档待显示故障消息。",
+        "退出属于普通卸载而非异常状态丢失。"
       ],
       "steps": [
-        "在消息显示前退出存档返回主菜单。",
-        "记录排队清除标志、排队数量与显示次数。"
+        "在消息显示前退出存档返回主菜单。预期：识别为普通退出。检查：load.transition=exit-to-menu 且 state.ordinaryLoadingOrExit=true。",
+        "记录排队清除标志与显示次数。预期：丢弃排队且无过期消息。检查：notice.queueClearedOnLoadExit=true 且 notice.queueCountAfter=0。"
       ],
       "expect": [
         {
@@ -1243,11 +1811,15 @@
           "equals": "exit-to-menu"
         },
         {
+          "observation": "state.ordinaryLoadingOrExit",
+          "equals": true
+        },
+        {
           "observation": "notice.queueClearedOnLoadExit",
           "equals": true
         },
         {
-          "observation": "notice.queueCount",
+          "observation": "notice.queueCountAfter",
           "equals": 0
         },
         {
@@ -1274,8 +1846,8 @@
         "处于正常加载过程且原生 HUD 尚未出现。"
       ],
       "steps": [
-        "载入该存档并在原生 HUD 尚未出现时观察。",
-        "记录待定标志、故障报告与消息显示次数。"
+        "载入该存档并记录待定阶段。预期：待定而非故障。检查：hud.pendingPhaseObserved=true 且 hud.pending=true。",
+        "等待加载完成并记录已存在阶段。预期：原生 HUD 自然出现且无故障报告。检查：hud.livePhaseObserved=true 且 fault.reported=false。"
       ],
       "expect": [
         {
@@ -1284,6 +1856,18 @@
         },
         {
           "observation": "hud.pending",
+          "equals": true
+        },
+        {
+          "observation": "hud.pendingPhaseObserved",
+          "equals": true
+        },
+        {
+          "observation": "hud.livePhaseObserved",
+          "equals": true
+        },
+        {
+          "observation": "hud.nativeHudAppearedAfterLoad",
           "equals": true
         },
         {
@@ -1319,9 +1903,8 @@
         "测试设施可受控使必需角落组件缺失。"
       ],
       "steps": [
-        "载入该存档并等待原生 HUD 出现。",
-        "注入必需角落组件缺失。",
-        "记录故障报告与角落文字类别消息次数。"
+        "载入该存档并等待原生 HUD 出现。预期：已存在阶段且非待定。检查：hud.livePhaseObserved=true 且 hud.pending=false。",
+        "注入必需角落组件缺失。预期：判为故障并显示角落文字类别消息一次。检查：fault.reported=true 且 notice.cornerHudDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -1331,6 +1914,14 @@
         {
           "observation": "hud.pending",
           "equals": false
+        },
+        {
+          "observation": "hud.livePhaseObserved",
+          "equals": true
+        },
+        {
+          "observation": "hud.pendingPhaseObserved",
+          "equals": true
         },
         {
           "observation": "hud.requiredCornerResourcePresent",
@@ -1360,9 +1951,8 @@
         "打开菜单或触发原生 HUD 正常隐藏。"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "使原生 HUD 按原生规则自然隐藏。",
-        "记录故障报告与消息显示次数。"
+        "载入该存档并等待加载完成。预期：已存在阶段。检查：hud.livePhaseObserved=true。",
+        "使原生 HUD 按原生规则自然隐藏。预期：不误报故障。检查：fault.reported=false 且 notice.totalDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -1394,12 +1984,12 @@
       "category": "localization",
       "prerequisites": [
         "游戏语言为简体中文。",
-        "必要状态读取故障已使状态读取类别消息实际显示。"
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
       ],
       "steps": [
-        "在简体中文下注入必要状态读取故障。",
-        "读取消息文案键与完整内容。",
-        "确认无标题、无图标、无确认控件且沿用原生时长与自动消失。"
+        "在简体中文下注入必要状态读取故障。预期：使用定稿简体中文消息。检查：notice.textKey=gksr.status.reminderUnavailable。",
+        "读取消息内容。预期：与定稿一致。检查：notice.text 等于 finalText 的 zh-CN 完整句。",
+        "确认无标题无图标无确认控件且沿用原生时长与自动消失。预期：全部满足。检查：notice.titlePresent=false 且 notice.nativeLifetime=true。"
       ],
       "expect": [
         {
@@ -1448,12 +2038,12 @@
       "category": "localization",
       "prerequisites": [
         "游戏语言为英语。",
-        "必要状态读取故障已使状态读取类别消息实际显示。"
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
       ],
       "steps": [
-        "在英语下注入必要状态读取故障。",
-        "读取消息文案键与完整内容。",
-        "确认无标题、无图标且无确认控件。"
+        "在英语下注入必要状态读取故障。预期：使用定稿英语消息。检查：notice.textKey=gksr.status.reminderUnavailable。",
+        "读取消息内容。预期：与定稿一致。检查：notice.text 等于 finalText 的 en 完整句。",
+        "确认无标题无图标无确认控件。预期：全部满足。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。"
       ],
       "expect": [
         {
@@ -1494,12 +2084,11 @@
       "category": "localization",
       "prerequisites": [
         "游戏语言不是简体中文也不是英语。",
-        "必要状态读取故障已使状态读取类别消息实际显示。"
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
       ],
       "steps": [
-        "把游戏语言设为受支持之外的语言。",
-        "注入必要状态读取故障。",
-        "读取消息完整内容并确认使用英语回退。"
+        "把游戏语言设为受支持之外的语言。预期：确为非受支持语言。检查：language.active 不等于 zh_cn 与 en。",
+        "注入必要状态读取故障。预期：消息回退为英语。检查：notice.text 等于 finalText 的 en 完整句。"
       ],
       "expect": [
         {
@@ -1535,9 +2124,9 @@
         "角落文字组件故障已使角落文字类别消息实际显示。"
       ],
       "steps": [
-        "在简体中文下注入角落文字组件故障。",
-        "读取消息类别、文案键与完整内容。",
-        "确认角落文字类别与状态读取类别相互独立。"
+        "在简体中文下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
+        "读取消息键与内容。预期：与定稿一致。检查：notice.textKey=gksr.status.hudUnavailable。",
+        "确认两个类别独立。预期：状态读取类别为零。检查：notice.stateReadDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -1569,6 +2158,52 @@
       }
     },
     {
+      "id": "corner-hud-notice-copy-en",
+      "title": "英语使用定稿角落文字故障消息",
+      "category": "localization",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "角落文字组件故障已使角落文字类别消息实际显示。"
+      ],
+      "steps": [
+        "在英语下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
+        "读取消息内容。预期：与定稿英语一致。检查：notice.text 等于 finalText 的 en 完整句。",
+        "确认沿用原生无标题无图标形式。预期：全部满足。检查：notice.titlePresent=false 且 notice.iconPresent=false。"
+      ],
+      "expect": [
+        {
+          "observation": "language.active",
+          "equals": "en"
+        },
+        {
+          "observation": "notice.category",
+          "equals": "corner-hud"
+        },
+        {
+          "observation": "notice.textKey",
+          "equals": "gksr.status.hudUnavailable"
+        },
+        {
+          "observation": "notice.text",
+          "finalTextKey": "gksr.status.hudUnavailable",
+          "language": "en"
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "equals": 1
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "equals": 0
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
       "id": "notice-nonblocking-no-pause-no-input-capture",
       "title": "故障消息非阻塞且不暂停不抢占输入",
       "category": "native-ui",
@@ -1576,8 +2211,9 @@
         "故障消息实际显示且游戏处于可操作画面。"
       ],
       "steps": [
-        "在故障消息显示期间记录暂停与输入占用状态。",
-        "记录消息位置、样式、时长与自动消失行为。"
+        "在故障消息显示期间记录暂停与输入占用。预期：非阻塞。检查：notice.pausedGame=false 且 notice.inputCapture=false。",
+        "记录消息形式。预期：无标题无图标无确认控件。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。",
+        "记录位置、样式、时长与自动消失。预期：沿用原生行为。检查：notice.nativeLocation=true 且 notice.autoDismiss=true。"
       ],
       "expect": [
         {
@@ -1632,9 +2268,8 @@
         "故障消息实际显示。"
       ],
       "steps": [
-        "触发一个原生通知。",
-        "在故障消息显示期间观察原生通知表现。",
-        "记录原生通知完整性与时长是否受影响。"
+        "触发一个原生通知。预期：原生通知正常显示。检查：notice.nativeNotificationIntactDuringNotice=true。",
+        "在故障消息显示期间观察原生通知。预期：时长与行为不受影响。检查：notice.nativeNotificationDurationUnaffected=true。"
       ],
       "expect": [
         {
@@ -1665,9 +2300,8 @@
         "必要状态读取故障发生且尚未提示。"
       ],
       "steps": [
-        "在界面被占用时注入必要状态读取故障。",
-        "确认故障消息延后且未显示。",
-        "返回可操作画面后确认显示一次且不暂停不抢占输入。"
+        "在界面被占用时注入必要状态读取故障。预期：延后且未显示。检查：notice.deferredWhileMenuOccupied=true 且 notice.totalDisplayedCount=0。",
+        "返回可操作画面。预期：显示一次且非阻塞。检查：notice.displayedAfterScreenPlayable=true 且 notice.stateReadDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -1706,9 +2340,9 @@
         "可读取运行日志。"
       ],
       "steps": [
-        "保持同类故障持续若干帧。",
-        "统计逐帧重复日志条数与初始诊断记录。",
-        "确认面向用户说明与异常调用栈分开且标识故障环节。"
+        "保持同类故障持续若干帧。预期：保留首次初始诊断。检查：log.initialDiagnosticPresent=true。",
+        "统计逐帧重复日志。预期：无逐帧噪声。检查：log.perFrameRepeatCount=0。",
+        "确认说明与调用栈分开且标识故障环节。预期：全部满足。检查：log.faultStageIdentified=true 且 log.stackSeparatedFromUserFacing=true。"
       ],
       "expect": [
         {
@@ -1735,29 +2369,37 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
       "id": "intermediate-healthy-binding-keeps-episode",
-      "title": "中间健康绑定后再次失败不重置同一故障回合",
+      "title": "中间健康绑定后角落渲染或文本再次失败不重置同一故障回合",
       "category": "logging",
       "prerequisites": [
-        "同一状态读取故障回合内出现一次中间健康绑定。",
-        "随后同一呈现或读取再次失败。"
+        "角落渲染或文本故障回合已开始。",
+        "该回合内出现一次健康绑定，随后角落渲染或文本故障继续。"
       ],
       "steps": [
-        "记录同一故障的日志回合数。",
-        "确认中间健康绑定未被当作新回合。",
-        "确认提示机会未被重复消耗。"
+        "记录该回合内是否观察到健康绑定。预期：观察到健康绑定且故障继续。检查：log.healthyBindingObserved=true 且 log.cornerRenderFailureContinued=true。",
+        "确认角落回合不被健康绑定重置。预期：同一回合。检查：log.cornerEpisodeCount=1 且 log.healthyBindingResetCornerEpisode=false。",
+        "确认角落提示机会独立于健康状态通道。预期：状态读取类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
       ],
       "expect": [
         {
-          "observation": "log.failureEpisodeCount",
+          "observation": "log.healthyBindingObserved",
+          "equals": true
+        },
+        {
+          "observation": "log.cornerRenderFailureContinued",
+          "equals": true
+        },
+        {
+          "observation": "log.cornerEpisodeCount",
           "equals": 1
         },
         {
-          "observation": "log.healthyBindingResetEpisode",
+          "observation": "log.healthyBindingResetCornerEpisode",
           "equals": false
         },
         {
@@ -1765,27 +2407,32 @@
           "equals": true
         },
         {
-          "observation": "notice.stateReadDisplayedCount",
+          "observation": "notice.cornerHudDisplayedCount",
           "equals": 1
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "equals": 0
         }
       ],
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
       "id": "per-channel-logs-separated",
-      "title": "状态读取与角落文字日志分离且可恢复故障不逃逸为框架异常",
+      "title": "状态读取与角落文字日志分离且按因果顺序观察且可恢复故障不逃逸为框架异常",
       "category": "logging",
       "prerequisites": [
-        "同一载入内分别发生状态读取故障与角落文字故障。",
+        "同一载入内先发生状态读取故障，恢复后再发生角落文字故障。",
         "框架生命周期可观察。"
       ],
       "steps": [
-        "记录两个故障通道是否存在与是否分离。",
-        "确认可恢复故障未使框架进入 Faulted 状态。"
+        "先记录状态读取故障通道。预期：通道存在并保留诊断。检查：log.stateReadChannelPresent=true。",
+        "恢复状态后再记录角落文字故障通道。预期：通道独立且按因果顺序观察。检查：log.cornerHudChannelPresent=true 且 log.channelsObservedInCausalOrder=true。",
+        "确认日志分离且未逃逸为框架异常。预期：全部满足。检查：log.channelsSeparated=true 且 log.frameworkFaultedState=false。"
       ],
       "expect": [
         {
@@ -1794,6 +2441,10 @@
         },
         {
           "observation": "log.cornerHudChannelPresent",
+          "equals": true
+        },
+        {
+          "observation": "log.channelsObservedInCausalOrder",
           "equals": true
         },
         {
@@ -1808,7 +2459,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1816,13 +2467,13 @@
       "title": "打勾图标加载待定期间抑制 Done 呈现且不误报故障",
       "category": "icon-isolation",
       "prerequisites": [
-        "布道日当天处于 Done 状态（原生 sermon_ready < 1）。",
+        "布道日当天处于 Done 状态（原生 sermon_ready < 1）且两个门槛任务均 Completed。",
         "打勾图标异步加载可受控处于待定。"
       ],
       "steps": [
-        "使打勾图标加载处于待定状态。",
-        "确认业务状态仍为可读 Done 且整个 Done 呈现被抑制。",
-        "解除阻塞后确认 Done 与自有 Image 恢复。"
+        "使打勾图标加载处于待定状态。预期：业务状态仍为可读 Done，逻辑键保持 Done。检查：state.readable=true 且 hud.textKey=gksr.hud.sermonDone。",
+        "观察实际呈现。预期：整个 Done 呈现被抑制且 TMP 文本已清空。检查：hud.visible=false 且 hud.tmpTextCleared=true。",
+        "解除阻塞。预期：Done 与自有 Image 恢复。检查：icon.spriteLoadedAfterResolve=true 且 hud.visibleAfterRecovery=true。"
       ],
       "expect": [
         {
@@ -1846,7 +2497,19 @@
           "equals": true
         },
         {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
           "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.tmpTextCleared",
+          "equals": true
+        },
+        {
+          "observation": "icon.ownImagePresent",
           "equals": false
         },
         {
@@ -1858,7 +2521,7 @@
           "equals": 0
         },
         {
-          "observation": "icon.spriteLoadedAfterRetry",
+          "observation": "icon.spriteLoadedAfterResolve",
           "equals": true
         },
         {
@@ -1885,13 +2548,13 @@
       "title": "打勾图标加载失败抑制整个 Done 呈现且归入角落文字类别一次",
       "category": "icon-isolation",
       "prerequisites": [
-        "布道日当天处于 Done 状态（原生 sermon_ready < 1）。",
+        "布道日当天处于 Done 状态（原生 sermon_ready < 1）且两个门槛任务均 Completed。",
         "测试设施可受控使打勾图标加载失败。"
       ],
       "steps": [
-        "注入打勾图标加载失败。",
-        "确认业务状态仍可读 Done 且整个 Done 呈现被抑制。",
-        "确认角落文字类别消息显示一次后重试恢复。"
+        "注入打勾图标加载失败。预期：业务状态仍可读 Done，逻辑键保持 Done。检查：state.readable=true 且 hud.textKey=gksr.hud.sermonDone。",
+        "观察实际呈现。预期：整个 Done 呈现被抑制且 TMP 文本已清空。检查：hud.visible=false 且 hud.tmpTextCleared=true。",
+        "注入失败后重试。预期：角落文字类别消息显示一次且重试恢复。检查：notice.cornerHudDisplayedCount=1 且 icon.spriteLoadedAfterRetry=true。"
       ],
       "expect": [
         {
@@ -1921,16 +2584,16 @@
           }
         },
         {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
           "observation": "hud.visible",
           "equals": false
         },
         {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
-        },
-        {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonReminder"
+          "observation": "hud.tmpTextCleared",
+          "equals": true
         },
         {
           "observation": "notice.cornerHudDisplayedCount",
@@ -1976,9 +2639,8 @@
         "测试设施可受控使打勾图标资源加载失败，但 Ready 不使用该图标。"
       ],
       "steps": [
-        "在 Ready 状态下注入打勾图标资源加载失败。",
-        "确认图标已失败且 Ready 文字仍正常显示。",
-        "确认 Ready 与倒计时未被抑制且未预留图标空间。"
+        "在 Ready 状态下注入打勾图标资源加载失败。预期：图标失败但 Ready 不受影响。检查：icon.loadFailed=true 且 hud.readyCountdownSuppressed=false。",
+        "观察 Ready 呈现与图标空间。预期：Ready 正常显示且不预留图标空间。检查：hud.textKey=gksr.hud.sermonReminder 且 icon.spaceReservedWhenReady=false。"
       ],
       "expect": [
         {
@@ -2027,50 +2689,6 @@
       }
     },
     {
-      "id": "unreadable-state-no-default-ready-done",
-      "title": "不可读状态不得被默认解释为未布道或已布道",
-      "category": "state-read",
-      "prerequisites": [
-        "两个门槛任务均为 Completed 的存档。",
-        "测试设施可受控使必要状态不可读。"
-      ],
-      "steps": [
-        "注入必要状态不可读。",
-        "确认未使用默认值且未显示 Ready 或 Done。"
-      ],
-      "expect": [
-        {
-          "observation": "state.readable",
-          "equals": false
-        },
-        {
-          "observation": "state.defaultValueUsed",
-          "equals": false
-        },
-        {
-          "observation": "fault.defaultValueUsed",
-          "equals": false
-        },
-        {
-          "observation": "hud.visible",
-          "equals": false
-        },
-        {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonReminder"
-        },
-        {
-          "observation": "hud.textKey",
-          "notEquals": "gksr.hud.sermonDone"
-        }
-      ],
-      "evidence": {
-        "screenshot": true,
-        "log": true,
-        "measurement": true
-      }
-    },
-    {
       "id": "plugin-load-proton",
       "title": "在目标 Proton 环境证明插件与框架实际加载",
       "category": "environment",
@@ -2080,9 +2698,8 @@
         "可重复构建的插件工程与 GK2 Mod Framework 发布包。"
       ],
       "steps": [
-        "记录游戏、Proton、BepInEx、框架与插件的版本与指纹。",
-        "启动真实游戏并载入存档。",
-        "保留 BepInEx 日志中证明插件与框架实际加载的记录。"
+        "记录游戏、Proton、BepInEx、框架与插件的版本与指纹。预期：全部可识别。检查：版本与 sha256 均非空。",
+        "启动真实游戏并载入存档。预期：插件与框架实际加载。检查：plugin.loaded=true 且 framework.loaded=true。"
       ],
       "expect": [
         {
