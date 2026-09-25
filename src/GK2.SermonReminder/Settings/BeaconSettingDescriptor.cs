@@ -30,9 +30,6 @@ namespace GK2.SermonReminder.Settings
             this.groupTitle = groupTitle;
         }
 
-        /// <summary>The wrapped framework descriptor whose identity is preserved.</summary>
-        internal IGk2Setting Inner => inner;
-
         /// <summary>Stable opaque config identity, independent of the localized section.</summary>
         public string UniqueKey => inner.UniqueKey;
 
