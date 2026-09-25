@@ -11,7 +11,7 @@ using HarmonyLib;
 namespace GK2.SermonReminder
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    [BepInDependency(FrameworkPlugin.PluginGuid, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(FrameworkPlugin.PluginGuid, "0.1.9")]
     public sealed class SermonReminderPlugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.derbay32.gk2.sermonreminder";
@@ -60,7 +60,7 @@ namespace GK2.SermonReminder
         {
             dependencies = new[]
             {
-                new Gk2ModDependency(FrameworkPlugin.PluginGuid, "0.1.0", "0.2.0")
+                new Gk2ModDependency(FrameworkPlugin.PluginGuid, "0.1.9")
             };
 
             // Seed a non-null metadata so registration can never fail; the
@@ -295,6 +295,16 @@ namespace GK2.SermonReminder
             }
 
             string text = BuildCountdownText(delta);
+            if (string.IsNullOrEmpty(text))
+            {
+                // A missing/empty localized sentence is an unreadable resource,
+                // not a reason to show an empty active label. We never substitute
+                // a replacement sentence.
+                hud.Hide();
+                LogTransition("missing-text", "GKSR_TEXT_UNAVAILABLE: localized countdown text is empty; countdown suppressed");
+                return;
+            }
+
             if (!hud.Update(text))
             {
                 LogTransition("hud-unavailable", "GKSR_HUD_UNAVAILABLE: native HUD label host not ready; countdown suppressed");

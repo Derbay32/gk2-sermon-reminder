@@ -134,9 +134,15 @@ namespace GK2.SermonReminder.Hud
                 return false;
             }
 
-            GetCanvasLocalBounds(parentRect, out float canvasMinX, out float canvasMaxX);
-            float available = Mathf.Max(1f, (canvasMaxX - canvasMinX) - LocalGap * 2f);
+            if (!TryGetCanvasLocalBounds(parentRect, out float canvasMinX, out float canvasMaxX))
+            {
+                // No resolvable canvas bounds: a resource failure, not a reason to
+                // invent placeholder dimensions. Fail closed and retry later.
+                Teardown();
+                return false;
+            }
 
+            float available = Mathf.Max(1f, (canvasMaxX - canvasMinX) - LocalGap * 2f);
             if (!string.Equals(appliedText, text, StringComparison.Ordinal)
                 || !Mathf.Approximately(appliedWidth, available))
             {
@@ -298,6 +304,12 @@ namespace GK2.SermonReminder.Hud
                 appliedLanguage = language;
                 styleApplied = true;
                 styleDirty = false;
+
+                // The reapply changed the font metrics, so any cached measurement
+                // is stale. Invalidate it so the next Update recomputes the
+                // preferred size and wrapping for the current sentence.
+                appliedText = null;
+                appliedWidth = -1f;
                 return true;
             }
             catch (Exception)
@@ -385,14 +397,30 @@ namespace GK2.SermonReminder.Hud
             rect.anchoredPosition = new Vector2(pivotLocalX - anchorLeftX, pivotLocalY - anchorTopY);
         }
 
-        private static void GetCanvasLocalBounds(RectTransform parentRect, out float minX, out float maxX)
+        /// <summary>
+        /// Resolve the horizontal bounds of the host canvas expressed in the
+        /// parent's local coordinates. Returns false when no real canvas rect is
+        /// reachable, so the caller fails closed instead of using invented bounds.
+        /// </summary>
+        private static bool TryGetCanvasLocalBounds(RectTransform parentRect, out float minX, out float maxX)
         {
-            minX = 0f;
-            maxX = parentRect.rect.width;
-
             Canvas canvas = parentRect.GetComponentInParent<Canvas>();
             RectTransform canvasRect = canvas != null ? canvas.transform as RectTransform : null;
-            if (canvasRect == null || canvasRect == parentRect) return;
+            if (canvasRect == null)
+            {
+                minX = 0f;
+                maxX = 0f;
+                return false;
+            }
+
+            if (canvasRect == parentRect)
+            {
+                // The parent is the canvas itself: its own rect is already the
+                // canvas space, so use it directly rather than 0..width.
+                minX = parentRect.rect.xMin;
+                maxX = parentRect.rect.xMax;
+                return true;
+            }
 
             var corners = new Vector3[4];
             canvasRect.GetWorldCorners(corners);
@@ -405,6 +433,8 @@ namespace GK2.SermonReminder.Hud
                 if (local.x < minX) minX = local.x;
                 if (local.x > maxX) maxX = local.x;
             }
+
+            return true;
         }
 
         private void ResetBindingRefs()

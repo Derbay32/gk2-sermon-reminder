@@ -23,21 +23,22 @@ namespace GK2.SermonReminder.State
                 if (expectedSave == null)
                     return SermonStateSnapshot.Unreadable("no active save");
 
-                EnvironmentData environment = expectedSave.environmentData;
-                if (environment == null)
-                    return SermonStateSnapshot.Unreadable("environment data unavailable");
-
                 QuestSystemData quests = expectedSave.questSystemData;
                 if (quests == null)
                     return SermonStateSnapshot.Unreadable("quest system data unavailable");
 
-                // Gate on the quest prerequisites before any date read. A gate
-                // that is not complete is a normal hidden state, so an unrelated
-                // date problem must not be reported as a fault in that case.
+                // Gate on the quest prerequisites before any environment or date
+                // read. A gate that is not complete is a normal hidden state, so
+                // unrelated environment/date problems must not be reported as a
+                // fault, nor cause a date read, while the gates are closed.
                 bool churchUnlocked = quests.IsQuestInStatus(ChurchQuestId, QuestStatus.Completed);
                 bool tutorialCompleted = quests.IsQuestInStatus(SermonQuestId, QuestStatus.Completed);
                 if (!(churchUnlocked && tutorialCompleted))
                     return SermonStateSnapshot.Ready(gatesSatisfied: false, delta: 0, daysInWeek: EnvironmentData.DAYS_IN_WEEK);
+
+                EnvironmentData environment = expectedSave.environmentData;
+                if (environment == null)
+                    return SermonStateSnapshot.Unreadable("environment data unavailable");
 
                 int week = EnvironmentData.DAYS_IN_WEEK;
 
