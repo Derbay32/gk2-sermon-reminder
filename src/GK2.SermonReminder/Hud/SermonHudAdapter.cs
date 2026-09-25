@@ -160,30 +160,28 @@ namespace GK2.SermonReminder.Hud
                 return FailBinding("native HUD members unavailable");
 
             HUD hud = TryGetHud();
-            GameObject group = null;
-            TextMeshProUGUI source = null;
-            UIHUDWheel wheel = null;
-            bool hostReadable = false;
-
-            if (hud != null)
-            {
-                group = ReadMember<GameObject>(leftUpGroupField, hud);
-                source = ReadMember<TextMeshProUGUI>(happinessLabelField, hud);
-                wheel = ReadMember<UIHUDWheel>(wheelField, hud);
-                hostReadable = group != null && source != null && wheel != null;
-            }
-
-            if (!hostReadable)
+            if (hud == null)
             {
                 // The native HUD is simply not live right now (menu, loading, or a
-                // rebuild). A previously owned binding is gone; report it so the
-                // caller drops the old sprite reference.
+                // rebuild): an ordinary pending condition, never a resource fault. A
+                // previously owned binding is gone, so the caller is told to drop
+                // the old sprite reference before acquiring one for the new binding.
                 if (DestroyOwnedDisplay())
                     reboundThisPrepare = true;
 
-                // A normally inactive native group is not a failure.
                 return new SermonBindingResult(SermonHudStatus.Pending, null, reboundThisPrepare);
             }
+
+            GameObject group = ReadMember<GameObject>(leftUpGroupField, hud);
+            TextMeshProUGUI source = ReadMember<TextMeshProUGUI>(happinessLabelField, hud);
+            UIHUDWheel wheel = ReadMember<UIHUDWheel>(wheelField, hud);
+
+            // A live HUD with a missing or destroyed required member is a real
+            // resource fault, cleaned up before the caller continues. A normally
+            // inactive native group is not a failure: a member only has to be
+            // present and readable, never active.
+            if (group == null || source == null || wheel == null)
+                return FailBinding("native HUD members unavailable");
 
             // Replacement detection: an explicit ownership flag plus host reference
             // identity, and separately a Unity-destroyed owned root. Unity's
@@ -290,6 +288,7 @@ namespace GK2.SermonReminder.Hud
         internal void Suppress()
         {
             DestroyOwnedIcon();
+            ClearOwnedText();
 
             if (displayObject != null)
                 displayObject.SetActive(false);
@@ -766,19 +765,64 @@ namespace GK2.SermonReminder.Hud
             appliedIcon = iconSprite;
         }
 
+        /// <summary>
+        /// Clear the owned label's real text so a suppressed label can never keep
+        /// showing the previous sentence. No fallback sentence is substituted; the
+        /// layout cache is reset by the caller so the next render reassigns it.
+        /// </summary>
+        private void ClearOwnedText()
+        {
+            TextMeshProUGUI owned = label;
+            if (owned == null) return;
+
+            try
+            {
+                // Only touch the property while it still holds text, so a label
+                // suppressed across many ticks is not rebuilt every frame.
+                if (!string.IsNullOrEmpty(owned.text))
+                    owned.text = string.Empty;
+            }
+            catch (Exception)
+            {
+                // A destroyed label is replaced on the next bind; nothing to clear.
+            }
+        }
+
+        /// <summary>
+        /// Remove the owned conditional Image. The game's shared Sprite is detached
+        /// at the property level first (never destroyed: it is not ours), the object
+        /// is hidden synchronously, and only then is it handed to Unity's deferred
+        /// destruction. Display teardown shares this cleanup instead of duplicating it.
+        /// </summary>
         private void DestroyOwnedIcon()
         {
-            // Drop the reference to the (shared) sprite before destroying the Image,
-            // so a released sprite is never left referenced by a live Image.
-            icon = null;
-
-            if (iconObject != null)
+            Image ownedImage = icon;
+            if (ownedImage != null)
             {
-                iconObject.SetActive(false);
-                UnityEngine.Object.Destroy(iconObject);
+                try
+                {
+                    // Clear the actual UnityEngine.UI.Image.sprite property, not
+                    // just this C# field, before destruction and before the owner
+                    // releases its handle.
+                    ownedImage.sprite = null;
+                }
+                catch (Exception)
+                {
+                    // An already-destroyed component has no property left to clear;
+                    // the object below is still removed.
+                }
             }
 
+            icon = null;
+
+            GameObject ownedObject = iconObject;
             iconObject = null;
+
+            if (ownedObject != null)
+            {
+                ownedObject.SetActive(false);
+                UnityEngine.Object.Destroy(ownedObject);
+            }
         }
 
         private bool DestroyOwnedDisplay()
@@ -787,17 +831,13 @@ namespace GK2.SermonReminder.Hud
             // owned sprite reference must be released.
             bool hadBinding = bindingActive;
 
-            icon = null;
-
-            if (iconObject != null)
-            {
-                iconObject.SetActive(false);
-                UnityEngine.Object.Destroy(iconObject);
-                iconObject = null;
-            }
+            // Share the icon cleanup, so the sprite is detached from the live Image
+            // here too rather than by a separate, inconsistent path.
+            DestroyOwnedIcon();
 
             if (textObject != null)
             {
+                textObject.SetActive(false);
                 UnityEngine.Object.Destroy(textObject);
                 textObject = null;
             }
