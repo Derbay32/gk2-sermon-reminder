@@ -92,9 +92,17 @@ namespace GK2.SermonReminder.Beacon
     /// actual owned <c>iconImage</c>. The native arrow is left exactly as Draw leaves
     /// it (it disappears when on-screen).
     ///
+    /// Ownership is tracked on the clone's <see cref="GameObject"/> the instant it is
+    /// instantiated, plus the actual owned <c>Image</c>, so cleanup still detaches the
+    /// borrowed sprite and destroys a live clone even when the widget component has
+    /// become Unity fake-null. A failed cleanup keeps ownership for a later retry
+    /// rather than dropping the only reference or creating a second instance.
+    ///
     /// Every entry point contains recoverable exceptions: an eligible failure clears
     /// the owned display, records one bounded failure episode and retries no sooner
-    /// than <see cref="RetryDelaySeconds"/> of unscaled time. Being ineligible or
+    /// than <see cref="RetryDelaySeconds"/> of unscaled time. The failure metadata is
+    /// retained across retries and Pending states and cleared only after a complete
+    /// Draw succeeds or at the Reset/ineligible boundary. Being ineligible or
     /// <see cref="Reset"/> clears the owned display synchronously, before any throttle,
     /// so a consumed sermon drops the beacon on the first LateUpdate regardless of the
     /// corner Done presentation.
@@ -130,15 +138,22 @@ namespace GK2.SermonReminder.Beacon
         private bool viewGlobalResolved;
         private MethodInfo viewGlobalMethod;
 
-        // Explicit ownership of the cloned widget: the flag survives external Unity
-        // destruction, while the CLR references identify the binding it came from.
+        // Explicit ownership of the cloned display. `bindingActive` and the host refs
+        // identify the binding; `ownedObject` is the clone GameObject and `ownedIcon`
+        // the actual owned Image, both tracked so cleanup survives the widget component
+        // becoming Unity fake-null.
         private bool bindingActive;
         private HUD boundHud;
         private UIMagnifyingGlassWidget boundPrefab;
+        private GameObject ownedObject;
         private UIMagnifyingGlassWidget widget;
+        private Image ownedIcon;
         private Vector2 originalIconSize;
+        private bool releasePending;
 
         // One bounded failure episode, independent of the corner-Done presentation.
+        // The metadata is kept across retries/Pending and cleared only on a complete
+        // Draw or at the Reset/ineligible boundary.
         private bool failed;
         private BeaconFailureStage failureStage;
         private string lastFailure;
@@ -166,7 +181,7 @@ namespace GK2.SermonReminder.Beacon
             {
                 // Not attributable to a specific native dependency: drop everything we
                 // own, record a bounded internal fault, and never fault the caller.
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
                 MarkFailed(BeaconFailureStage.Internal, ex.GetType().Name);
                 return new BeaconUpdateResult(BeaconStatus.Failed, BeaconFailureStage.Internal);
             }
@@ -180,7 +195,7 @@ namespace GK2.SermonReminder.Beacon
         {
             try
             {
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
             }
             catch (Exception)
             {
@@ -197,14 +212,16 @@ namespace GK2.SermonReminder.Beacon
             //    inherits this load's fault or cooldown.
             if (!eligible)
             {
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
                 ClearEpisode();
                 return Inactive();
             }
 
             // 2. A live fault episode defers all resource work until the bounded retry
-            //    window opens. An unreadable clock suspends retries without fabricating
-            //    a time value; the next readable clock opens the window.
+            //    window opens. An unreadable/non-finite clock suspends retries without
+            //    fabricating a time value. The failure metadata is deliberately NOT
+            //    cleared here: it is retained until a complete Draw succeeds so a
+            //    diagnostic is never dropped before recovery.
             if (failed)
             {
                 if (!TryUnscaledTime(out float now))
@@ -212,19 +229,19 @@ namespace GK2.SermonReminder.Beacon
 
                 if (now < nextRetryUnscaledTime)
                     return new BeaconUpdateResult(BeaconStatus.Failed, failureStage);
-
-                ClearEpisode();
             }
 
             if (!EnsureMembers())
                 return Fail(BeaconFailureStage.Component, "native HUD beacon members unavailable");
 
-            // 3. Resolve the real native HUD. Absent is ordinary unreadiness (menu,
-            //    loading, rebuild), never a resource fault.
-            HUD hud = TryGetHud();
+            // 3. Resolve the real native HUD. A legitimate null is ordinary unreadiness
+            //    (menu, loading, rebuild); a thrown native access is a contained fault.
+            if (!TryReadHud(out HUD hud, out string hudFailure))
+                return Fail(BeaconFailureStage.Component, hudFailure);
+
             if (hud == null)
             {
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
                 return Pending();
             }
 
@@ -233,20 +250,34 @@ namespace GK2.SermonReminder.Beacon
                 return Fail(BeaconFailureStage.Component, "native magnifying glass prefab unavailable");
 
             // 4. Replacement/destroyed binding detection: explicit ownership plus host
-            //    identity, and separately a Unity fake-null owned clone. Unity's
+            //    identity, and separately a Unity fake-null owned object or widget. Unity's
             //    fake-null is never the only signal.
-            if (bindingActive
-                && (!ReferenceEquals(boundHud, hud)
-                    || !ReferenceEquals(boundPrefab, prefab)
-                    || widget == null))
+            bool hostReplaced = bindingActive
+                && (!ReferenceEquals(boundHud, hud) || !ReferenceEquals(boundPrefab, prefab));
+            bool ownedGone = bindingActive && ownedObject == null;
+            bool componentGone = bindingActive && widget == null;
+
+            // A retained binding is released before any rebuild when the host changed,
+            // the owned object/component vanished, or a prior release failed
+            // (`releasePending`). A stuck orphan is thus re-attempted on the next
+            // bounded retry rather than reused or duplicated; an unrelated fault does
+            // not needlessly destroy a healthy owned widget.
+            if (bindingActive && (hostReplaced || ownedGone || componentGone || releasePending))
             {
-                ClearOwnedDisplay();
+                if (!ReleaseOwnedDisplay())
+                {
+                    // A still-live owned orphan could not be released: fail and retry
+                    // rather than create a second instance alongside it.
+                    return Fail(BeaconFailureStage.Component, "owned beacon release failed");
+                }
             }
 
-            if (widget == null && !TryCreateWidget(hud, prefab))
+            // 5. Create only when we truly own nothing, so a retained orphan can never
+            //    coexist with a replacement.
+            if (!bindingActive && !TryCreateWidget(hud, prefab))
                 return Fail(BeaconFailureStage.Component, "beacon widget creation failed");
 
-            // 5. Resolve the exact church target from the authoritative save.
+            // 6. Resolve the exact church target from the authoritative save.
             GDPointData point;
             try
             {
@@ -264,21 +295,22 @@ namespace GK2.SermonReminder.Beacon
             // skips. Treat a missing camera as ordinary unreadiness and retry next tick.
             if (CameraSystem.Instance == null)
             {
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
                 return Pending();
             }
 
-            // 6. Native route + native projection/edge geometry.
+            // 7. Native route + native projection/edge geometry.
             if (!TryBuildWidgetData(hud, point, out UIMagnifyingGlassWidgetData data, out string geometryFailure))
                 return Fail(BeaconFailureStage.Projection, geometryFailure);
 
-            // 7. Borrow the native static faith icon.
+            // 8. Borrow the native static faith icon.
             Sprite faith = ResolveFaithSprite(out string iconFailure);
             if (faith == null)
                 return Fail(BeaconFailureStage.Icon, iconFailure);
 
-            // 8. Draw with the real native widget, then restore the borrowed icon and
-            //    the pristine prefab slot the native Draw replaces.
+            // 9. Draw with the real native widget, then restore the borrowed icon and
+            //    the pristine prefab slot the native Draw replaces. This is the only
+            //    point at which the failure episode is cleared.
             if (!TryDraw(data, faith))
                 return Fail(BeaconFailureStage.Component, "beacon draw failed");
 
@@ -295,8 +327,9 @@ namespace GK2.SermonReminder.Beacon
         private BeaconUpdateResult Fail(BeaconFailureStage stage, string reason)
         {
             // Every failure removes the owned display before the caller continues, so
-            // no stale or partial beacon can survive.
-            ClearOwnedDisplay();
+            // no stale or partial beacon can survive. A failed release keeps ownership
+            // and is retried on the next bounded attempt.
+            ReleaseOwnedDisplay();
             MarkFailed(stage, reason);
             return new BeaconUpdateResult(BeaconStatus.Failed, stage);
         }
@@ -334,15 +367,23 @@ namespace GK2.SermonReminder.Beacon
             return membersAvailable;
         }
 
-        private static HUD TryGetHud()
+        /// <summary>
+        /// Read the live native HUD. A legitimate null is ordinary unreadiness reported
+        /// by the caller as Pending; a thrown access is a real contained fault.
+        /// </summary>
+        private static bool TryReadHud(out HUD hud, out string failure)
         {
+            hud = null;
+            failure = null;
             try
             {
-                return LazyUI.Get<HUD>();
+                hud = LazyUI.Get<HUD>();
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                failure = "native HUD access failed: " + ex.GetType().Name;
+                return false;
             }
         }
 
@@ -361,44 +402,63 @@ namespace GK2.SermonReminder.Beacon
 
         /// <summary>
         /// Create the independent clone under the same native HUD parent and capture
-        /// the pristine prefab slot size before any Draw can replace it.
+        /// the pristine prefab slot size before any Draw can replace it. The clone
+        /// GameObject is owned from the instant it is created, so every failure path
+        /// releases through the one ownership-aware cleanup (never a second Destroy).
         /// </summary>
         private bool TryCreateWidget(HUD hud, UIMagnifyingGlassWidget prefab)
         {
-            GameObject cloneObject = null;
+            GameObject clone;
             try
             {
-                cloneObject = UnityEngine.Object.Instantiate(prefab.gameObject, hud.transform);
-                if (cloneObject == null)
-                    return false;
+                clone = UnityEngine.Object.Instantiate(prefab.gameObject, hud.transform);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
 
-                UIMagnifyingGlassWidget created = cloneObject.GetComponent<UIMagnifyingGlassWidget>();
+            if (clone == null)
+                return false;
+
+            // Own the GameObject before any later step can fail, so it can never be
+            // orphaned by a partial create.
+            ownedObject = clone;
+            bindingActive = true;
+            boundHud = hud;
+            boundPrefab = prefab;
+
+            try
+            {
+                UIMagnifyingGlassWidget created = clone.GetComponent<UIMagnifyingGlassWidget>();
                 if (created == null)
                 {
-                    UnityEngine.Object.Destroy(cloneObject);
+                    ReleaseOwnedDisplay();
                     return false;
                 }
 
-                // Register ownership immediately so a failure below can never orphan it.
                 widget = created;
-                bindingActive = true;
-                boundHud = hud;
-                boundPrefab = prefab;
 
                 Image icon = created.iconImage;
+
+                // Cache the actual owned image before any further check, so cleanup can
+                // detach the borrowed sprite even if another member is missing.
+                ownedIcon = icon;
+
                 Image pointer = created.pointerImage;
                 if (icon == null || pointer == null)
                 {
-                    ClearOwnedDisplay();
+                    ReleaseOwnedDisplay();
                     return false;
                 }
 
                 // The pristine native prefab slot, captured before any Draw swaps the
-                // on-screen bubble icon and calls SetNativeSize.
+                // on-screen bubble icon and calls SetNativeSize. It must be strictly
+                // positive, not merely finite.
                 Vector2 slot = prefab.iconImage.rectTransform.sizeDelta;
-                if (!IsFinite(slot.x) || !IsFinite(slot.y))
+                if (!IsPositiveFinite(slot.x) || !IsPositiveFinite(slot.y))
                 {
-                    ClearOwnedDisplay();
+                    ReleaseOwnedDisplay();
                     return false;
                 }
 
@@ -406,15 +466,12 @@ namespace GK2.SermonReminder.Beacon
 
                 // Stay hidden until a healthy Draw, so a rebuild never flashes a
                 // half-prepared widget.
-                created.gameObject.SetActive(false);
+                clone.SetActive(false);
                 return true;
             }
             catch (Exception)
             {
-                if (cloneObject != null)
-                    UnityEngine.Object.Destroy(cloneObject);
-
-                ClearOwnedDisplay();
+                ReleaseOwnedDisplay();
                 return false;
             }
         }
@@ -446,7 +503,8 @@ namespace GK2.SermonReminder.Beacon
 
         /// <summary>
         /// Resolve the native routing target and screen placement. Returns false with
-        /// a stage reason when a native dependency or a finite result is unavailable.
+        /// a stage reason when a native dependency or a usable finite result is
+        /// unavailable; invalid screen bounds never yield a finite fake position.
         /// </summary>
         private bool TryBuildWidgetData(
             HUD hud,
@@ -457,16 +515,8 @@ namespace GK2.SermonReminder.Beacon
             data = null;
             failure = null;
 
-            Vector3 worldPosition;
-            try
-            {
-                worldPosition = ResolveRoutedWorldPosition(point);
-            }
-            catch (Exception ex)
-            {
-                failure = "route failed: " + ex.GetType().Name;
+            if (!TryResolveRoutedWorldPosition(point, out Vector3 worldPosition, out failure))
                 return false;
-            }
 
             Vector2 rawScreen;
             bool isOutOfScreen;
@@ -490,15 +540,31 @@ namespace GK2.SermonReminder.Beacon
                     return false;
                 }
 
+                // The native bounds must be finite and usable before geometry runs, so
+                // an invalid viewport cannot produce a finite-looking Healthy position.
+                Bounds screenBounds = LazyUI.GetScreenBounds();
+                if (!IsFinite(screenBounds.center.x) || !IsFinite(screenBounds.center.y)
+                    || !IsPositiveFinite(screenBounds.size.x) || !IsPositiveFinite(screenBounds.size.y))
+                {
+                    failure = "native screen bounds unusable";
+                    return false;
+                }
+
                 // Exact native clamp rect: screen bounds inset by the HUD's own border
                 // offset, with the native center as the edge-intersection origin.
-                Bounds screenBounds = LazyUI.GetScreenBounds();
                 Vector2 center = new Vector2(screenBounds.center.x, screenBounds.center.y);
                 Rect clampRect = new Rect(
                     screenBounds.min.x + inset,
                     screenBounds.min.y + inset,
                     screenBounds.size.x - inset * 2f,
                     screenBounds.size.y - inset * 2f);
+
+                if (!IsPositiveFinite(clampRect.width) || !IsPositiveFinite(clampRect.height)
+                    || !IsFinite(clampRect.x) || !IsFinite(clampRect.y))
+                {
+                    failure = "native clamp rect unusable";
+                    return false;
+                }
 
                 isOutOfScreen = !clampRect.Contains(rawScreen);
                 if (isOutOfScreen)
@@ -540,67 +606,135 @@ namespace GK2.SermonReminder.Beacon
         /// Native routing: resolve the door the player must cross toward the church and
         /// use the door's bubble position, otherwise the church point itself. Mirrors
         /// the HUD's own <c>TryResolveDoor</c> + <c>GetWgoViewGlobal(...).BubbleDrawablePosition</c>
-        /// fallback chain.
+        /// fallback chain. A failed native view lookup is a fault; the door fallback is
+        /// used only when the exact native method runs and legitimately returns null.
         /// </summary>
-        private Vector3 ResolveRoutedWorldPosition(GDPointData point)
+        private bool TryResolveRoutedWorldPosition(GDPointData point, out Vector3 worldPosition, out string failure)
         {
-            Vector3 target = point.Position;
+            worldPosition = point.Position;
+            failure = null;
 
-            Vector3 playerPosition = TryGetPlayerPosition(point.Position);
+            if (!TryGetPlayerPosition(point.Position, out Vector3 playerPosition, out failure))
+                return false;
 
             TeleportPointGraph graph = TeleportPointGraph.Instance;
             if (graph == null)
-                return target;
+                return true;
 
-            if (graph.TryResolveDoor(playerPosition, point.Position, out WgoData door) && door != null)
+            bool hasDoor;
+            WgoData door;
+            try
             {
-                // Native identity check uses Unity's overloaded null comparison, not
-                // the null-conditional shortcut.
-                Wgo view = GetWgoViewGlobal(door.UniqueId);
-                return (view != null) ? view.BubbleDrawablePosition : door.BubblePos;
+                hasDoor = graph.TryResolveDoor(playerPosition, point.Position, out door) && door != null;
+            }
+            catch (Exception ex)
+            {
+                failure = "door route failed: " + ex.GetType().Name;
+                return false;
             }
 
-            return target;
+            if (!hasDoor)
+                return true;
+
+            if (!TryGetWgoViewGlobal(door.UniqueId, out Wgo view, out failure))
+                return false;
+
+            try
+            {
+                // Only a successfully invoked native lookup that returns actual null /
+                // fake-null falls back to the door bubble position.
+                worldPosition = (view != null) ? view.BubbleDrawablePosition : door.BubblePos;
+            }
+            catch (Exception ex)
+            {
+                failure = "door target position failed: " + ex.GetType().Name;
+                return false;
+            }
+
+            return true;
         }
 
-        private static Vector3 TryGetPlayerPosition(Vector3 fallback)
+        /// <summary>
+        /// Read the live player position. A legitimate null player uses the verified
+        /// native fallback (the object position); a thrown access is a real fault.
+        /// </summary>
+        private static bool TryGetPlayerPosition(Vector3 fallback, out Vector3 position, out string failure)
         {
+            position = fallback;
+            failure = null;
             try
             {
                 PlayerController player = MainGame.PlayerController;
                 if (player != null)
-                    return player.transform.position;
+                    position = player.transform.position;
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Without a readable player the native code falls back to the object
-                // position; mirror that fallback rather than inventing a source.
+                failure = "player access failed: " + ex.GetType().Name;
+                return false;
             }
-
-            return fallback;
         }
 
         /// <summary>
         /// Native <c>GameScene.GetWgoViewGlobal(SGuid)</c> resolved by name, exactly as
-        /// the HUD calls it, without naming its unreferenced Odin-based type.
+        /// the HUD calls it, without naming its unreferenced Odin-based type. A missing
+        /// type or method is a fault, never silently treated as an absent native view.
         /// </summary>
-        private Wgo GetWgoViewGlobal(SGuid uniqueId)
+        private bool TryGetWgoViewGlobal(SGuid uniqueId, out Wgo view, out string failure)
         {
+            view = null;
+            failure = null;
+
             if (!viewGlobalResolved)
+            {
+                viewGlobalMethod = ResolveViewGlobalMethod();
+                viewGlobalResolved = true;
+            }
+
+            if (viewGlobalMethod == null)
+            {
+                failure = "native GameScene.GetWgoViewGlobal unavailable";
+                return false;
+            }
+
+            object result;
+            try
+            {
+                result = viewGlobalMethod.Invoke(null, new object[] { uniqueId });
+            }
+            catch (Exception ex)
+            {
+                failure = "native view lookup failed: " + ex.GetType().Name;
+                return false;
+            }
+
+            // A successful invocation may legitimately yield null / fake-null; that is
+            // the native "no view" answer the caller may fall back from.
+            view = result as Wgo;
+            return true;
+        }
+
+        private static MethodInfo ResolveViewGlobalMethod()
+        {
+            try
             {
                 Type gameSceneType = typeof(MainGame).Assembly.GetType(
                     GameSceneTypeName, throwOnError: false);
-                viewGlobalMethod = gameSceneType?.GetMethod(
+                if (gameSceneType == null)
+                    return null;
+
+                return gameSceneType.GetMethod(
                     ViewGlobalMethodName,
                     BindingFlags.Public | BindingFlags.Static,
                     null,
                     new[] { typeof(SGuid) },
                     null);
-                viewGlobalResolved = true;
             }
-
-            object result = viewGlobalMethod?.Invoke(null, new object[] { uniqueId });
-            return result as Wgo;
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -668,14 +802,19 @@ namespace GK2.SermonReminder.Beacon
                 // Native placement, icon swap and pointer-style selection.
                 current.Draw(data);
 
+                // Reapply to the actual owned image Draw just touched; fall back to the
+                // tracked reference if the live field has become unusable.
                 Image icon = current.iconImage;
+                if (icon == null)
+                    icon = ownedIcon;
+
                 if (icon == null)
                     return false;
 
                 icon.sprite = faith;
 
-                // A non-null widget guarantees the pristine prefab slot was captured
-                // before this clone's first Draw.
+                // A live owned image guarantees the pristine prefab slot was captured
+                // and validated strictly positive before this clone's first Draw.
                 icon.rectTransform.sizeDelta = originalIconSize;
 
                 return true;
@@ -697,47 +836,86 @@ namespace GK2.SermonReminder.Beacon
         }
 
         /// <summary>
-        /// Detach the borrowed sprite from the live owned image (property level, never
-        /// destroying the native Sprite) before destroying the clone, then forget the
-        /// binding. Only the clone this module created is ever destroyed.
+        /// Release the owned display: detach the borrowed sprite from the actual owned
+        /// image, deactivate and destroy the owned clone, and forget the binding. This
+        /// runs even when the widget component is Unity fake-null, because the clone
+        /// GameObject and image are tracked separately. A genuinely destroyed object is
+        /// forgotten; a failed cleanup of a still-live object keeps ownership so a later
+        /// retry can finish and no duplicate is created. Only our clone is ever
+        /// destroyed; no prefab or native resource is touched.
         /// </summary>
-        private void ClearOwnedDisplay()
+        /// <returns>True when nothing owned remains; false when a live owned object could not be released.</returns>
+        private bool ReleaseOwnedDisplay()
         {
-            UIMagnifyingGlassWidget current = widget;
-            widget = null;
+            // Detach the borrowed sprite at the property level first, never destroying
+            // the native Sprite. Fall back to the live widget when the cached image is
+            // not available.
+            Image icon = ownedIcon;
+            if (icon == null)
+            {
+                UIMagnifyingGlassWidget live = widget;
+                if (live != null)
+                {
+                    try
+                    {
+                        icon = live.iconImage;
+                    }
+                    catch (Exception)
+                    {
+                        icon = null;
+                    }
+                }
+            }
 
-            if (current != null)
+            if (icon != null)
             {
                 try
                 {
-                    Image icon = current.iconImage;
-                    if (icon != null)
-                        icon.sprite = null;
+                    icon.sprite = null;
                 }
                 catch (Exception)
                 {
                     // An already-destroyed component has no property left to clear.
                 }
-
-                try
-                {
-                    GameObject ownedObject = current.gameObject;
-                    if (ownedObject != null)
-                    {
-                        ownedObject.SetActive(false);
-                        UnityEngine.Object.Destroy(ownedObject);
-                    }
-                }
-                catch (Exception)
-                {
-                    // The object below is already gone; nothing to destroy.
-                }
             }
 
+            GameObject owned = ownedObject;
+
+            if (owned == null)
+            {
+                // Genuinely gone (never created, or destroyed externally): release all
+                // ownership references so a replacement can be built cleanly.
+                ForgetOwnership();
+                return true;
+            }
+
+            try
+            {
+                owned.SetActive(false);
+                UnityEngine.Object.Destroy(owned);
+            }
+            catch (Exception)
+            {
+                // Could not release a still-live orphan: keep ownership so a later tick
+                // retries instead of losing the reference or creating a duplicate.
+                releasePending = true;
+                return false;
+            }
+
+            ForgetOwnership();
+            return true;
+        }
+
+        private void ForgetOwnership()
+        {
             bindingActive = false;
             boundHud = null;
             boundPrefab = null;
+            ownedObject = null;
+            widget = null;
+            ownedIcon = null;
             originalIconSize = Vector2.zero;
+            releasePending = false;
         }
 
         private void ClearEpisode()
@@ -761,15 +939,20 @@ namespace GK2.SermonReminder.Beacon
         }
 
         /// <summary>
-        /// Read the unscaled clock. Returns false when the native clock cannot be read,
-        /// so no time value is ever fabricated.
+        /// Read the unscaled clock. Returns false when the native clock cannot be read
+        /// or is non-finite, so no time value is ever fabricated and a NaN/Infinity
+        /// deadline can never satisfy the retry window.
         /// </summary>
         private static bool TryUnscaledTime(out float unscaledTime)
         {
             unscaledTime = 0f;
             try
             {
-                unscaledTime = Time.unscaledTime;
+                float now = Time.unscaledTime;
+                if (!IsFinite(now))
+                    return false;
+
+                unscaledTime = now;
                 return true;
             }
             catch (Exception)
@@ -779,5 +962,7 @@ namespace GK2.SermonReminder.Beacon
         }
 
         private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+        private static bool IsPositiveFinite(float value) => IsFinite(value) && value > 0f;
     }
 }
