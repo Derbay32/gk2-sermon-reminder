@@ -289,15 +289,25 @@
     ],
     "requireLoadEvidenceLog": true,
     "measurementObservationPaths": [
-      "beacon.slotWidthPx",
-      "beacon.slotHeightPx",
-      "beacon.projectedScreenX",
-      "beacon.projectedScreenY",
+      "beacon.slotWidthLocal",
+      "beacon.slotHeightLocal",
+      "beacon.slotWidthLocalAfterTransitions",
+      "beacon.slotHeightLocalAfterTransitions",
+      "beacon.renderedWidthPx",
+      "beacon.renderedHeightPx",
+      "beacon.rawProjectedScreenX",
+      "beacon.rawProjectedScreenY",
+      "beacon.clampedScreenX",
+      "beacon.clampedScreenY",
       "beacon.edgeInsetPx",
-      "native.slotWidthPx",
-      "native.slotHeightPx",
-      "native.projectedScreenX",
-      "native.projectedScreenY",
+      "native.slotWidthLocal",
+      "native.slotHeightLocal",
+      "native.renderedWidthPx",
+      "native.renderedHeightPx",
+      "native.rawProjectedScreenX",
+      "native.rawProjectedScreenY",
+      "native.clampedScreenX",
+      "native.clampedScreenY",
       "native.edgeInsetPx"
     ],
     "requiredEnvironmentPaths": [
@@ -638,7 +648,8 @@
       ],
       "steps": [
         "在开启状态下载入存档；预期信标实际显示；检查 beacon.enabledActiveLoadBeforeToggle=true 与 beacon.visibleActiveLoadBeforeToggle=true。",
-        "返回主菜单；预期回到模组设置页面；检查 settings.pageCount=1。",
+        "返回主菜单；预期已退出存档并回到主菜单；检查操作者截图或观察记录确认主菜单可见。",
+        "从主菜单 Mods 打开本模组设置页面；预期只注册本模组一个自有页面；检查 settings.pageCount=1。",
         "把信标开关改为关闭；预期保存新的持久值；检查 settings.beacon.enabled=false（持久化值）。",
         "不重启游戏再次载入同一存档；预期按新设置停用信标；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true、beacon.enabledActiveLoadAfterToggle=false 与 beacon.visibleActiveLoadAfterToggle=false。"
       ],
@@ -762,7 +773,8 @@
       ],
       "steps": [
         "在关闭状态下载入存档；预期信标实际不显示；检查 beacon.enabledActiveLoadBeforeToggle=false 与 beacon.visibleActiveLoadBeforeToggle=false。",
-        "返回主菜单；预期回到模组设置页面；检查 settings.pageCount=1。",
+        "返回主菜单；预期已退出存档并回到主菜单；检查操作者截图或观察记录确认主菜单可见。",
+        "从主菜单 Mods 打开本模组设置页面；预期只注册本模组一个自有页面；检查 settings.pageCount=1。",
         "把信标开关改为开启；预期保存新的持久值；检查 settings.beacon.enabled=true（持久化值）与 settings.beacon.persistedAfterToggle=true。",
         "不重启游戏再次载入同一存档；预期按新设置启用信标；检查 settings.beacon.appliedOnNextLoad=true、settings.beacon.appliedWithoutRestart=true、beacon.enabledActiveLoadAfterToggle=true 与 beacon.visibleActiveLoadAfterToggle=true。"
       ],
