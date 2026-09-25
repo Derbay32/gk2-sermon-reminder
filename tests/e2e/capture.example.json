@@ -8,10 +8,10 @@
     "artifacts produced by an actual Proton run and copy it to a capture file whose",
     "kind is 'gksa10-e2e-capture'.",
     "The validator never generates a capture and never marks a scenario passed.",
-    "Day-of-week model: dayOfWeek = rawDay % 6 with remainder 0 mapped to 6 (Build25509347",
     "DAYS_IN_WEEK = 6); the sermon weekday is ConstDef.Get(\"day_wrath\").IntValue; the",
     "countdown is (sermonWeekday - dayOfWeek + 6) % 6.",
-    "The style source field is the verified identifier HUD.happinessLabel."
+    "The style source field is the verified identifier HUD.happinessLabel.",
+    "Absolute-day model: EnvironmentData.Day is the absolute day (positive int); EnvironmentData.CurrentDayNumber is only the weekday and satisfies dayOfWeek == ((absoluteDay-1)%6)+1. The sermon weekday is the observed environment field game.sermonWeekday, read from ConstDef.Get(\"day_wrath\").IntValue (a single runtime definition that scenarios must never redefine); the countdown is (T - current + 6) % 6."
   ],
   "environment": {
     "game.name": "Graveyard Keeper 2 (Steam Windows build)",
@@ -31,7 +31,10 @@
     "resolution.width": 1920,
     "resolution.height": 1080,
     "uiScale": 1.0,
-    "inputDevices": ["keyboard", "mouse"],
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
     "os": "CachyOS x86-64",
     "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
     "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
@@ -41,7 +44,8 @@
     "evidenceFiles": {
       "screenshots/church-locked.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
       "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
-    }
+    },
+    "game.sermonWeekday": 2
   },
   "observations": {
     "church-locked": {
@@ -50,15 +54,18 @@
       "language.active": "zh_cn"
     },
     "countdown-one-day-zh": {
-      "hud.visible": true,
+      "save.absoluteDay": 7,
       "save.dayOfWeek": 1,
       "save.sermonWeekday": 2,
       "save.daysInWeek": 6,
+      "hud.visible": true,
       "hud.countdownDays": 1,
       "language.active": "zh_cn",
       "hud.text": "明天是布道日！"
     },
     "cycle-wrap": {
+      "save.absoluteDayBefore": 12,
+      "save.absoluteDayAfter": 13,
       "save.priorDayOfWeek": 6,
       "save.dayOfWeek": 1,
       "save.sermonWeekday": 2,

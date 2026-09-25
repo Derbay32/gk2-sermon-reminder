@@ -114,6 +114,15 @@ def check_type(value, kind):
     elif kind == "positive-number":
         if not is_number(value) or value <= 0:
             raise Fail(f"expected positive number, got {value!r}")
+    elif kind == "weekday-int":
+        # A day-of-week / sermon-weekday from the game's six-day cycle. The
+        # runtime definition is ConstDef.Get("day_wrath").IntValue, a single
+        # value that every scenario must reuse instead of a per-test literal.
+        if not is_int(value) or not (1 <= value <= 6):
+            raise Fail(
+                f"expected an integer weekday in 1..6 (EnvironmentData six-day "
+                f"cycle), got {value!r}"
+            )
     elif kind == "sha256":
         if not isinstance(value, str) or not SHA256_RE.match(value):
             raise Fail(f"expected lowercase 64-hex sha256, got {value!r}")
@@ -165,6 +174,59 @@ def load_json(path):
         raise Fail(f"file not found: {path}") from exc
     except json.JSONDecodeError as exc:
         raise Fail(f"invalid JSON in {path}: {exc}") from exc
+
+
+def validate_date_check(sid, condition):
+    """Structurally validate one bounded dateCheck helper condition.
+
+    The helper is deliberately a fixed-mode calendar checker, not a general
+    expression DSL: each mode has an exact required field set and no unknown
+    fields are accepted.
+    """
+    spec = condition["dateCheck"]
+    if not isinstance(spec, dict) or not spec:
+        raise Fail(f"scenario {sid} dateCheck must be a non-empty object")
+    mode = spec.get("mode")
+    if mode not in date_check_modes:
+        raise Fail(
+            f"scenario {sid} dateCheck.mode {mode!r} must be one of "
+            f"{list(date_check_modes)}"
+        )
+    required = set(date_check_required_fields[mode]) \
+        | {"mode", "target", "week"} \
+        | set(DATE_CHECK_OPTIONAL_STRING_FIELDS)
+    unknown = sorted(set(spec) - required)
+    if unknown:
+        raise Fail(f"scenario {sid} dateCheck({mode}) has unknown fields: {unknown}")
+    for field in date_check_required_fields[mode]:
+        if not isinstance(spec.get(field), str) or not spec[field].strip():
+            raise Fail(
+                f"scenario {sid} dateCheck({mode}) requires a non-empty "
+                f"observation path for {field!r}"
+            )
+    for field in ("target", "week", "countdown", "text", "textKey", "language",
+                  "visible", "nonSermonCountdownShown"):
+        if field in spec and (not isinstance(spec[field], str) or not spec[field].strip()):
+            raise Fail(
+                f"scenario {sid} dateCheck({mode}) field {field!r} must be a "
+                "non-empty observation path"
+            )
+    if "target" in spec and spec["target"] != "save.sermonWeekday":
+        raise Fail(
+            f"scenario {sid} dateCheck({mode}) must read the target from the observed "
+            f"save.sermonWeekday (got {spec['target']!r}); day_wrath is a single runtime "
+            "definition that scenarios must never redefine"
+        )
+    if "week" in spec and spec["week"] != "save.daysInWeek":
+        raise Fail(
+            f"scenario {sid} dateCheck({mode}) must read the week length from the "
+            f"observed save.daysInWeek (got {spec['week']!r})"
+        )
+    if "language" in spec and spec["language"] not in ("zh-CN", "en"):
+        raise Fail(
+            f"scenario {sid} dateCheck({mode}) language {spec['language']!r} must be a "
+            "catalog label (zh-CN or en)"
+        )
 
 
 def validate_manifest(manifest):
@@ -238,18 +300,44 @@ def validate_manifest(manifest):
         if not isinstance(expect, list) or not expect:
             raise Fail(f"scenario {sid} has no expectations")
         for condition in expect:
-            if not isinstance(condition, dict) or not isinstance(condition.get("observation"), str) \
+            if not isinstance(condition, dict):
+                raise Fail(f"scenario {sid} has a malformed expectation: {condition!r}")
+            if "dateCheck" in condition:
+                validate_date_check(sid, condition)
+                continue
+            if not isinstance(condition.get("observation"), str) \
                     or not condition["observation"].strip():
                 raise Fail(f"scenario {sid} has a malformed expectation: {condition!r}")
+            if "equalsEnvironment" in condition:
+                env_target = condition["equalsEnvironment"]
+                if not isinstance(env_target, str) or not env_target.strip():
+                    raise Fail(
+                        f"scenario {sid} equalsEnvironment must name a non-empty "
+                        f"environment path: {condition!r}"
+                    )
+                if condition["observation"] != "save.sermonWeekday":
+                    raise Fail(
+                        f"scenario {sid} equalsEnvironment is only valid on "
+                        "save.sermonWeekday so the observed sermon weekday is compared "
+                        "with the single runtime definition; got "
+                        f"{condition['observation']!r}"
+                    )
+            if condition["observation"] == "save.sermonWeekday" \
+                    and "equalsEnvironment" not in condition:
+                raise Fail(
+                    f"scenario {sid} must compare save.sermonWeekday against the observed "
+                    "environment field game.sermonWeekday via equalsEnvironment; a "
+                    "hardcoded sermon-weekday literal is forbidden because day_wrath is a "
+                    f"single runtime definition. Got: {condition!r}"
+                )
             if "equals" not in condition and not (
                 "integerGreaterThan" in condition
                 or "integerBetween" in condition
-                or "equalsObservationMinus" in condition
-                or "equalsWeekDelta" in condition
                 or "greaterThanObservation" in condition
                 or "notEquals" in condition
                 or "notEqualsObservation" in condition
                 or "equalsObservation" in condition
+                or "equalsEnvironment" in condition
                 or "present" in condition
                 or "finalTextKey" in condition
                 or "finalTextKeyFromObservation" in condition
@@ -466,12 +554,408 @@ def validate_evidence_files(env, evidence_files, capture_dir):
 # expectation evaluation
 # --------------------------------------------------------------------------
 
-def evaluate_expectation(condition, observations, final_text):
+# --------------------------------------------------------------------------
+# dedicated date-check helper
+# --------------------------------------------------------------------------
+#
+# Calendar scenarios must never invent a sermon weekday literal. day_wrath is a
+# single runtime definition (ConstDef.Get("day_wrath").IntValue) captured once
+# as environment.game.sermonWeekday and compared with save.sermonWeekday. Every
+# other date quantity is expressed relative to that observed target T, so no
+# scenario hardcodes T (T may legitimately be any of 1..6, including 1).
+#
+# Ground truth (decompiled EnvironmentData.cs, build 25509347):
+#   EnvironmentData.Day            -> the ABSOLUTE day, private field day = 1
+#   EnvironmentData.CurrentDayNumber -> GetDayNumberFromDay(day) = day % 6, with
+#                                     remainder 0 mapped to 6, i.e. WEEKDAY ONLY
+#   DAYS_IN_WEEK = 6
+#   dayOfWeek == ((absoluteDay - 1) % week) + 1   (equivalent to day % 6, 0 -> 6)
+#
+# This is one dedicated, bounded helper with a fixed set of modes, deliberately
+# not a general expression DSL.
+
+date_check_modes = (
+    "single-day",
+    "multi-day",
+    "same-day",
+    "midnight",
+    "cycle-wrap",
+    "sermon-day",
+)
+
+date_check_required_fields = {
+    "single-day": ("absoluteDay", "dayOfWeek", "countdown"),
+    "multi-day": ("absoluteDay", "dayOfWeek", "countdown"),
+    "same-day": (
+        "absoluteDayBefore",
+        "absoluteDayAfter",
+        "dayOfWeekBefore",
+        "dayOfWeekAfter",
+        "countdownBefore",
+        "countdownAfter",
+    ),
+    "midnight": (
+        "absoluteDayBefore",
+        "absoluteDayAfter",
+        "dayOfWeekBefore",
+        "dayOfWeekAfter",
+        "countdownBefore",
+        "countdownAfter",
+    ),
+    "cycle-wrap": (
+        "absoluteDayBefore",
+        "absoluteDayAfter",
+        "dayOfWeekBefore",
+        "dayOfWeekAfter",
+    ),
+    "sermon-day": ("absoluteDay", "dayOfWeek"),
+}
+
+DATE_CHECK_OPTIONAL_STRING_FIELDS = (
+    "target",
+    "week",
+    "countdown",
+    "text",
+    "textKey",
+    "language",
+    "visible",
+    "nonSermonCountdownShown",
+)
+
+
+def weekday_from_absolute_day(absolute_day, week):
+    """EnvironmentData.CurrentDayNumber == ((absoluteDay - 1) % week) + 1."""
+    return ((absolute_day - 1) % week) + 1
+
+
+def _date_read_int(observations, path, label, failures):
+    if not has_path(observations, path):
+        failures.append(f"{label} observation {path!r} was not captured")
+        return None
+    value = get_path(observations, path)
+    if not is_int(value):
+        failures.append(
+            f"{label} {path} = {value!r} must be a strict integer "
+            "(floats and booleans do not qualify)"
+        )
+        return None
+    return value
+
+
+def _date_check_absolute_day(absolute, path, failures):
+    if absolute is None:
+        return
+    if absolute <= 0:
+        failures.append(
+            f"{path} = {absolute!r} must be a strict positive absolute game day; "
+            "EnvironmentData.Day starts at 1 (the 1..6 range is CurrentDayNumber, "
+            "which is only the weekday)"
+        )
+
+
+def _date_check_weekday(path, value, week, failures):
+    if value is None:
+        return
+    if not (1 <= value <= week):
+        failures.append(
+            f"{path} = {value!r} must be a weekday within 1..{week} "
+            "(EnvironmentData.CurrentDayNumber)"
+        )
+
+
+def _date_check_weekday_matches_absolute(
+    absolute, absolute_path, weekday, weekday_path, week, failures
+):
+    if absolute is None or weekday is None or absolute <= 0:
+        return
+    expected = weekday_from_absolute_day(absolute, week)
+    if weekday != expected:
+        failures.append(
+            f"{weekday_path} = {weekday!r} does not match {absolute_path} = {absolute!r}: "
+            f"(({absolute} - 1) % {week}) + 1 = {expected}"
+        )
+
+
+def date_delta(target, current, week):
+    """Countdown days to the sermon weekday, wrapping inside the six-day cycle."""
+    return (target - current + week) % week
+
+
+def _date_check_countdown_equals(observations, path, label, expected, failures):
+    shown = _date_read_int(observations, path, label, failures)
+    if shown is not None and shown != expected:
+        failures.append(
+            f"{path} = {shown!r} != the mathematical delta {expected} computed from the "
+            "observed sermon weekday"
+        )
+
+
+def _date_check_text(observations, final_text, spec, delta, failures):
+    """The displayed sentence must correspond to the delta derived from observed T.
+
+    delta == 1 uses the parameterless one-day sentence; any other shown delta uses
+    the {days} sentence rendered with that delta. Only zh-CN is asserted here.
+    """
+    text_path = spec.get("text", "hud.text")
+    key_path = spec.get("textKey", "hud.textKey")
+    language = spec.get("language", "zh-CN")
+    if not has_path(observations, text_path):
+        failures.append(f"countdown text observation {text_path!r} was not captured")
+        return
+    text = get_path(observations, text_path)
+    if delta == 1:
+        expected_key = "gksr.hud.sermonCountdown.one"
+        expected = final_text.get(expected_key, {}).get(language)
+    else:
+        expected_key = "gksr.hud.sermonCountdown.other"
+        template = final_text.get(expected_key, {}).get(language)
+        expected = None if template is None else template.replace("{days}", str(delta))
+    if expected is None:
+        failures.append(
+            f"manifest finalText has no {language} sentence for {expected_key!r}"
+        )
+        return
+    if has_path(observations, key_path):
+        key = get_path(observations, key_path)
+        if key != expected_key:
+            failures.append(
+                f"{key_path} = {key!r} must be {expected_key!r} for a shown delta of {delta}"
+            )
+    if text != expected:
+        failures.append(
+            f"{text_path} = {text!r}, expected the complete {language} sentence {expected!r} "
+            f"for delta {delta}"
+        )
+
+
+def evaluate_date_check(condition, observations, final_text):
+    """Evaluate one dedicated dateCheck helper condition.
+
+    Returns a list of failure messages (empty when the check passes). Every
+    quantity is derived from the observed target T and the observed six-day week,
+    never from a literal baked into the manifest.
+    """
+    spec = condition["dateCheck"]
+    mode = spec["mode"]
+    failures = []
+
+    week_path = spec.get("week", "save.daysInWeek")
+    week = _date_read_int(observations, week_path, "daysInWeek", failures)
+    if week is not None and week < 2:
+        failures.append(f"{week_path} = {week!r} must be at least 2")
+
+    target_path = spec.get("target", "save.sermonWeekday")
+    target = _date_read_int(observations, target_path, "sermonWeekday", failures)
+    if target is not None and week is not None:
+        _date_check_weekday(target_path, target, week, failures)
+
+    single = mode in ("single-day", "multi-day")
+    sermon_day = mode == "sermon-day"
+
+    if single or sermon_day:
+        abs_path = spec["absoluteDay"]
+        dow_path = spec["dayOfWeek"]
+        absolute = _date_read_int(observations, abs_path, "absoluteDay", failures)
+        _date_check_absolute_day(absolute, abs_path, failures)
+        dow = _date_read_int(observations, dow_path, "dayOfWeek", failures)
+        if week is not None:
+            _date_check_weekday(dow_path, dow, week, failures)
+            _date_check_weekday_matches_absolute(
+                absolute, abs_path, dow, dow_path, week, failures
+            )
+        if week is None or target is None or absolute is None or dow is None:
+            return failures
+        if sermon_day:
+            if dow != target:
+                failures.append(
+                    f"sermon-day requires {dow_path} = {dow!r} to equal the observed "
+                    f"sermon weekday {target_path} = {target!r}"
+                )
+            flag_path = spec.get("nonSermonCountdownShown", "hud.nonSermonCountdownShown")
+            if not has_path(observations, flag_path):
+                failures.append(
+                    f"sermon-day requires {flag_path!r} to prove the non-sermon "
+                    "countdown is not shown"
+                )
+            elif get_path(observations, flag_path) is not False:
+                failures.append(
+                    f"{flag_path} = {get_path(observations, flag_path)!r} must be false on the "
+                    "sermon day"
+                )
+            return failures
+
+        delta = date_delta(target, dow, week)
+        if mode == "single-day":
+            if delta != 1:
+                failures.append(
+                    f"single-day requires (T - current + {week}) % {week} = 1; "
+                    f"{target_path} = {target!r} with {dow_path} = {dow!r} gives {delta}"
+                )
+        elif not (2 <= delta <= week - 1):
+            failures.append(
+                f"multi-day requires (T - current + {week}) % {week} in 2..{week - 1}; "
+                f"{target_path} = {target!r} with {dow_path} = {dow!r} gives {delta}"
+            )
+        _date_check_countdown_equals(
+            observations, spec["countdown"], "countdownDays", delta, failures
+        )
+        return failures
+
+    # same-day / midnight / cycle-wrap all compare a before/after pair.
+    before_abs_path = spec["absoluteDayBefore"]
+    after_abs_path = spec["absoluteDayAfter"]
+    before_dow_path = spec["dayOfWeekBefore"]
+    after_dow_path = spec["dayOfWeekAfter"]
+    before_abs = _date_read_int(observations, before_abs_path, "absoluteDayBefore", failures)
+    after_abs = _date_read_int(observations, after_abs_path, "absoluteDayAfter", failures)
+    _date_check_absolute_day(before_abs, before_abs_path, failures)
+    _date_check_absolute_day(after_abs, after_abs_path, failures)
+    before_dow = _date_read_int(observations, before_dow_path, "dayOfWeekBefore", failures)
+    after_dow = _date_read_int(observations, after_dow_path, "dayOfWeekAfter", failures)
+    if week is not None:
+        _date_check_weekday(before_dow_path, before_dow, week, failures)
+        _date_check_weekday(after_dow_path, after_dow, week, failures)
+        _date_check_weekday_matches_absolute(
+            before_abs, before_abs_path, before_dow, before_dow_path, week, failures
+        )
+        _date_check_weekday_matches_absolute(
+            after_abs, after_abs_path, after_dow, after_dow_path, week, failures
+        )
+    if week is None or target is None or None in (before_abs, after_abs, before_dow, after_dow):
+        return failures
+
+    before_delta = date_delta(target, before_dow, week)
+    after_delta = date_delta(target, after_dow, week)
+
+    if mode == "same-day":
+        if before_abs != after_abs:
+            failures.append(
+                f"same-day requires the absolute day to be unchanged: {before_abs_path} = "
+                f"{before_abs!r} vs {after_abs_path} = {after_abs!r}"
+            )
+        if before_dow != after_dow:
+            failures.append(
+                f"same-day requires the weekday to be unchanged: {before_dow_path} = "
+                f"{before_dow!r} vs {after_dow_path} = {after_dow!r}"
+            )
+        if before_delta != after_delta:
+            failures.append(
+                f"same-day requires the delta to be unchanged: {before_delta} vs {after_delta} "
+                f"from the same observed target {target_path} = {target!r}"
+            )
+        _date_check_countdown_equals(
+            observations, spec["countdownBefore"], "countdown.beforeDays", before_delta, failures
+        )
+        _date_check_countdown_equals(
+            observations, spec["countdownAfter"], "countdown.afterDays", after_delta, failures
+        )
+        _date_check_text(observations, final_text, spec, after_delta, failures)
+        return failures
+
+    if after_abs != before_abs + 1:
+        failures.append(
+            f"{mode} requires the absolute day to advance by exactly one: "
+            f"{after_abs_path} = {after_abs!r} != {before_abs_path} + 1 = {before_abs + 1}"
+        )
+
+    if mode == "midnight":
+        if not (1 <= before_dow <= week - 1):
+            failures.append(
+                f"midnight requires the prior weekday in 1..{week - 1}; "
+                f"{before_dow_path} = {before_dow!r}"
+            )
+        if before_delta < 3:
+            failures.append(
+                f"midnight requires the prior delta >= 3 (a non-boundary date); "
+                f"{target_path} = {target!r} with {before_dow_path} = {before_dow!r} gives "
+                f"{before_delta}"
+            )
+        if after_delta != before_delta - 1:
+            failures.append(
+                f"midnight requires afterDelta = beforeDelta - 1: {after_delta} != "
+                f"{before_delta} - 1 = {before_delta - 1} (both computed from the same "
+                f"target {target_path} = {target!r})"
+            )
+        _date_check_countdown_equals(
+            observations, spec["countdownBefore"], "countdown.beforeDays", before_delta, failures
+        )
+        _date_check_countdown_equals(
+            observations, spec["countdownAfter"], "countdown.afterDays", after_delta, failures
+        )
+        _date_check_text(observations, final_text, spec, after_delta, failures)
+        return failures
+
+    # cycle-wrap
+    if before_dow != week or after_dow != 1:
+        failures.append(
+            f"cycle-wrap requires the week boundary {week} -> 1; got "
+            f"{before_dow_path} = {before_dow!r} and {after_dow_path} = {after_dow!r}"
+        )
+    if after_delta == 0:
+        # T == 1: the post-boundary day IS the sermon day, so no non-sermon
+        # countdown may be shown. T is allowed to be 1, so this branch is real.
+        flag_path = spec.get("nonSermonCountdownShown", "hud.nonSermonCountdownShown")
+        if not has_path(observations, flag_path):
+            failures.append(
+                "cycle-wrap with afterDelta 0 requires "
+                f"{flag_path!r} to prove no non-sermon countdown is shown"
+            )
+        elif get_path(observations, flag_path) is not False:
+            failures.append(
+                f"{flag_path} = {get_path(observations, flag_path)!r} must be false when the "
+                "post-boundary day is the sermon day"
+            )
+        return failures
+
+    if not (1 <= after_delta <= week - 1):
+        failures.append(
+            f"cycle-wrap computed afterDelta {after_delta} outside 1..{week - 1} from "
+            f"{target_path} = {target!r} and {after_dow_path} = {after_dow!r}"
+        )
+    visible_path = spec.get("visible", "hud.visible")
+    if not has_path(observations, visible_path):
+        failures.append(f"cycle-wrap requires {visible_path!r} to prove the countdown is visible")
+    elif get_path(observations, visible_path) is not True:
+        failures.append(
+            f"{visible_path} = {get_path(observations, visible_path)!r} must be true when a "
+            "non-sermon countdown is shown"
+        )
+    _date_check_countdown_equals(
+        observations,
+        spec.get("countdown", "hud.countdownDays"),
+        "countdownDays",
+        after_delta,
+        failures,
+    )
+    _date_check_text(observations, final_text, spec, after_delta, failures)
+    return failures
+
+
+def evaluate_expectation(condition, observations, final_text, environment):
+    if "dateCheck" in condition:
+        failures = evaluate_date_check(condition, observations, final_text)
+        if failures:
+            return False, "; ".join(failures)
+        return True, ""
+
     obs_path = condition["observation"]
     if not has_path(observations, obs_path):
         return False, f"observation {obs_path!r} was not captured"
 
     value = get_path(observations, obs_path)
+
+    if "equalsEnvironment" in condition:
+        env_path = condition["equalsEnvironment"]
+        if not isinstance(env_path, str) or not env_path.strip():
+            return False, "equalsEnvironment must name a non-empty environment path"
+        if not isinstance(environment, dict) or not has_path(environment, env_path):
+            return False, f"environment field {env_path!r} was not captured"
+        env_value = get_path(environment, env_path)
+        if json_type_kind(value) != json_type_kind(env_value) or value != env_value:
+            return False, (
+                f"{obs_path} = {value!r} must equal environment {env_path} = "
+                f"{env_value!r} (strict JSON type match)"
+            )
 
     if "equals" in condition:
         # Strict JSON value type semantics: expected bool/int/str must match the
@@ -539,57 +1023,6 @@ def evaluate_expectation(condition, observations, final_text):
                 "floats and booleans do not qualify"
             )
 
-    if "equalsObservationMinus" in condition:
-        spec = condition["equalsObservationMinus"]
-        if not isinstance(spec, dict) or not isinstance(spec.get("otherObservation"), str) \
-                or not is_int(spec.get("delta")):
-            return False, f"malformed equalsObservationMinus spec: {spec!r}"
-        other = spec["otherObservation"]
-        if not has_path(observations, other):
-            return False, f"comparison observation {other!r} was not captured"
-        other_value = get_path(observations, other)
-        if not (is_int(value) and is_int(other_value)):
-            return False, f"{obs_path} = {value!r} and {other} = {other_value!r} must both be integers"
-        if value != other_value + spec["delta"]:
-            return False, (
-                f"{obs_path} = {value!r} != {other} {spec['delta']:+d} = "
-                f"{other_value + spec['delta']}"
-            )
-
-    if "equalsWeekDelta" in condition:
-        spec = condition["equalsWeekDelta"]
-        if not isinstance(spec, dict):
-            return False, f"malformed equalsWeekDelta spec: {spec!r}"
-        names = ("targetObservation", "currentObservation", "daysInWeekObservation")
-        if not all(isinstance(spec.get(n), str) for n in names):
-            return False, f"malformed equalsWeekDelta spec: {spec!r}"
-        for name in names:
-            if not has_path(observations, spec[name]):
-                return False, f"equalsWeekDelta observation {spec[name]!r} was not captured"
-        target = get_path(observations, spec["targetObservation"])
-        current = get_path(observations, spec["currentObservation"])
-        week = get_path(observations, spec["daysInWeekObservation"])
-        if not (is_int(target) and is_int(current) and is_int(week)):
-            return False, "equalsWeekDelta inputs must be strict integers"
-        if week <= 0:
-            return False, f"daysInWeekObservation = {week!r} must be a positive integer"
-        if not (1 <= current <= week) or not (1 <= target <= week):
-            return False, (
-                f"day-of-week values must be in 1..{week}; got current={current!r}, "
-                f"target={target!r}"
-            )
-        expected_delta = (target - current + week) % week
-        if expected_delta == 0:
-            return False, (
-                "equalsWeekDelta is only for non-sermon countdowns; target and current "
-                "day-of-week coincide, so no countdown should be shown"
-            )
-        if not is_int(value) or value != expected_delta:
-            return False, (
-                f"{obs_path} = {value!r} != mathematical delta {expected_delta} "
-                f"(target {target}, current {current}, week {week})"
-            )
-
     if "present" in condition:
         want = condition["present"]
         is_present = value is not None and value != ""
@@ -640,10 +1073,10 @@ def evaluate_expectation(condition, observations, final_text):
     return True, ""
 
 
-def evaluate_scenario(scenario, observations, final_text, record):
+def evaluate_scenario(scenario, observations, final_text, record, environment):
     failures = []
     for condition in scenario["expect"]:
-        ok, message = evaluate_expectation(condition, observations, final_text)
+        ok, message = evaluate_expectation(condition, observations, final_text, environment)
         if not ok:
             failures.append(message)
 
@@ -898,7 +1331,7 @@ def main(argv=None):
         else:
             entry["observations"] = observations
             failures = evaluate_scenario(
-                scenario, observations, final_text, record
+                scenario, observations, final_text, record, env
             )
             if failures:
                 entry.setdefault("failures", []).extend(failures)
