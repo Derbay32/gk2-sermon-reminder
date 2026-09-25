@@ -13,7 +13,7 @@
     "绝对日模型：EnvironmentData.Day 为从 1 开始的正整数；EnvironmentData.CurrentDayNumber 只是星期编号，满足 dayOfWeek == ((absoluteDay - 1) % 6) + 1；delta = (T - 当前星期编号 + 6) % 6。",
     "布道日当天（delta==0）由原生访问器 playerData.GetRes(\"sermon_ready\") 判定：>=1 显示 Ready，<1 显示 Done。该访问器缺键时文档默认值为 0；不得复制状态、不得改用 CanStartCraft 或交互探测、不得要求检查私有字段或键是否存在。",
     "原生玩家或存档缺失、读取异常、原生浮点非有限值均视为不可读，隐藏而不显示 Done；不得沿用旧判定。",
-    "开始布道消耗机会后必须在下一次 LateUpdate（下一帧）内更新为 Done，且发生在动画/奖励结束之前；不保留自有持久状态、不等待动画结束。Done 在该日剩余时间内保持不变。",
+    "开始布道消耗机会后必须在消耗后的首次 LateUpdate（允许与消耗同帧）内更新为 Done，且发生在动画/奖励结束之前；不保留自有持久状态、不等待动画结束。Done 在该日剩余时间内保持不变。",
     "已布道与错过布道两种跨日都回到 delta=5（下一次布道）的倒计时，包括 T=6 的周期回绕；非布道日残留的原生 ready 标志不得保持 Ready。",
     "载入布道前旧存档应恢复 Ready；载入布道后存档应恢复 Done。",
     "同一角落同一时刻只允许一个文字状态；本票不实现弹窗或信标。",
@@ -21,12 +21,12 @@
     "图标来源：游戏 Addressables 初始化后请求 Sprite GUID 4d1c67d72f3e6c8419b24e8c275d101e（catalog 静态映射 btn_i-check.png 已在静态核对中确认，不代表运行时证明）。",
     "图标要求：Done 文字前挂一个自有 UnityEngine.UI.Image，使用原 Sprite 颜色与白色 Image tint，宽高比 20:18，尺寸基于实际文字行高并随原生画布缩放（不得写死屏幕像素高度），raycastTarget=false，仅在 Done 状态预留图标空间。",
     "图标加载生命周期：保持单一异步句柄，不做逐帧请求、不同步 WaitForCompletion；为满足 Ready→Done 的即时正常呈现，允许在布道日当天（Ready 或 Done）预加载并保留该单一自有 Sprite 句柄，但只有 Done 状态可以创建/显示 Image 或预留其布局空间。在非布道日倒计时、关闭门槛、不可读状态、退出、关闭或 HUD 重建时释放；重建后允许重新获取，单飞按当前所有权适用。退出存档或 HUD 重建时清理并销毁自有 Image、在不再使用时释放自有 Addressables 引用；退出/重绑后延迟完成不得复活旧 UI。不销毁或修改共享 Sprite/材质；不将原生 Sprite 复制进仓库/发行包，也不使用 Unicode 或替代图回退。",
-    "图标加载失败仅抑制依赖它的 Done 图标显示，不影响可读业务状态与无关的倒计时/Ready，且保持可恢复（可重试）。即时首帧 Done 呈现检查针对资源健康情形；待定/失败资源情形另行要求无陈旧 Ready/Done 呈现、业务状态正确且可后续恢复。这些均为生命周期细节，不构成等待动画/奖励或放宽正常切换时序的许可。",
+    "图标加载失败会隐藏整个依赖图标的 Done 呈现（文字与图标），但可读业务状态仍为 Done 且不影响无关的倒计时/Ready，并保持可恢复（可重试）。即时首帧 Done 呈现检查针对资源健康情形；待定/失败资源情形另行要求无陈旧 Ready/Done 呈现、业务状态正确且可后续恢复。这些均为生命周期细节，不构成等待动画/奖励或放宽正常切换时序的许可。",
     "完整用户故障通知属于 GKSA-14/GKSA-15，本票不实现。",
     "验收边界为 CachyOS x86-64 上的 Steam Proton、真实游戏、完整加载模组。",
     "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
     "布局与视觉结论必须附带实测测量值或操作者明确观察记录，并附截图；仅日志不能作为布局证据。",
-    "视觉类场景采用以下观察方案：每条视觉断言都以实际截图 evidence 与一条明确的操作者观察/实测记录为依据；icon-visual-style 另在 results[].measurement 中记录实测宽度/高度（以 measuredRatio 对 20:18 校验）与文字行高；其余视觉场景在记录中附明确观察结论。不接受仅布尔值断言代替可见输出。",
+    "视觉类场景采用以下观察方案：本清单所有场景的 evidence.measurement 均为 true，校验器因此强制要求 results[].measurement 含非空数值 values 或非空 operatorObservation，并附已校验的截图；仅有布尔值断言不能满足。icon-visual-style 另以 measuredRatio 对 20:18 校验实测宽度/高度，并强制要求 icon.textLineHeightPx 为有限数值且不小于 0。不接受仅布尔值断言代替可见输出。",
     "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
     "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
     "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：布道后跨日使用 after-sermon-day 模式，要求跨日前星期编号 = 观察到的 T、绝对日 +1、绝对日与星期编号自洽、afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
@@ -91,6 +91,7 @@
     "save.loadedAfterSermonSave": "bool: 是否载入了布道日当天、布道动作之后（原生 ready<1）的同日存档",
     "state.readable": "bool: 必要业务状态是否可可靠读取",
     "state.sermonReadyValue": "number: 原生 playerData.GetRes(\"sermon_ready\") 的实际数值；>=1 为 Ready，<1 为 Done；缺键时文档默认 0",
+    "state.sermonReadyValueBefore": "number: 重载前起始状态的原生 sermon_ready 数值（用于证明发生了真实状态转换）",
     "state.readyKeyAbsent": "bool: 原生 sermon_ready 键在本次观察中是否缺失（缺失按文档默认 0 处理，不额外要求键存在性检查）",
     "state.nativeReadyNonFinite": "bool: 原生 sermon_ready 数值是否为非有限值（NaN/Infinity），属于不可读",
     "state.staleNativeReadyFlag": "bool: 非布道日上是否仍残留原生 ready 标志",
@@ -150,9 +151,10 @@
     "icon.uiResurrectedAfterExit": "bool: 延迟完成是否复活了旧 UI（必须为 false）",
     "icon.hudRebuilt": "bool: 是否触发原生 HUD 重建",
     "icon.oldImageDestroyed": "bool: 重建时是否销毁了旧自有 Image",
+    "icon.oldAddressableReferenceReleased": "bool: 重建时是否释放了旧的（重建前）那把自有 Addressables 引用（由追踪日志佐证）",
     "icon.imageInstanceCountAfterRebuild": "int: 重建后自有 Image 实例数量（必须为 1）",
     "icon.leakedImageCount": "int: 重建后泄漏的自有 Image 数量（必须为 0）",
-    "icon.addressableReferencesHeld": "int: HUD 重建后仍持有的自有 Addressables 引用数量（根据当前所有权单飞；可为 0 或 1，绝不 >1）",
+    "icon.addressableReferencesHeld": "int: 最终健康观察（重建并已重新加载 Done+Image）时持有的自有 Addressables 引用数量，必须为 1；加载中的中间待定状态不计入该最终观察",
     "icon.loadFailed": "bool: 图标加载是否失败",
     "icon.retryAttemptedAfterFailure": "bool: 失败后是否进行了重试",
     "icon.spriteLoadedAfterRetry": "bool: 重试后是否成功返回 Sprite",
@@ -335,7 +337,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -379,7 +381,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -456,7 +458,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -529,7 +531,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -606,7 +608,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -683,7 +685,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -748,7 +750,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -804,7 +806,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -896,7 +898,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -959,7 +961,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1014,7 +1016,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1062,7 +1064,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1123,7 +1125,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1136,6 +1138,7 @@
       ],
       "steps": [
         "在 Done 状态下重新载入布道日当天布道动作之前的存档。",
+        "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
         "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
       ],
       "expect": [
@@ -1158,6 +1161,16 @@
         {
           "observation": "save.isSermonDay",
           "equals": true
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "state.sermonReadyValueBefore",
+          "numberRange": {
+            "maxExclusive": 1
+          }
         },
         {
           "observation": "state.readable",
@@ -1186,7 +1199,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1199,6 +1212,7 @@
       ],
       "steps": [
         "在 Ready 状态下重新载入布道日当天布道动作之后的存档。",
+        "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
         "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
       ],
       "expect": [
@@ -1221,6 +1235,16 @@
         {
           "observation": "save.isSermonDay",
           "equals": true
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "state.sermonReadyValueBefore",
+          "numberRange": {
+            "min": 1
+          }
         },
         {
           "observation": "state.readable",
@@ -1249,7 +1273,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1297,7 +1321,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1338,7 +1362,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1395,6 +1419,12 @@
           }
         },
         {
+          "observation": "icon.textLineHeightPx",
+          "numberRange": {
+            "min": 0
+          }
+        },
+        {
           "observation": "hud.textKey",
           "equals": "gksr.hud.sermonDone"
         }
@@ -1442,7 +1472,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1481,7 +1511,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1526,7 +1556,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1539,8 +1569,8 @@
       ],
       "steps": [
         "触发原生 HUD 重建。",
-        "统计重建后自有 Image 实例数量与泄漏数量。",
-        "确认仍持有的自有 Addressables 引用数量。"
+        "观察重建的中间（加载中）状态并等待其完成。",
+        "在最终健康观察（重建后 Done+Image 已重新就绪）时统计自有 Image 实例与持有引用，并核对旧引用已释放（保留追踪日志）。"
       ],
       "expect": [
         {
@@ -1549,6 +1579,10 @@
         },
         {
           "observation": "icon.oldImageDestroyed",
+          "equals": true
+        },
+        {
+          "observation": "icon.oldAddressableReferenceReleased",
           "equals": true
         },
         {
@@ -1561,27 +1595,25 @@
         },
         {
           "observation": "icon.addressableReferencesHeld",
-          "numberRange": {
-            "min": 0,
-            "max": 1
-          }
+          "equals": 1
         },
         {
           "observation": "icon.asyncHandleCount",
-          "numberRange": {
-            "min": 0,
-            "max": 1
-          }
+          "equals": 1
         },
         {
           "observation": "hud.textKey",
           "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "icon.ownImagePresent",
+          "equals": true
         }
       ],
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1664,7 +1696,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1738,7 +1770,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1751,9 +1783,13 @@
       ],
       "steps": [
         "在 Ready 状态下注入图标资源加载失败。",
-        "观察 Ready 文字是否仍正常显示且业务状态可读。"
+        "确认图标确实已失败，并观察 Ready 文字是否仍正常显示且业务状态可读。"
       ],
       "expect": [
+        {
+          "observation": "icon.loadFailed",
+          "equals": true
+        },
         {
           "observation": "state.readable",
           "equals": true
@@ -1789,7 +1825,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1842,7 +1878,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1886,7 +1922,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1930,7 +1966,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -1970,7 +2006,7 @@
       "evidence": {
         "screenshot": true,
         "log": true,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -2026,7 +2062,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -2077,7 +2113,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     },
     {
@@ -2128,7 +2164,7 @@
       "evidence": {
         "screenshot": true,
         "log": false,
-        "measurement": false
+        "measurement": true
       }
     }
   ]
