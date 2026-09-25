@@ -24,7 +24,7 @@
     "authorized future test facility.",
     "Every visual scenario requires a screenshot plus a measurement or an",
     "explicit operatorObservation.",
-    "Phase-specific observation keys (BeforeResolve/BeforeRetry/AfterFaultRecovery/AfterRestore/Before/After) separate snapshots so a scenario never asserts contradictory current values."
+    "Phase-specific observation keys (BeforeResolve/BeforeRetry/AfterFaultRecovery/AfterRestore/Before/After/BeforeRefault) separate snapshots so a scenario never asserts contradictory current values."
   ],
   "environment": {
     "game.name": "Graveyard Keeper 2 (Steam Windows build)",
@@ -111,6 +111,19 @@
       "notice.surfaceAvailableAfterRestore": true,
       "notice.stateReadBudgetConsumed": false,
       "notice.totalDisplayedCount": 0
+    },
+    "cancelled-queue-preserves-budget-for-refailure": {
+      "notice.surfaceAvailableBefore": false,
+      "notice.queuePendingBefore": true,
+      "notice.stateReadDisplayedCountBefore": 0,
+      "notice.stateReadBudgetConsumedBefore": false,
+      "notice.queuePendingAfterCancellation": false,
+      "notice.stateReadBudgetConsumedAfterCancellation": false,
+      "notice.surfaceAvailableBeforeRefault": true,
+      "ui.safetyGateClearBeforeRefault": true,
+      "notice.staleNoticeAfterRecovery": false,
+      "notice.stateReadDisplayedCountAfterRefault": 1,
+      "notice.stateReadBudgetConsumed": true
     },
     "independent-category-budgets": {
       "notice.stateReadDisplayedCount": 1,

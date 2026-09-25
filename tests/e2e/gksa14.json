@@ -288,6 +288,8 @@
     "notice.queueCountAfterFaultRecovery": "int: 故障恢复后待显示消息数量（应为 0）",
     "notice.surfaceAvailableAfterFaultRecovery": "bool: 故障恢复后（恢复消息组件之前）原生消息组件是否可用（应为 false）",
     "notice.surfaceAvailableAfterRestore": "bool: 故障恢复后恢复原生消息组件时是否可用（应为 true）",
+    "notice.surfaceAvailableBeforeRefault": "bool: 再次注入同类故障前原生消息组件是否可用（应为 true）",
+    "ui.safetyGateClearBeforeRefault": "bool: 再次注入同类故障前原生 UI 安全门是否已清空（应为 true）",
     "notice.stateReadDisplayedCountBefore": "int: 取消或恢复前状态读取类别消息实际显示次数（应为 0）",
     "notice.stateReadBudgetConsumedBefore": "bool: 取消或恢复前状态读取类别提示机会是否已被消耗（应为 false）",
     "notice.stateReadBudgetConsumedAfterCancellation": "bool: 取消排队后状态读取类别提示机会是否仍未被消耗（应为 false）",
@@ -1821,14 +1823,21 @@
       "title": "取消排队后同次载入再次失效仍可显示一次并消耗机会",
       "category": "queue",
       "prerequisites": [
-        "排队中的故障消息在显示前因恢复被取消（消息组件真正不可用场景）。"
+        "已成功载入的合法存档：两个解锁门槛均满足，且注入前已成功观察到一次就绪读取；受影响类别的提示机会尚未消耗。",
+        "初始状态读取故障因原生消息组件不可用而被排队且尚未显示。",
+        "同次载入内可使该故障恢复并在不重载的情况下恢复原生消息组件。"
       ],
       "steps": [
-        "记录取消前的待显示状态与显示次数。预期：排队且未显示、机会未消耗。检查：notice.queuePendingBefore=true 且 notice.stateReadDisplayedCountBefore=0。",
-        "使故障在显示前恢复。预期：取消排队且机会仍未消耗。检查：notice.queuePendingAfterCancellation=false 且 notice.stateReadBudgetConsumedAfterCancellation=false。",
-        "在同次载入内再次注入同类故障。预期：实际显示一次并消耗机会。检查：notice.stateReadDisplayedCountAfterRefault=1 且 notice.stateReadBudgetConsumed=true。"
+        "记录初始排队状态与显示次数。预期：故障消息因原生消息组件不可用而排队且尚未显示，提示机会未消耗。检查：notice.surfaceAvailableBefore=false 且 notice.queuePendingBefore=true 且 notice.stateReadDisplayedCountBefore=0 且 notice.stateReadBudgetConsumedBefore=false。",
+        "在消息显示前使故障恢复。预期：取消排队且提示机会仍未消耗。检查：notice.queuePendingAfterCancellation=false 且 notice.stateReadBudgetConsumedAfterCancellation=false。",
+        "恢复原生消息组件。预期：消息组件可用且原生 UI 安全门已清空。检查：notice.surfaceAvailableBeforeRefault=true 且 ui.safetyGateClearBeforeRefault=true。",
+        "在同次载入内再次注入同类故障。预期：实际显示一次并消耗机会，且不补发已取消的消息。检查：notice.stateReadDisplayedCountAfterRefault=1 且 notice.stateReadBudgetConsumed=true 且 notice.staleNoticeAfterRecovery=false。"
       ],
       "expect": [
+        {
+          "observation": "notice.surfaceAvailableBefore",
+          "equals": false
+        },
         {
           "observation": "notice.queuePendingBefore",
           "equals": true
@@ -1850,6 +1859,18 @@
           "equals": false
         },
         {
+          "observation": "notice.surfaceAvailableBeforeRefault",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateClearBeforeRefault",
+          "equals": true
+        },
+        {
+          "observation": "notice.staleNoticeAfterRecovery",
+          "equals": false
+        },
+        {
           "observation": "notice.stateReadDisplayedCountAfterRefault",
           "equals": 1
         },
@@ -1863,7 +1884,7 @@
         "log": true,
         "measurement": true
       },
-      "phaseNote": "使用 before/after 阶段专用键表达初始排队、取消后、再失效后三个阶段，不再只用终态计数。"
+      "phaseNote": "使用阶段专用键表达初始排队、取消后、恢复原生消息组件后与再次失效四个阶段：先取消排队，再恢复原生消息组件，方可在同次载入内再次失效并实际显示一次，不以终态计数代替阶段。"
     },
     {
       "id": "exit-drops-queued-notice",
