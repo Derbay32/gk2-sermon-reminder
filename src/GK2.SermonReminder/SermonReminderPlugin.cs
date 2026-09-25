@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using BepInEx;
+using BepInEx.Configuration;
 using GK2.Framework;
 using GK2.SermonReminder.Beacon;
 using GK2.SermonReminder.Hud;
@@ -68,10 +69,11 @@ namespace GK2.SermonReminder
         private bool ready;
         private GameSave activeSave;
 
-        // The mod's own registered beacon toggle descriptor, captured during
-        // registration. Null while registration failed, which fails the beacon
-        // closed (disabled) rather than falling back to a silent default-on.
-        private IGk2Setting beaconToggle;
+        // The mod's own registered beacon toggle, captured during registration as the
+        // stable ConfigEntry value source. Null until registration AND own-descriptor
+        // localization both succeed, which fails the beacon closed (disabled) rather
+        // than falling back to an unlocalized descriptor or a silent default-on.
+        private ConfigEntry<bool> beaconEntry;
 
         // Snapshot of the persisted beacon toggle for the current load. Established
         // exactly once on actual load readiness and immutable for that load; runtime
@@ -182,23 +184,44 @@ namespace GK2.SermonReminder
         /// </summary>
         private void RegisterBeaconSetting(Gk2ModContext context)
         {
+            // Fail closed until registration and own-descriptor wrapping both succeed.
+            beaconEntry = null;
+
             try
             {
                 Gk2Settings settings = context?.Settings;
-                if (settings == null)
+
+                // Validate the mutable list shape and readability BEFORE any registration.
+                if (!BeaconSettingLocalization.TryGetMutableList(settings, out IList<IGk2Setting> list, out string listFailure))
                 {
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: settings unavailable");
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: " + listFailure);
                     return;
                 }
 
-                HashSet<IGk2Setting> before = SnapshotItems(settings);
+                if (!TrySnapshotItems(list, out HashSet<IGk2Setting> before, out string snapshotFailure))
+                {
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: " + snapshotFailure);
+                    return;
+                }
 
-                settings.AddToggle(BeaconSection, BeaconKey, true, string.Empty, string.Empty, 0);
+                ConfigEntry<bool> entry = settings.AddToggle(
+                    BeaconSection, BeaconKey, true, string.Empty, string.Empty, 0);
 
-                IGk2Setting registered = FindNewlyAdded(settings, before);
+                // Identify our exact new descriptor by proven reference delta AND the
+                // expected stable identity, requiring one unambiguous candidate; never
+                // fall back to an arbitrary item.
+                IGk2Setting registered = FindOwnDescriptor(list, before);
                 if (registered == null)
                 {
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: registration produced no descriptor");
+                    // Cannot prove which entry is ours: leave the list untouched and
+                    // fail closed rather than remove or change an unidentified item.
+                    SafeLogError("GKSR_BEACON_SETTING_FAILED: registration produced no unambiguous own descriptor");
+                    return;
+                }
+
+                if (entry == null)
+                {
+                    RollBackOwnDescriptor(list, registered, "registration returned no config entry");
                     return;
                 }
 
@@ -206,61 +229,108 @@ namespace GK2.SermonReminder
                     registered,
                     () => SermonReminderLocalization.Get(SermonReminderLocalization.SettingsGroupTitleKey));
 
-                if (BeaconSettingLocalization.TryReplaceOwnDescriptor(
-                        settings, registered, localized, out string failure))
+                if (!BeaconSettingLocalization.TryReplaceOwnDescriptor(list, registered, localized, out string replaceFailure))
                 {
-                    beaconToggle = localized;
+                    // Fail closed: never keep an unlocalized descriptor usable. Roll back
+                    // only our own just-added entry when that is safely possible.
+                    RollBackOwnDescriptor(list, registered, "localization swap failed (" + replaceFailure + ")");
+                    return;
                 }
-                else
-                {
-                    // Keep the exact framework descriptor (stable key and value) so
-                    // the toggle still works; report the localization swap failure.
-                    beaconToggle = registered;
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: localization swap failed (" + failure + ")");
-                }
+
+                // Only a fully registered and localized toggle becomes the value source.
+                beaconEntry = entry;
             }
             catch (Exception ex)
             {
-                beaconToggle = null;
+                beaconEntry = null;
                 SafeLogError("GKSR_BEACON_SETTING_FAILED: " + ex.GetType().Name);
             }
         }
 
-        private static HashSet<IGk2Setting> SnapshotItems(Gk2Settings settings)
+        /// <summary>
+        /// Remove exactly our own just-added descriptor after a failed localization
+        /// step, so no unlocalized beacon setting remains registered. Never removes or
+        /// changes another mod's entry; a failed rollback is reported, not forced.
+        /// </summary>
+        private void RollBackOwnDescriptor(IList<IGk2Setting> list, IGk2Setting registered, string reason)
         {
-            var snapshot = new HashSet<IGk2Setting>();
-            try
+            if (BeaconSettingLocalization.TryRemoveOwnDescriptor(list, registered, out string rollbackFailure))
             {
-                foreach (IGk2Setting item in settings.Items)
-                {
-                    if (item != null) snapshot.Add(item);
-                }
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + reason + "; own descriptor rolled back");
             }
-            catch (Exception)
+            else
             {
-                // An unreadable list yields an empty snapshot; the added-descriptor
-                // lookup still resolves against the post-registration list.
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + reason
+                    + "; rollback failed (" + rollbackFailure + ")");
             }
-
-            return snapshot;
         }
 
-        private static IGk2Setting FindNewlyAdded(Gk2Settings settings, HashSet<IGk2Setting> before)
+        private static bool TrySnapshotItems(
+            IList<IGk2Setting> list,
+            out HashSet<IGk2Setting> snapshot,
+            out string failure)
         {
+            snapshot = null;
+            failure = null;
             try
             {
-                foreach (IGk2Setting item in settings.Items)
+                var captured = new HashSet<IGk2Setting>();
+                for (int i = 0; i < list.Count; i++)
                 {
-                    if (item != null && !before.Contains(item))
-                        return item;
+                    IGk2Setting item = list[i];
+                    if (item != null) captured.Add(item);
                 }
+
+                snapshot = captured;
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Fall through to a null result, reported by the caller.
+                failure = "settings snapshot unreadable (" + ex.GetType().Name + ")";
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Find the one descriptor this registration added: it must be absent from the
+        /// proven pre-registration snapshot AND carry the expected stable identity
+        /// (Beacon / EnabledChurchBeacon / bool). Zero or multiple matches report null
+        /// so the caller fails closed instead of selecting an arbitrary or pre-existing
+        /// descriptor.
+        /// </summary>
+        private static IGk2Setting FindOwnDescriptor(IList<IGk2Setting> list, HashSet<IGk2Setting> before)
+        {
+            IGk2Setting candidate = null;
+            int matches = 0;
+            for (int i = 0; i < list.Count; i++)
+            {
+                IGk2Setting item = list[i];
+                if (item == null || before.Contains(item))
+                    continue;
+
+                string section;
+                string key;
+                Type valueType;
+                try
+                {
+                    section = item.Section;
+                    key = item.Key;
+                    valueType = item.ValueType;
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(section, BeaconSection, StringComparison.Ordinal)) continue;
+                if (!string.Equals(key, BeaconKey, StringComparison.Ordinal)) continue;
+                if (valueType != typeof(bool)) continue;
+
+                candidate = item;
+                matches++;
             }
 
-            return null;
+            return matches == 1 ? candidate : null;
         }
 
         public override void OnEnable()
@@ -349,18 +419,15 @@ namespace GK2.SermonReminder
         {
             try
             {
-                IGk2Setting toggle = beaconToggle;
-                if (toggle == null)
+                ConfigEntry<bool> entry = beaconEntry;
+                if (entry == null)
                 {
                     SafeLogError("GKSR_BEACON_SETTING_FAILED: toggle unavailable; beacon disabled for this load");
                     return false;
                 }
 
-                object value = toggle.Value;
-                if (value is bool enabled) return enabled;
-
-                SafeLogError("GKSR_BEACON_SETTING_FAILED: unexpected value type; beacon disabled for this load");
-                return false;
+                // The successfully registered ConfigEntry is the stable value source.
+                return entry.Value;
             }
             catch (Exception ex)
             {
@@ -397,13 +464,23 @@ namespace GK2.SermonReminder
         }
 
         /// <summary>
-        /// Reset the owned beacon and clear its diagnostic channel, contained so a
-        /// beacon failure can never reach or skip the corner work.
+        /// Release only the owned beacon resources, leaving the beacon diagnostic
+        /// episode untouched so a persisting identical failure is not re-logged.
         /// </summary>
-        private void SafeResetBeacon()
+        private void ResetBeaconResources()
         {
             try { beacon.Reset(); }
             catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Release the owned beacon resources and end its diagnostic episode. Called only
+        /// at true eligibility / load-reset boundaries, never from the defensive per-tick
+        /// path, so a prior failure is preserved until a real boundary.
+        /// </summary>
+        private void SafeResetBeacon()
+        {
+            ResetBeaconResources();
             ClearBeaconDiagnostic();
         }
 
@@ -604,7 +681,9 @@ namespace GK2.SermonReminder
             catch (Exception ex)
             {
                 // Defensive net: beacon.Update already contains recoverable errors.
-                SafeResetBeacon();
+                // Release owned resources but PRESERVE the beacon episode, so repeated
+                // identical eligible failures deduplicate instead of re-logging per tick.
+                ResetBeaconResources();
                 LogBeaconDiagnostic("beacon-tick:" + ex.GetType().Name,
                     "GKSR_BEACON_FAILED: tick " + ex.GetType().Name);
                 return;
