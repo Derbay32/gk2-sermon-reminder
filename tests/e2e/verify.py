@@ -49,7 +49,9 @@ TICKET_STEM_RE = re.compile(r"^gksa(\d{1,4})$")
 RATIO_EXPECTED_NUMERATOR = 20
 RATIO_EXPECTED_DENOMINATOR = 18
 RATIO_TOLERANCE = 0.001
-RATIO_TOLERANCE_MAX = 0.01
+# The measured 20:18 check accepts the specified 0.001 tolerance and nothing
+# looser; a larger tolerance would let a visibly wrong ratio pass.
+RATIO_TOLERANCE_MAX = 0.001
 
 
 class Fail(Exception):
@@ -95,11 +97,16 @@ def is_positive_int(value):
 
 
 def _finite_number(value):
-    """True for a finite JSON int/float. Bools, strings, NaN and infinity are
-    rejected so a numeric check can never be satisfied by a non-number."""
+    """True for a finite JSON int/float. Bools, strings, NaN, infinity and
+    integers too large to convert to a float are rejected, so a numeric check
+    can never be satisfied by a non-number and can never crash on a huge
+    integer magnitude."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return False
-    return math.isfinite(value)
+    try:
+        return math.isfinite(value)
+    except (OverflowError, ValueError, TypeError):
+        return False
 
 
 def ticket_from_kind(kind, suffix):
@@ -114,7 +121,7 @@ def ticket_from_kind(kind, suffix):
     tail = "-" + suffix
     if not kind.endswith(tail):
         return None
-    match = TICKET_STEM_RE.match(kind[: -len(tail)])
+    match = TICKET_STEM_RE.fullmatch(kind[: -len(tail)])
     if not match:
         return None
     digits = match.group(1)
