@@ -1,0 +1,98 @@
+name: ci
+
+# Repository source/structural CI for GKSA-10.
+#
+# This workflow only runs Python-standard-library source and manifest/structure
+# checks on hosted runners. It does NOT build native code, does NOT build the
+# plugin against game assemblies, and does NOT run or validate the game. Every
+# uploaded report is a source/structure/negative report and must never be read
+# as a game passing.
+on:
+  pull_request:
+    branches:
+      - dev
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-structure:
+    name: source and structure checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Show Python version
+        run: python3 --version
+
+      - name: Compile helper scripts (stdlib only)
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          python3 -m py_compile \
+            tools/source_check.py \
+            tools/local_build.py \
+            tools/package.py \
+            tests/e2e/verify.py
+
+      - name: Source and resource guard
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          python3 tools/source_check.py \
+            --repo-root . \
+            --output artifacts/ci/source-check.json
+
+      - name: Manifest structural check
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          python3 tests/e2e/verify.py \
+            --manifest tests/e2e/gksa10.json \
+            --check-manifest \
+            --output artifacts/manifest.json
+
+      - name: Negative check - missing capture is rejected
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          set +e
+          python3 tests/e2e/verify.py \
+            --manifest tests/e2e/gksa10.json \
+            --capture tests/e2e/no-such-capture.json \
+            --output artifacts/ci/missing-capture.json
+          status=$?
+          set -e
+          echo "missing-capture exit code: $status"
+          test "$status" -eq 2
+          python3 -c "import json,sys; d=json.load(open('artifacts/ci/missing-capture.json')); sys.exit(0 if d.get('ok') is False else 1)"
+
+      - name: Negative check - example capture is rejected
+        env:
+          PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
+        run: |
+          set +e
+          python3 tests/e2e/verify.py \
+            --manifest tests/e2e/gksa10.json \
+            --capture tests/e2e/capture.example.json \
+            --output artifacts/ci/reject-example.json
+          status=$?
+          set -e
+          echo "reject-example exit code: $status"
+          test "$status" -eq 2
+          python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-example.json')); sys.exit(0 if d.get('ok') is False else 1)"
+
+      - name: Upload structural reports (not a game pass)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: gksa10-structural-reports
+          path: |
+            artifacts/ci/source-check.json
+            artifacts/manifest.json
+            artifacts/ci/missing-capture.json
+            artifacts/ci/reject-example.json
+          if-no-files-found: error
