@@ -331,15 +331,27 @@ namespace GK2.SermonReminder
 
         private static GameSave TryGetCurrentSave()
         {
-            try { return MainGame.Instance?.GameSave; }
-            catch (Exception) { return null; }
+            try
+            {
+                return MainGame.Instance?.GameSave;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private void HandleLanguageChanged()
         {
             // Refresh style and text for the new language on the next tick.
-            try { hud.MarkStyleDirty(); }
-            catch (Exception) { }
+            try
+            {
+                hud.MarkStyleDirty();
+            }
+            catch (Exception)
+            {
+                // Best-effort invalidation; the next tick repaints anyway.
+            }
         }
 
         private void Unsubscribe()

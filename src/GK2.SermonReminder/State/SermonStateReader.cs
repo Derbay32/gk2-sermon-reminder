@@ -27,6 +27,8 @@ namespace GK2.SermonReminder.State
                 if (quests == null)
                     return SermonStateSnapshot.Unreadable("quest system data unavailable");
 
+                int week = EnvironmentData.DAYS_IN_WEEK;
+
                 // Gate on the quest prerequisites before any environment or date
                 // read. A gate that is not complete is a normal hidden state, so
                 // unrelated environment/date problems must not be reported as a
@@ -34,13 +36,11 @@ namespace GK2.SermonReminder.State
                 bool churchUnlocked = quests.IsQuestInStatus(ChurchQuestId, QuestStatus.Completed);
                 bool tutorialCompleted = quests.IsQuestInStatus(SermonQuestId, QuestStatus.Completed);
                 if (!(churchUnlocked && tutorialCompleted))
-                    return SermonStateSnapshot.Ready(gatesSatisfied: false, delta: 0, daysInWeek: EnvironmentData.DAYS_IN_WEEK);
+                    return SermonStateSnapshot.Ready(gatesSatisfied: false, delta: 0, daysInWeek: week);
 
                 EnvironmentData environment = expectedSave.environmentData;
                 if (environment == null)
                     return SermonStateSnapshot.Unreadable("environment data unavailable");
-
-                int week = EnvironmentData.DAYS_IN_WEEK;
 
                 // EnvironmentData.Day is the absolute day (positive, starts at 1).
                 // CurrentDayNumber is only the weekday; without this check an
