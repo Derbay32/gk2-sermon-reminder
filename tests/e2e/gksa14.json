@@ -27,7 +27,8 @@
     "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
     "原生消息使用 titleless、iconless、非阻塞的纯文字形式，沿用原生位置、样式、时长与自动消失行为。",
     "日志抑制逐帧重复噪声但保留初始诊断；中间健康绑定不得重置角落故障回合。",
-    "新载入重新计算各类别提示机会；不进行进程级去重。"
+    "新载入重新计算各类别提示机会；不进行进程级去重。",
+    "受控故障注入场景的先成功就绪读取只是实验前置条件，用于区分异常状态丢失与普通加载/退出；不得据此为生产故障消息增加必须先成功读取一次业务状态的业务门槛。"
   ],
   "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
   "specRefs": [
@@ -47,7 +48,8 @@
     "safePlayableNoticeSurface": true,
     "categoryBudgetUnspent": true,
     "affectedDisplayEligible": true,
-    "noticesNeverForced": "在过场、对话、菜单或消息表面不可用时不得强制显示故障消息；应延后或排队。"
+    "noticesNeverForced": "在过场、对话、菜单或消息表面不可用时不得强制显示故障消息；应延后或排队。",
+    "injectionPrerequisiteScope": "受控故障注入场景要求注入前先成功读取一次就绪，仅作为区分异常状态丢失与普通加载/退出的实验前置条件。它不表示生产环境下的故障消息必须先有一次成功业务读取；存档可以在生命周期就绪但初始状态即不可读的情形下产生状态读取故障消息。"
   },
   "noticeCategories": {
     "state-read": {
@@ -260,7 +262,38 @@
     "layout.measurement": "object: 实测数值（由测量探针或操作者记录，字段由设施定义）",
     "layout.operatorObservation": "string: 无法数值化时的操作者明确观察记录",
     "plugin.loaded": "bool: 插件是否在真实 Proton 环境中实际加载",
-    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载"
+    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载",
+    "hud.pendingBefore": "bool: 正常加载中、原生 HUD 尚未出现阶段的待定标志",
+    "hud.pendingAfter": "bool: 加载完成、原生 HUD 出现后的待定标志（应为 false）",
+    "hud.liveNativeHudPresentBefore": "bool: 待定阶段原生 HUD 是否已存在（应为 false）",
+    "hud.liveNativeHudPresentAfter": "bool: 加载完成后原生 HUD 是否已存在（应为 true）",
+    "hud.visibleBefore": "bool: 待定阶段角落文字是否可见（应为 false）",
+    "hud.displayEligibleAfter": "bool: 加载完成后受影响显示是否具备显示条件",
+    "fault.reportedBefore": "bool: 待定阶段是否误报故障（应为 false）",
+    "hud.selectedTextKeyBeforeResolve": "string: 图标待定阶段逻辑选定的业务角落文案键",
+    "hud.selectedTextKeyBeforeRetry": "string: 图标失败待重试阶段逻辑选定的业务角落文案键",
+    "hud.tmpTextClearedBeforeResolve": "bool: 图标待定阶段实际赋给 TMP 的文本是否已清空",
+    "hud.tmpTextClearedBeforeRetry": "bool: 图标失败待重试阶段实际赋给 TMP 的文本是否已清空",
+    "hud.visibleBeforeResolve": "bool: 图标待定阶段角落文字是否可见（应为 false）",
+    "hud.visibleBeforeRetry": "bool: 图标失败待重试阶段角落文字是否可见（应为 false）",
+    "icon.loadPendingBeforeResolve": "bool: 解除阻塞前打勾图标异步加载是否处于待定",
+    "icon.spriteLoadedBeforeResolve": "bool: 解除阻塞前打勾图标请求是否已返回 Sprite（应为 false）",
+    "icon.ownImagePresentBeforeResolve": "bool: 解除阻塞前自有打勾 Image 是否存在（应为 false）",
+    "icon.loadFailedBeforeRetry": "bool: 重试前打勾图标加载是否失败",
+    "icon.spriteLoadedBeforeRetry": "bool: 重试前打勾图标请求是否已返回 Sprite（应为 false）",
+    "icon.ownImagePresentBeforeRetry": "bool: 重试前自有打勾 Image 是否存在（应为 false）",
+    "hud.healthyCornerResources": "bool: 打勾图标资源、角落文字组件与原生 HUD 是否均健康可用",
+    "notice.queueCountBefore": "int: 恢复或取消前的待显示消息数量",
+    "notice.queuePendingAfterFaultRecovery": "bool: 故障恢复后（消息组件仍缺失）是否仍存在排队消息（应为 false）",
+    "notice.queueCountAfterFaultRecovery": "int: 故障恢复后待显示消息数量（应为 0）",
+    "notice.surfaceAvailableAfterFaultRecovery": "bool: 故障恢复后（恢复消息组件之前）原生消息组件是否可用（应为 false）",
+    "notice.surfaceAvailableAfterRestore": "bool: 故障恢复后恢复原生消息组件时是否可用（应为 true）",
+    "notice.stateReadDisplayedCountBefore": "int: 取消或恢复前状态读取类别消息实际显示次数（应为 0）",
+    "notice.stateReadBudgetConsumedBefore": "bool: 取消或恢复前状态读取类别提示机会是否已被消耗（应为 false）",
+    "notice.stateReadBudgetConsumedAfterCancellation": "bool: 取消排队后状态读取类别提示机会是否仍未被消耗（应为 false）",
+    "notice.stateReadDisplayedCountAfterRefault": "int: 同次载入再次失效后状态读取类别消息实际显示次数（应为 1）",
+    "hud.selectedTextKeyAfterRecovery": "string: 恢复后逻辑选定的业务角落文案键",
+    "notice.queuePendingAfterCancellation": "bool: 取消排队后是否仍存在待显示消息（应为 false）"
   },
   "validation": {
     "supportedCaptureVersions": [
@@ -795,11 +828,12 @@
       "category": "state-read",
       "prerequisites": [
         "布道日当天，两个门槛任务均为 Completed。",
-        "当前存档中不存在原生 sermon_ready 键（访问器文档默认 0）。"
+        "当前存档中不存在原生 sermon_ready 键（访问器文档默认 0）。",
+        "否则健康：打勾图标资源、角落文字组件与原生 HUD 均可用。"
       ],
       "steps": [
         "载入该存档并等待加载完成。预期：缺键按文档默认 0 得到可读 Done，而不是伪造回退。检查：state.readyKeyAbsent=true 且 state.readable=true。",
-        "观察角落与故障报告。预期：正常显示 Done 且不报告故障。检查：hud.textKey=gksr.hud.sermonDone 且 fault.reported=false。"
+        "观察角落与故障报告。预期：在资源健康前提下正常显示 Done 且不报告故障。检查：hud.healthyCornerResources=true 且 fault.reported=false。"
       ],
       "expect": [
         {
@@ -838,6 +872,14 @@
           "equals": 0
         },
         {
+          "observation": "hud.healthyCornerResources",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteLoaded",
+          "equals": true
+        },
+        {
           "observation": "hud.visible",
           "equals": true
         },
@@ -850,7 +892,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "在资源健康前提下断言 Done 可见，避免在打勾图标异步待定时误期可见。"
     },
     {
       "id": "state-read-recovery-rebuild",
@@ -1410,7 +1453,7 @@
         },
         {
           "observation": "notice.retryRealDisplayCount",
-          "numberRange": {
+          "integerBetween": {
             "min": 1,
             "max": 1
           }
@@ -1448,7 +1491,7 @@
       ],
       "steps": [
         "在消息组件不可用且界面被占用期间注入同类故障。预期：排一条待显示消息。检查：notice.queuedWhileSurfaceUnavailable=true 且 notice.queuePending=true。",
-        "记录排队数量与显示次数。预期：不累计多条且未实际显示。检查：notice.queueCount 介于 0..1 且 notice.totalDisplayedCount=0。"
+        "记录排队数量与显示次数。预期：恰为一条且未实际显示。检查：notice.queueCount=1 且 notice.totalDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -1461,10 +1504,7 @@
         },
         {
           "observation": "notice.queueCount",
-          "numberRange": {
-            "min": 0,
-            "max": 1
-          }
+          "equals": 1
         },
         {
           "observation": "notice.totalDisplayedCount",
@@ -1475,7 +1515,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "queuePending=true 意味着该类恰有一条待显示消息，故 queueCount 用严格整数 1。"
     },
     {
       "id": "repeated-failure-after-notice-no-extra",
@@ -1711,16 +1752,16 @@
     },
     {
       "id": "recovery-before-display-cancels-queue",
-      "title": "显示前恢复时取消排队消息且不消耗提示机会",
+      "title": "消息组件不可用时排队、故障先恢复、随后恢复组件也不补发且不消耗机会",
       "category": "queue",
       "prerequisites": [
-        "故障消息已因消息组件不可用或界面被占用而排队。",
+        "原生消息组件不可用，使故障消息只能排队。",
         "在消息实际显示前可使故障恢复。"
       ],
       "steps": [
-        "确认恢复前存在排队消息。预期：排队且尚未显示。检查：notice.queuePendingBefore=true 且 notice.queueCount 介于 0..1。",
-        "在消息实际显示前使故障恢复。预期：清除排队消息且无过期消息。检查：notice.queuePendingAfter=false 且 notice.queueCountAfter=0。",
-        "观察消息计数与提示机会。预期：即使组件随后可用也不显示消息且不消耗机会。检查：notice.totalDisplayedCount=0 且 notice.stateReadBudgetConsumed=false。"
+        "在消息组件不可用时注入状态读取故障。预期：排队且尚未显示。检查：notice.surfaceAvailableBefore=false 且 notice.queuePendingBefore=true。",
+        "在消息实际显示前使故障恢复。预期：清除排队消息且不消耗机会。检查：notice.queuePendingAfterFaultRecovery=false 且 notice.queueCountAfterFaultRecovery=0。",
+        "在故障恢复后恢复原生消息组件。预期：不显示过期消息且机会仍未消耗。检查：notice.surfaceAvailableAfterRestore=true 且 notice.stateReadBudgetConsumed=false。"
       ],
       "expect": [
         {
@@ -1732,28 +1773,36 @@
           "equals": true
         },
         {
-          "observation": "notice.surfaceAvailableAfter",
-          "equals": true
+          "observation": "notice.queueCountBefore",
+          "equals": 1
         },
         {
-          "observation": "notice.queuePendingAfter",
+          "observation": "notice.surfaceAvailableAfterFaultRecovery",
           "equals": false
         },
         {
-          "observation": "notice.queueCountAfter",
+          "observation": "notice.queuePendingAfterFaultRecovery",
+          "equals": false
+        },
+        {
+          "observation": "notice.queueCountAfterFaultRecovery",
           "equals": 0
         },
         {
-          "observation": "notice.totalDisplayedCount",
-          "equals": 0
+          "observation": "notice.surfaceAvailableAfterRestore",
+          "equals": true
+        },
+        {
+          "observation": "notice.stateReadBudgetConsumed",
+          "equals": false
         },
         {
           "observation": "notice.budgetConsumedWithoutDisplay",
           "equals": false
         },
         {
-          "observation": "notice.stateReadBudgetConsumed",
-          "equals": false
+          "observation": "notice.totalDisplayedCount",
+          "equals": 0
         },
         {
           "observation": "notice.staleNoticeAfterRecovery",
@@ -1764,34 +1813,57 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "明确限定为消息组件真正不可用（不含仅界面被占用）。步骤包含故障恢复后恢复消息组件的独立动作。"
     },
     {
       "id": "cancelled-queue-preserves-budget-for-refailure",
-      "title": "取消过期消息后同次载入再次失效仍可显示一次",
+      "title": "取消排队后同次载入再次失效仍可显示一次并消耗机会",
       "category": "queue",
       "prerequisites": [
-        "排队中的故障消息在显示前因恢复被取消。"
+        "排队中的故障消息在显示前因恢复被取消（消息组件真正不可用场景）。"
       ],
       "steps": [
-        "使故障在显示前恢复。预期：取消排队且不清空机会。检查：notice.queueClearedOnRecovery=true 且 notice.stateReadBudgetConsumed=false。",
-        "在同次载入内再次注入同类故障。预期：仍可显示一次。检查：notice.stateReadDisplayedCount=1 且 notice.totalDisplayedCount=1。"
+        "记录取消前的待显示状态与显示次数。预期：排队且未显示、机会未消耗。检查：notice.queuePendingBefore=true 且 notice.stateReadDisplayedCountBefore=0。",
+        "使故障在显示前恢复。预期：取消排队且机会仍未消耗。检查：notice.queuePendingAfterCancellation=false 且 notice.stateReadBudgetConsumedAfterCancellation=false。",
+        "在同次载入内再次注入同类故障。预期：实际显示一次并消耗机会。检查：notice.stateReadDisplayedCountAfterRefault=1 且 notice.stateReadBudgetConsumed=true。"
       ],
       "expect": [
         {
-          "observation": "notice.stateReadDisplayedCount",
+          "observation": "notice.queuePendingBefore",
+          "equals": true
+        },
+        {
+          "observation": "notice.stateReadDisplayedCountBefore",
+          "equals": 0
+        },
+        {
+          "observation": "notice.stateReadBudgetConsumedBefore",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingAfterCancellation",
+          "equals": false
+        },
+        {
+          "observation": "notice.stateReadBudgetConsumedAfterCancellation",
+          "equals": false
+        },
+        {
+          "observation": "notice.stateReadDisplayedCountAfterRefault",
           "equals": 1
         },
         {
-          "observation": "notice.totalDisplayedCount",
-          "equals": 1
+          "observation": "notice.stateReadBudgetConsumed",
+          "equals": true
         }
       ],
       "evidence": {
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "使用 before/after 阶段专用键表达初始排队、取消后、再失效后三个阶段，不再只用终态计数。"
     },
     {
       "id": "exit-drops-queued-notice",
@@ -1846,24 +1918,36 @@
         "处于正常加载过程且原生 HUD 尚未出现。"
       ],
       "steps": [
-        "载入该存档并记录待定阶段。预期：待定而非故障。检查：hud.pendingPhaseObserved=true 且 hud.pending=true。",
-        "等待加载完成并记录已存在阶段。预期：原生 HUD 自然出现且无故障报告。检查：hud.livePhaseObserved=true 且 fault.reported=false。"
+        "记录加载中的原生 HUD 阶段。预期：待定而非故障。检查：hud.pendingBefore=true 且 hud.liveNativeHudPresentBefore=false。",
+        "等待加载完成并记录原生 HUD 已出现阶段。预期：原生 HUD 自然出现、受影响显示具备条件且无故障报告。检查：hud.liveNativeHudPresentAfter=true 且 hud.displayEligibleAfter=true。"
       ],
       "expect": [
         {
-          "observation": "hud.liveNativeHudPresent",
+          "observation": "hud.pendingBefore",
+          "equals": true
+        },
+        {
+          "observation": "hud.liveNativeHudPresentBefore",
           "equals": false
         },
         {
-          "observation": "hud.pending",
+          "observation": "hud.visibleBefore",
+          "equals": false
+        },
+        {
+          "observation": "fault.reportedBefore",
+          "equals": false
+        },
+        {
+          "observation": "hud.pendingAfter",
+          "equals": false
+        },
+        {
+          "observation": "hud.liveNativeHudPresentAfter",
           "equals": true
         },
         {
-          "observation": "hud.pendingPhaseObserved",
-          "equals": true
-        },
-        {
-          "observation": "hud.livePhaseObserved",
+          "observation": "hud.displayEligibleAfter",
           "equals": true
         },
         {
@@ -1879,10 +1963,6 @@
           "equals": 0
         },
         {
-          "observation": "hud.visible",
-          "equals": false
-        },
-        {
           "observation": "log.cornerHudChannelPresent",
           "equals": false
         }
@@ -1891,7 +1971,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "本场景明确分两个阶段：待定阶段（原生 HUD 未出现）与已出现阶段（加载完成）。先前版本用当前字段混用两阶段，此处改为阶段专用键。"
     },
     {
       "id": "live-hud-missing-component-failure",
@@ -1900,10 +1981,10 @@
       "prerequisites": [
         "两个门槛任务均为 Completed 的存档。",
         "原生 HUD 已在运行中存在。",
-        "测试设施可受控使必需角落组件缺失。"
+        "测试辅助可用：使必需角落组件缺失。"
       ],
       "steps": [
-        "载入该存档并等待原生 HUD 出现。预期：已存在阶段且非待定。检查：hud.livePhaseObserved=true 且 hud.pending=false。",
+        "载入该存档并等待原生 HUD 出现。预期：已存在阶段且非待定。检查：hud.liveNativeHudPresent=true 且 hud.pending=false。",
         "注入必需角落组件缺失。预期：判为故障并显示角落文字类别消息一次。检查：fault.reported=true 且 notice.cornerHudDisplayedCount=1。"
       ],
       "expect": [
@@ -1917,10 +1998,6 @@
         },
         {
           "observation": "hud.livePhaseObserved",
-          "equals": true
-        },
-        {
-          "observation": "hud.pendingPhaseObserved",
           "equals": true
         },
         {
@@ -1940,7 +2017,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "活动绑定失败无需先观察到 Pending 阶段，因此不再要求 hud.pendingPhaseObserved。"
     },
     {
       "id": "native-hud-natural-hide-no-fault",
@@ -2471,22 +2549,22 @@
         "打勾图标异步加载可受控处于待定。"
       ],
       "steps": [
-        "使打勾图标加载处于待定状态。预期：业务状态仍为可读 Done，逻辑键保持 Done。检查：state.readable=true 且 hud.textKey=gksr.hud.sermonDone。",
-        "观察实际呈现。预期：整个 Done 呈现被抑制且 TMP 文本已清空。检查：hud.visible=false 且 hud.tmpTextCleared=true。",
-        "解除阻塞。预期：Done 与自有 Image 恢复。检查：icon.spriteLoadedAfterResolve=true 且 hud.visibleAfterRecovery=true。"
+        "使打勾图标加载处于待定。预期：业务状态仍为可读 Done，逻辑选定的业务键保持 Done。检查：state.readable=true 且 hud.selectedTextKeyBeforeResolve=gksr.hud.sermonDone。",
+        "记录待定阶段的实际呈现。预期：整个 Done 呈现被抑制且实际 TMP 文本已清空。检查：hud.visibleBeforeResolve=false 且 hud.tmpTextClearedBeforeResolve=true。",
+        "解除阻塞并记录恢复后阶段。预期：Done 与自有 Image 恢复。检查：icon.spriteLoadedAfterResolve=true 且 hud.visibleAfterRecovery=true。"
       ],
       "expect": [
         {
-          "observation": "icon.loadPending",
+          "observation": "icon.loadPendingBeforeResolve",
           "equals": true
         },
         {
-          "observation": "icon.spriteLoaded",
+          "observation": "icon.spriteLoadedBeforeResolve",
           "equals": false
         },
         {
-          "observation": "icon.dependentPresentationSuppressed",
-          "equals": true
+          "observation": "icon.ownImagePresentBeforeResolve",
+          "equals": false
         },
         {
           "observation": "icon.staleReadyShownWhilePending",
@@ -2497,20 +2575,20 @@
           "equals": true
         },
         {
-          "observation": "hud.textKey",
+          "observation": "hud.selectedTextKeyBeforeResolve",
           "equals": "gksr.hud.sermonDone"
         },
         {
-          "observation": "hud.visible",
+          "observation": "hud.visibleBeforeResolve",
           "equals": false
         },
         {
-          "observation": "hud.tmpTextCleared",
+          "observation": "hud.tmpTextClearedBeforeResolve",
           "equals": true
         },
         {
-          "observation": "icon.ownImagePresent",
-          "equals": false
+          "observation": "icon.dependentPresentationSuppressed",
+          "equals": true
         },
         {
           "observation": "notice.cornerHudDisplayedCount",
@@ -2533,7 +2611,7 @@
           "equals": true
         },
         {
-          "observation": "hud.textKeyAfterRecovery",
+          "observation": "hud.selectedTextKeyAfterRecovery",
           "equals": "gksr.hud.sermonDone"
         }
       ],
@@ -2541,7 +2619,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "待定阶段与恢复后阶段分开记录：待定快照使用 BeforeResolve 键，恢复后使用 AfterRecovery/AfterResolve 键，避免当前字段歧义。"
     },
     {
       "id": "icon-failed-suppresses-done-notice-once",
@@ -2549,24 +2628,24 @@
       "category": "icon-isolation",
       "prerequisites": [
         "布道日当天处于 Done 状态（原生 sermon_ready < 1）且两个门槛任务均 Completed。",
-        "测试设施可受控使打勾图标加载失败。"
+        "测试辅助可用：使打勾图标加载失败。"
       ],
       "steps": [
-        "注入打勾图标加载失败。预期：业务状态仍可读 Done，逻辑键保持 Done。检查：state.readable=true 且 hud.textKey=gksr.hud.sermonDone。",
-        "观察实际呈现。预期：整个 Done 呈现被抑制且 TMP 文本已清空。检查：hud.visible=false 且 hud.tmpTextCleared=true。",
-        "注入失败后重试。预期：角落文字类别消息显示一次且重试恢复。检查：notice.cornerHudDisplayedCount=1 且 icon.spriteLoadedAfterRetry=true。"
+        "注入打勾图标加载失败。预期：业务状态仍可读 Done，逻辑选定的业务键保持 Done。检查：state.readable=true 且 hud.selectedTextKeyBeforeRetry=gksr.hud.sermonDone。",
+        "记录重试前的实际呈现。预期：整个 Done 呈现被抑制且实际 TMP 文本已清空。检查：hud.visibleBeforeRetry=false 且 hud.tmpTextClearedBeforeRetry=true。",
+        "注入失败后重试并记录恢复后阶段。预期：角落文字类别消息显示一次且重试恢复。检查：notice.cornerHudDisplayedCount=1 且 icon.spriteLoadedAfterRetry=true。"
       ],
       "expect": [
         {
-          "observation": "icon.loadFailed",
+          "observation": "icon.loadFailedBeforeRetry",
           "equals": true
         },
         {
-          "observation": "icon.spriteLoaded",
+          "observation": "icon.spriteLoadedBeforeRetry",
           "equals": false
         },
         {
-          "observation": "icon.ownImagePresent",
+          "observation": "icon.ownImagePresentBeforeRetry",
           "equals": false
         },
         {
@@ -2584,15 +2663,15 @@
           }
         },
         {
-          "observation": "hud.textKey",
+          "observation": "hud.selectedTextKeyBeforeRetry",
           "equals": "gksr.hud.sermonDone"
         },
         {
-          "observation": "hud.visible",
+          "observation": "hud.visibleBeforeRetry",
           "equals": false
         },
         {
-          "observation": "hud.tmpTextCleared",
+          "observation": "hud.tmpTextClearedBeforeRetry",
           "equals": true
         },
         {
@@ -2620,7 +2699,7 @@
           "equals": true
         },
         {
-          "observation": "hud.textKeyAfterRecovery",
+          "observation": "hud.selectedTextKeyAfterRecovery",
           "equals": "gksr.hud.sermonDone"
         }
       ],
@@ -2628,7 +2707,8 @@
         "screenshot": true,
         "log": true,
         "measurement": true
-      }
+      },
+      "phaseNote": "失败待重试阶段与恢复后阶段分开记录，避免 loadFailed/spriteLoaded/hud.visible 的当前值歧义。"
     },
     {
       "id": "icon-irrelevant-failure-keeps-ready",

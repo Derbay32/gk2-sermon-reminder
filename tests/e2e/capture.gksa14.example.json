@@ -23,7 +23,8 @@
     "telemetry API; real facts may be collected by operator observation, logs, or an",
     "authorized future test facility.",
     "Every visual scenario requires a screenshot plus a measurement or an",
-    "explicit operatorObservation."
+    "explicit operatorObservation.",
+    "Phase-specific observation keys (BeforeResolve/BeforeRetry/AfterFaultRecovery/AfterRestore/Before/After) separate snapshots so a scenario never asserts contradictory current values."
   ],
   "environment": {
     "game.name": "Graveyard Keeper 2 (Steam Windows build)",
@@ -88,26 +89,28 @@
       "notice.autoDismiss": true
     },
     "icon-failed-suppresses-done-notice-once": {
-      "icon.loadFailed": true,
-      "icon.spriteLoaded": false,
-      "icon.ownImagePresent": false,
+      "icon.loadFailedBeforeRetry": true,
+      "icon.spriteLoadedBeforeRetry": false,
+      "icon.ownImagePresentBeforeRetry": false,
       "icon.dependentPresentationSuppressed": true,
       "state.readable": true,
       "state.sermonReadyValue": 0,
-      "hud.textKey": "gksr.hud.sermonDone",
-      "hud.visible": false,
-      "hud.tmpTextCleared": true,
+      "hud.selectedTextKeyBeforeRetry": "gksr.hud.sermonDone",
+      "hud.visibleBeforeRetry": false,
+      "hud.tmpTextClearedBeforeRetry": true,
       "notice.cornerHudDisplayedCount": 1,
       "notice.stateReadDisplayedCount": 0
     },
     "recovery-before-display-cancels-queue": {
       "notice.surfaceAvailableBefore": false,
       "notice.queuePendingBefore": true,
-      "notice.surfaceAvailableAfter": true,
-      "notice.queuePendingAfter": false,
-      "notice.queueCountAfter": 0,
-      "notice.totalDisplayedCount": 0,
-      "notice.stateReadBudgetConsumed": false
+      "notice.queueCountBefore": 1,
+      "notice.surfaceAvailableAfterFaultRecovery": false,
+      "notice.queuePendingAfterFaultRecovery": false,
+      "notice.queueCountAfterFaultRecovery": 0,
+      "notice.surfaceAvailableAfterRestore": true,
+      "notice.stateReadBudgetConsumed": false,
+      "notice.totalDisplayedCount": 0
     },
     "independent-category-budgets": {
       "notice.stateReadDisplayedCount": 1,
@@ -115,6 +118,18 @@
       "notice.totalDisplayedCount": 2,
       "notice.causalOrderRespected": true,
       "notice.cornerEvaluatedOnlyAfterStateRecovered": true
+    },
+    "normal-load-hud-pending-no-fault": {
+      "hud.pendingBefore": true,
+      "hud.liveNativeHudPresentBefore": false,
+      "hud.visibleBefore": false,
+      "fault.reportedBefore": false,
+      "hud.pendingAfter": false,
+      "hud.liveNativeHudPresentAfter": true,
+      "hud.displayEligibleAfter": true,
+      "hud.nativeHudAppearedAfterLoad": true,
+      "fault.reported": false,
+      "notice.totalDisplayedCount": 0
     }
   },
   "results": [
