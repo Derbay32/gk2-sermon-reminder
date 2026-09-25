@@ -1,0 +1,1963 @@
+{
+  "manifestVersion": 1,
+  "kind": "gksa11-e2e-manifest",
+  "ticket": "GKSA-11",
+  "title": "布道三态文字（Ready/Done）与完成图标：真实游戏 E2E 场景清单",
+  "status": "requirements-not-results",
+  "notes": [
+    "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
+    "本票交付布道日当天的 Ready 文字、已完成本周布道的 Done 文字，以及 Done 状态下原生 HUD 内的完成图标；非布道日倒计时沿用 GKSA-10 不变。",
+    "本票复用 GKSA-10 的解锁门槛、生命周期、原生字体与画布缩放语义；不得改动原生进度。",
+    "解锁门槛为两个精确任务 ID 均为 Completed：19_base_ceremony_church 与 19_base_ceremony_sermon。",
+    "布道日判定复用单一运行时定义 T = ConstDef.Get(\"day_wrath\").IntValue，观察字段为 game.sermonWeekday，且每个场景的 save.sermonWeekday 必须等于该环境字段；绝不写死 T。",
+    "绝对日模型：EnvironmentData.Day 为从 1 开始的正整数；EnvironmentData.CurrentDayNumber 只是星期编号，满足 dayOfWeek == ((absoluteDay - 1) % 6) + 1；delta = (T - 当前星期编号 + 6) % 6。",
+    "布道日当天（delta==0）由原生访问器 playerData.GetRes(\"sermon_ready\") 判定：>=1 显示 Ready，<1 显示 Done。该访问器缺键时文档默认值为 0；不得复制状态、不得改用 CanStartCraft 或交互探测、不得要求检查私有字段或键是否存在。",
+    "原生玩家或存档缺失、读取异常、原生浮点非有限值均视为不可读，隐藏而不显示 Done；不得沿用旧判定。",
+    "开始布道消耗机会后必须在下一次 LateUpdate（下一帧）内更新为 Done，且发生在动画/奖励结束之前；不保留自有持久状态、不等待动画结束。Done 在该日剩余时间内保持不变。",
+    "已布道与错过布道两种跨日都回到 delta=5（下一次布道）的倒计时，包括 T=6 的周期回绕；非布道日残留的原生 ready 标志不得保持 Ready。",
+    "载入布道前旧存档应恢复 Ready；载入布道后存档应恢复 Done。",
+    "同一角落同一时刻只允许一个文字状态；本票不实现弹窗或信标。",
+    "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e（布道提醒模组：文案清单与人工定稿）为准：gksr.hud.sermonReminder（zh-CN 布道日！/ en Sermon Day!）、gksr.hud.sermonDone（zh-CN 已完成本周布道！/ en This week’s sermon is complete!）；既有倒计时键保持不变，原始 zh_cn/en/其它回退 en 语义保留。",
+    "图标来源：游戏 Addressables 初始化后请求 Sprite GUID 4d1c67d72f3e6c8419b24e8c275d101e（catalog 静态映射 btn_i-check.png 已在静态核对中确认，不代表运行时证明）。",
+    "图标要求：Done 文字前挂一个自有 UnityEngine.UI.Image，使用原 Sprite 颜色与白色 Image tint，宽高比 20:18，尺寸基于实际文字行高并随原生画布缩放（不得写死屏幕像素高度），raycastTarget=false，仅在 Done 状态预留图标空间。",
+    "图标加载生命周期：保持单一异步句柄，不做逐帧请求、不同步 WaitForCompletion；为满足 Ready→Done 的即时正常呈现，允许在布道日当天（Ready 或 Done）预加载并保留该单一自有 Sprite 句柄，但只有 Done 状态可以创建/显示 Image 或预留其布局空间。在非布道日倒计时、关闭门槛、不可读状态、退出、关闭或 HUD 重建时释放；重建后允许重新获取，单飞按当前所有权适用。退出存档或 HUD 重建时清理并销毁自有 Image、在不再使用时释放自有 Addressables 引用；退出/重绑后延迟完成不得复活旧 UI。不销毁或修改共享 Sprite/材质；不将原生 Sprite 复制进仓库/发行包，也不使用 Unicode 或替代图回退。",
+    "图标加载失败仅抑制依赖它的 Done 图标显示，不影响可读业务状态与无关的倒计时/Ready，且保持可恢复（可重试）。即时首帧 Done 呈现检查针对资源健康情形；待定/失败资源情形另行要求无陈旧 Ready/Done 呈现、业务状态正确且可后续恢复。这些均为生命周期细节，不构成等待动画/奖励或放宽正常切换时序的许可。",
+    "完整用户故障通知属于 GKSA-14/GKSA-15，本票不实现。",
+    "验收边界为 CachyOS x86-64 上的 Steam Proton、真实游戏、完整加载模组。",
+    "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
+    "布局与视觉结论必须附带实测测量值或操作者明确观察记录，并附截图；仅日志不能作为布局证据。",
+    "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
+    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
+    "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：布道后跨日使用 after-sermon-day 模式，要求跨日前星期编号 = 观察到的 T、绝对日 +1、绝对日与星期编号自洽、afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+  ],
+  "baselineCommit": "4aac02abf7da16d3659de07e69ca4f2ad3d25ebb",
+  "specRefs": [
+    "GKSA-1",
+    "GKSA-3",
+    "GKSA-4",
+    "GKSA-9",
+    "GKSA-10",
+    "GKSA-11"
+  ],
+  "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
+  "iconSource": {
+    "spriteGuid": "4d1c67d72f3e6c8419b24e8c275d101e",
+    "catalogAsset": "btn_i-check.png",
+    "note": "catalog 静态映射已在静态核对中确认；运行时仅要求请求该 GUID 并返回 Sprite，静态映射本身不构成运行时证明。"
+  },
+  "finalText": {
+    "gksr.hud.sermonReminder": {
+      "zh-CN": "布道日！",
+      "en": "Sermon Day!"
+    },
+    "gksr.hud.sermonDone": {
+      "zh-CN": "已完成本周布道！",
+      "en": "This week’s sermon is complete!"
+    },
+    "gksr.hud.sermonCountdown.one": {
+      "zh-CN": "明天是布道日！",
+      "en": "Sermon Day is Tomorrow!"
+    },
+    "gksr.hud.sermonCountdown.other": {
+      "zh-CN": "距离下一次布道日还有{days}天。",
+      "en": "{days} days before the Sermon Day."
+    }
+  },
+  "languageMapping": {
+    "catalogLabelToRawGameLanguageId": {
+      "zh-CN": "zh_cn",
+      "en": "en"
+    },
+    "knownRawGameLanguageIds": [
+      "zh_cn",
+      "en"
+    ],
+    "note": "观察字段 language.active 记录游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+  },
+  "observationVocabulary": {
+    "save.churchUnlocked": "bool: 任务 19_base_ceremony_church 是否 Completed",
+    "save.tutorialCompleted": "bool: 任务 19_base_ceremony_sermon 是否 Completed",
+    "save.isSermonDay": "bool: 当前游戏日是否为布道日",
+    "save.dayAdvanced": "bool: 操作期间游戏日期是否变化",
+    "save.dayOfWeek": "int: 星期编号，来自 EnvironmentData.CurrentDayNumber = day % 6（余数 0 记为 6），满足 dayOfWeek == ((absoluteDay - 1) % 6) + 1；只是星期，不是绝对日",
+    "save.priorDayOfWeek": "int: 跨日或周期边界前一天的星期编号",
+    "save.absoluteDay": "int: 绝对游戏日 EnvironmentData.Day，从 1 开始的正整数",
+    "save.absoluteDayBefore": "int: 跨日前的绝对游戏日，正整数",
+    "save.absoluteDayAfter": "int: 跨日后的绝对游戏日，等于 before + 1",
+    "save.sermonWeekday": "int: 实际观察到的布道日星期编号，必须等于环境字段 game.sermonWeekday（ConstDef.Get(\"day_wrath\").IntValue，运行时单一定义，不得改写）",
+    "save.daysInWeek": "int: EnvironmentData.DAYS_IN_WEEK 常量值，Build25509347 为 6",
+    "save.loadedBeforeSermonSave": "bool: 是否载入了布道日之前（ready>=1）的旧存档",
+    "save.loadedAfterSermonSave": "bool: 是否载入了布道日之后（ready<1）的存档",
+    "state.readable": "bool: 必要业务状态是否可可靠读取",
+    "state.sermonReadyValue": "number: 原生 playerData.GetRes(\"sermon_ready\") 的实际数值；>=1 为 Ready，<1 为 Done；缺键时文档默认 0",
+    "state.sermonReadyValueBefore": "number: 连续观察中前一状态的原生 sermon_ready 数值",
+    "state.sermonReadyValueAfter": "number: 连续观察中后一状态的原生 sermon_ready 数值",
+    "state.readyKeyAbsent": "bool: 原生 sermon_ready 键在本次观察中是否缺失（缺失按文档默认 0 处理，不额外要求键存在性检查）",
+    "state.nativeReadyNonFinite": "bool: 原生 sermon_ready 数值是否为非有限值（NaN/Infinity），属于不可读",
+    "state.staleNativeReadyFlag": "bool: 非布道日上是否仍残留原生 ready 标志",
+    "state.missingPlayerOrSave": "bool: 是否缺失原生玩家或存档（不可读）",
+    "state.readException": "bool: 原生读取是否抛出异常（不可读）",
+    "state.nativeProgressModified": "bool: 是否修改了原生进度",
+    "state.progressWriteCount": "int: 模组对原生进度写入的调用次数（必须为 0）",
+    "state.ownPersistenceWritten": "bool: 是否写入模组自有持久状态",
+    "hud.visible": "bool: 角落文字当前是否可见",
+    "hud.text": "string: 角落文字当前显示的完整内容",
+    "hud.textKey": "string: 当前选用的文案键",
+    "hud.countdownDays": "int: 非布道日倒计时显示的整数天数",
+    "hud.nonSermonCountdownShown": "bool: 当前是否显示非布道日倒计时",
+    "hud.instanceCount": "int: 模组自有的角落显示实例数量",
+    "hud.cornerTextInstanceCount": "int: 同一角落同时存在的文字状态数量（必须为 1）",
+    "hud.readyAndDoneCoexist": "bool: Ready 与 Done 是否同时存在（必须为 false）",
+    "hud.popupShown": "bool: 是否出现弹窗（本票不实现）",
+    "hud.beaconShown": "bool: 是否出现信标（本票不实现）",
+    "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
+    "hud.textBefore": "string: 连续观察中的前一文字内容",
+    "hud.textKeyBefore": "string: 连续观察中的前一文案键",
+    "hud.textAfter": "string: 连续观察中的后一文字内容",
+    "hud.textKeyAfter": "string: 连续观察中的后一文案键",
+    "timing.consumptionFrame": "int: 观察到开始布道消耗机会的帧号",
+    "timing.doneShownFrame": "int: Done 首次显示的帧号",
+    "timing.animationEndFrame": "int: 动画/奖励结束的帧号",
+    "timing.framesUntilDone": "int: 从消耗帧到 Done 显示帧的差值，必须为 1（下一帧/firstLateUpdate）",
+    "timing.animationFinishedWhenDoneShown": "bool: Done 显示时动画是否已结束（必须为 false）",
+    "timing.prematureDoneBeforeConsumption": "bool: 消耗前是否提前显示 Done（必须为 false）",
+    "timing.waitedForAnimationEnd": "bool: 是否等待动画结束后才更新（必须为 false）",
+    "icon.addressablesReady": "bool: 游戏 Addressables 是否已初始化",
+    "icon.requestedGuid": "string: 实际请求的 Sprite GUID",
+    "icon.spriteLoaded": "bool: 请求是否返回可用 Sprite",
+    "icon.loadPending": "bool: 图标异步加载是否处于进行中（尚未完成）",
+    "icon.ownImagePresent": "bool: 模组自有的 UnityEngine.UI.Image 是否存在",
+    "icon.underNativeHudBeforeDoneText": "bool: 自有 Image 是否位于原生 HUD 内且排在 Done 文字之前",
+    "icon.spriteColorCopied": "bool: 是否使用原 Sprite 颜色",
+    "icon.tintWhite": "bool: Image tint 是否为白色",
+    "icon.raycastTarget": "bool: raycastTarget 是否为 false",
+    "icon.heightBasedOnTextLineHeight": "bool: 图标高度是否基于实际文字行高",
+    "icon.uiScaleFollowsNative": "bool: 图标是否随原生画布缩放",
+    "icon.hardcodedPixelHeightUsed": "bool: 是否写死了屏幕像素高度（必须为 false）",
+    "icon.measuredWidthPx": "number: 实测图标宽度",
+    "icon.measuredHeightPx": "number: 实测图标高度",
+    "icon.textLineHeightPx": "number: 实测原生文字行高",
+    "icon.spaceReservedWhenCountdown": "bool: 非布道日倒计时状态是否预留了图标空间（必须为 false）",
+    "icon.spaceReservedWhenReady": "bool: Ready 状态是否预留了图标空间（必须为 false）",
+    "icon.spaceReservedWhenDone": "bool: Done 状态是否预留了图标空间（必须为 true）",
+    "icon.phantomGapCountdown": "bool: 倒计时状态是否出现图标空位（必须为 false）",
+    "icon.phantomGapReady": "bool: Ready 状态是否出现图标空位（必须为 false）",
+    "icon.asyncHandleCount": "int: 当前所有权下保持的异步句柄数量；单飞即在加载/使用期间为 1，不在使用时为 0，绝不 >1",
+    "icon.perFrameRequestsIssued": "int: 是否逐帧重复请求（必须为 0）",
+    "icon.syncWaitForCompletionUsed": "bool: 是否使用同步 WaitForCompletion（必须为 false）",
+    "icon.exitWhileLoading": "bool: 是否在加载未完成时退出存档",
+    "icon.imageAfterExit": "int: 退出后残留的自有 Image 数量（必须为 0）",
+    "icon.addressableRefReleased": "bool: 自有 Addressables 引用是否已释放",
+    "icon.uiResurrectedAfterExit": "bool: 延迟完成是否复活了旧 UI（必须为 false）",
+    "icon.hudRebuilt": "bool: 是否触发原生 HUD 重建",
+    "icon.oldImageDestroyed": "bool: 重建时是否销毁了旧自有 Image",
+    "icon.imageInstanceCountAfterRebuild": "int: 重建后自有 Image 实例数量（必须为 1）",
+    "icon.leakedImageCount": "int: 重建后泄漏的自有 Image 数量（必须为 0）",
+    "icon.addressableReferencesHeld": "int: HUD 重建后仍持有的自有 Addressables 引用数量（根据当前所有权单飞；可为 0 或 1，绝不 >1）",
+    "icon.loadFailed": "bool: 图标加载是否失败",
+    "icon.retryAttemptedAfterFailure": "bool: 失败后是否进行了重试",
+    "icon.spriteLoadedAfterRetry": "bool: 重试后是否成功返回 Sprite",
+    "icon.imagePresentAfterRetry": "bool: 重试成功后自有 Image 是否恢复",
+    "icon.staleReadyShownWhilePending": "bool: 图标加载进行中时是否仍显示陈旧的 Ready（必须为 false）",
+    "icon.spriteLoadedAfterResolve": "bool: 待定加载完成后是否成功返回 Sprite",
+    "icon.imagePresentAfterResolve": "bool: 待定加载完成后自有 Image 是否出现",
+    "icon.sharedSpriteUnmodified": "bool: 共享 Sprite 是否未被修改",
+    "icon.sharedMaterialUnmodified": "bool: 共享材质是否未被修改",
+    "icon.spriteCopiedIntoDistribution": "bool: 是否将原生 Sprite 复制进仓库/发行包（必须为 false）",
+    "icon.alternateImageFallbackUsed": "bool: 是否使用 Unicode 或替代图回退（必须为 false）",
+    "language.active": "string: 游戏原始语言标识，例如 zh_cn、en；使用 zh_cn 而非文案目录标签 zh-CN",
+    "language.activeBefore": "string: 语言切换前的原始语言标识",
+    "language.activeAfter": "string: 语言切换后的原始语言标识",
+    "language.hudRefreshedWithoutReload": "bool: 是否在不重载存档的情况下刷新了文字",
+    "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定",
+    "fault.reported": "bool: 是否上报了故障",
+    "fault.fullUserNotificationDeferred": "bool: 是否将完整用户故障通知推迟到 GKSA-14/GKSA-15",
+    "plugin.loaded": "bool: 插件是否在真实 Proton 环境中实际加载",
+    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载"
+  },
+  "validation": {
+    "supportedCaptureVersions": [
+      1
+    ],
+    "requireLoadEvidenceLog": true,
+    "measurementObservationPaths": [
+      "icon.measuredWidthPx",
+      "icon.measuredHeightPx",
+      "icon.textLineHeightPx",
+      "layout.measurement",
+      "layout.operatorObservation"
+    ],
+    "requiredEnvironmentPaths": [
+      {
+        "path": "game.sermonWeekday",
+        "type": "weekday-int"
+      },
+      {
+        "path": "game.name",
+        "type": "string"
+      },
+      {
+        "path": "game.version",
+        "type": "string"
+      },
+      {
+        "path": "game.buildId",
+        "type": "string"
+      },
+      {
+        "path": "game.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "proton.version",
+        "type": "string"
+      },
+      {
+        "path": "proton.buildId",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.version",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "framework.name",
+        "type": "string"
+      },
+      {
+        "path": "framework.version",
+        "type": "string"
+      },
+      {
+        "path": "framework.commit",
+        "type": "string"
+      },
+      {
+        "path": "plugin.version",
+        "type": "string"
+      },
+      {
+        "path": "plugin.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "plugin.loaded",
+        "type": "boolean",
+        "equals": true
+      },
+      {
+        "path": "resolution.width",
+        "type": "positive-int"
+      },
+      {
+        "path": "resolution.height",
+        "type": "positive-int"
+      },
+      {
+        "path": "uiScale",
+        "type": "positive-number"
+      },
+      {
+        "path": "inputDevices",
+        "type": "nonempty-string-array"
+      },
+      {
+        "path": "os",
+        "type": "string"
+      },
+      {
+        "path": "capturedAt",
+        "type": "timestamp"
+      },
+      {
+        "path": "build.sourceCommit",
+        "type": "git-commit"
+      },
+      {
+        "path": "build.command",
+        "type": "string"
+      },
+      {
+        "path": "build.sdkVersion",
+        "type": "string"
+      },
+      {
+        "path": "build.artifactSha256",
+        "type": "sha256"
+      }
+    ],
+    "buildPluginHashConsistency": [
+      [
+        "build.artifactSha256",
+        "plugin.sha256"
+      ]
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "gates-church-quest-incomplete",
+      "title": "教堂开启任务未完成时不显示 Ready 或 Done",
+      "category": "gating",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 不是 Completed。",
+        "本场景验证 GKSA-11 复用 GKSA-10 的解锁门槛。"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组并载入该存档。",
+        "等待存档加载完成并进入可操作画面。",
+        "记录两个门槛任务的完成状态与角落文字区域。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": false
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "gates-sermon-quest-incomplete",
+      "title": "首次布道教学任务未完成时不显示 Ready 或 Done",
+      "category": "gating",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 为 Completed。",
+        "当前存档中任务 19_base_ceremony_sermon 不是 Completed。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录两个门槛任务的完成状态与角落文字区域。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": false
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "ready-zh",
+      "title": "布道日当天原生 sermon_ready>=1 显示简体中文 Ready 文案",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值与角落文字。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "hud.cornerTextInstanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "icon.spaceReservedWhenReady",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "ready-en",
+      "title": "布道日当天原生 sermon_ready>=1 显示英文 Ready 文案",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为英语。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值与角落文字。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "language.active",
+          "equals": "en"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "en"
+        },
+        {
+          "observation": "hud.cornerTextInstanceCount",
+          "equals": 1
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "done-zh",
+      "title": "布道日当天原生 sermon_ready<1 显示简体中文 Done 文案",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "hud.cornerTextInstanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "icon.spaceReservedWhenDone",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "done-en",
+      "title": "布道日当天原生 sermon_ready<1 显示英文 Done 文案",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为英语。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "language.active",
+          "equals": "en"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "en"
+        },
+        {
+          "observation": "hud.cornerTextInstanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "icon.spaceReservedWhenDone",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "native-ready-accessor-default-zero",
+      "title": "原生 sermon_ready 键缺失时按文档默认 0 判定为 Done",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生存档中不存在 sermon_ready 键。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "确认键缺失（不要求模组做键存在性检查或复制状态）。",
+        "观察角落文字是否按默认 0 显示 Done。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.readyKeyAbsent",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "done-persists-same-date",
+      "title": "同一天内 Done 状态在剩余时间保持不变",
+      "category": "sermon-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，开始布道后原生 sermon_ready < 1。"
+      ],
+      "steps": [
+        "记录第一次观察的绝对日与角落文字。",
+        "在同一天内推进游戏时间。",
+        "记录第二次观察的绝对日与角落文字。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "save.absoluteDayBefore",
+          "equalsObservation": "save.absoluteDayAfter"
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equalsObservation": "hud.textKeyAfter"
+        },
+        {
+          "observation": "hud.textBefore",
+          "equalsObservation": "hud.textAfter"
+        },
+        {
+          "observation": "hud.textAfter",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "consumption-before-animation-end",
+      "title": "开始布道消耗机会后下一帧内显示 Done 且早于动画结束",
+      "category": "timing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生 sermon_ready >= 1（Ready 状态）。",
+        "可记录帧号与动画/奖励结束帧。"
+      ],
+      "steps": [
+        "记录开始布道消耗机会的帧号 timing.consumptionFrame。",
+        "记录 Done 首次显示的帧号 timing.doneShownFrame 与动画结束帧 timing.animationEndFrame。",
+        "确认消耗前未提前显示 Done，且 Done 显示时动画尚未结束。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "timing.doneShownFrame",
+          "greaterThanObservation": "timing.consumptionFrame"
+        },
+        {
+          "observation": "timing.animationEndFrame",
+          "greaterThanObservation": "timing.doneShownFrame"
+        },
+        {
+          "observation": "timing.framesUntilDone",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "timing.animationFinishedWhenDoneShown",
+          "equals": false
+        },
+        {
+          "observation": "timing.prematureDoneBeforeConsumption",
+          "equals": false
+        },
+        {
+          "observation": "timing.waitedForAnimationEnd",
+          "equals": false
+        },
+        {
+          "observation": "state.ownPersistenceWritten",
+          "equals": false
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "next-day-after-done",
+      "title": "已布道跨日后回到下一次布道的 5 天倒计时",
+      "category": "cross-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于 Done 状态。",
+        "跨日前星期编号等于观察到的 T。"
+      ],
+      "steps": [
+        "记录跨日前 Done 文字与跨日后绝对日、星期编号、倒计时与文字。",
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "after-sermon-day",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "countdownAfter": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.textBefore",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "icon.spaceReservedWhenCountdown",
+          "equals": false
+        },
+        {
+          "observation": "icon.phantomGapCountdown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "next-day-after-missed",
+      "title": "错过布道跨日后同样回到下一次布道的 5 天倒计时",
+      "category": "cross-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天始终处于 Ready 状态（未开始布道）。",
+        "跨日前星期编号等于观察到的 T。"
+      ],
+      "steps": [
+        "记录跨日前 Ready 文字与跨日后绝对日、星期编号、倒计时与文字。",
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "after-sermon-day",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "countdownAfter": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textBefore",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "six-day-wrap-after-sermon",
+      "title": "T=6 周期回绕后仍得到下一次布道的 5 天倒计时",
+      "category": "cross-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "观察到的布道日星期编号 T 使得跨日前为周 6、跨日后为周 1。",
+        "布道日当天处于 Done 或 Ready 状态。"
+      ],
+      "steps": [
+        "记录跨日前绝对日与星期编号（应为周期末）、跨日后绝对日与星期编号（应为周 1）。",
+        "记录跨日后倒计时与文字，确认 afterDelta = 周长度 - 1。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "after-sermon-day",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "countdownAfter": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.daysInWeek",
+          "equals": 6
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "equals": 1
+        },
+        {
+          "observation": "save.dayAdvanced",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "stale-ready-flag-nonsermon-day",
+      "title": "非布道日残留原生 ready 标志不得保持 Ready",
+      "category": "cross-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "刚跨过布道日进入非布道日，原生 ready 标志仍 >= 1。"
+      ],
+      "steps": [
+        "记录当前星期编号、绝对日与原生 ready 数值。",
+        "确认角落显示的是非布道日倒计时而不是 Ready。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "multi-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "countdown": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "state.staleNativeReadyFlag",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "load-before-sermon-save-ready",
+      "title": "载入布道前旧存档恢复 Ready",
+      "category": "lifecycle",
+      "prerequisites": [
+        "同一进程可载入布道日之前（ready>=1）的旧存档。"
+      ],
+      "steps": [
+        "载入布道日之前的旧存档并等待加载完成。",
+        "记录原生 ready 数值与角落文字。"
+      ],
+      "expect": [
+        {
+          "observation": "save.loadedBeforeSermonSave",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValueBefore",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textBefore",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "load-after-sermon-save-done",
+      "title": "载入布道后存档恢复 Done",
+      "category": "lifecycle",
+      "prerequisites": [
+        "同一进程可载入布道日之后（ready<1）的存档。"
+      ],
+      "steps": [
+        "载入布道日之后的存档并等待加载完成。",
+        "记录原生 ready 数值与角落文字。"
+      ],
+      "expect": [
+        {
+          "observation": "save.loadedAfterSermonSave",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValueAfter",
+          "numberRange": {
+            "maxExclusive": 1
+          }
+        },
+        {
+          "observation": "hud.textKeyAfter",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.textAfter",
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "exclusive-corner-state",
+      "title": "同一角落同一时刻只有一个文字状态且无弹窗信标",
+      "category": "state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于 Ready 状态。"
+      ],
+      "steps": [
+        "载入存档并等待加载完成。",
+        "统计角落文字状态数量并确认没有同时存在 Ready 与 Done。",
+        "确认未出现弹窗或信标。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "hud.cornerTextInstanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "hud.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "hud.readyAndDoneCoexist",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.popupShown",
+          "equals": false
+        },
+        {
+          "observation": "hud.beaconShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-addressables-load",
+      "title": "Addressables 初始化后请求图标 GUID 并返回 Sprite",
+      "category": "icon",
+      "prerequisites": [
+        "Done 状态且原生 HUD 可用。",
+        "游戏 Addressables 已初始化。"
+      ],
+      "steps": [
+        "确认 Addressables 已初始化。",
+        "记录请求的 Sprite GUID 与实际是否返回可用 Sprite。",
+        "确认自有 Image 已挂载。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.addressablesReady",
+          "equals": true
+        },
+        {
+          "observation": "icon.requestedGuid",
+          "equals": "4d1c67d72f3e6c8419b24e8c275d101e"
+        },
+        {
+          "observation": "icon.spriteLoaded",
+          "equals": true
+        },
+        {
+          "observation": "icon.ownImagePresent",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-visual-style",
+      "title": "Done 图标颜色、20:18 比例、行高尺寸与 UI 缩放",
+      "category": "icon",
+      "prerequisites": [
+        "Done 状态且图标已成功加载。",
+        "可记录实测宽高与原生文字行高。"
+      ],
+      "steps": [
+        "测量图标宽度、高度与原生文字行高。",
+        "确认使用原 Sprite 颜色、白色 tint、无 raycastTarget。",
+        "确认高度基于行高且随原生画布缩放。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.ownImagePresent",
+          "equals": true
+        },
+        {
+          "observation": "icon.underNativeHudBeforeDoneText",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteColorCopied",
+          "equals": true
+        },
+        {
+          "observation": "icon.tintWhite",
+          "equals": true
+        },
+        {
+          "observation": "icon.raycastTarget",
+          "equals": false
+        },
+        {
+          "observation": "icon.heightBasedOnTextLineHeight",
+          "equals": true
+        },
+        {
+          "observation": "icon.uiScaleFollowsNative",
+          "equals": true
+        },
+        {
+          "observation": "icon.hardcodedPixelHeightUsed",
+          "equals": false
+        },
+        {
+          "observation": "icon.measuredWidthPx",
+          "measuredRatio": {
+            "numerator": "icon.measuredWidthPx",
+            "denominator": "icon.measuredHeightPx"
+          }
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "icon-space-per-state",
+      "title": "仅在 Done 状态预留图标空间且倒计时与 Ready 无空位",
+      "category": "icon",
+      "prerequisites": [
+        "可分别观察倒计时、Ready 与 Done 三种状态。"
+      ],
+      "steps": [
+        "在倒计时状态确认未预留图标空间且无空位。",
+        "在 Ready 状态确认未预留图标空间且无空位。",
+        "在 Done 状态确认预留了图标空间。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.spaceReservedWhenCountdown",
+          "equals": false
+        },
+        {
+          "observation": "icon.phantomGapCountdown",
+          "equals": false
+        },
+        {
+          "observation": "icon.spaceReservedWhenReady",
+          "equals": false
+        },
+        {
+          "observation": "icon.phantomGapReady",
+          "equals": false
+        },
+        {
+          "observation": "icon.spaceReservedWhenDone",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-single-flight-request",
+      "title": "图标加载保持单一异步句柄且不逐帧请求不同步等待",
+      "category": "icon",
+      "prerequisites": [
+        "Done 状态且图标正在加载或已使用。"
+      ],
+      "steps": [
+        "记录加载/使用期间的异步句柄数量。",
+        "确认未逐帧重复请求且未使用同步 WaitForCompletion。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.addressablesReady",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteLoaded",
+          "equals": true
+        },
+        {
+          "observation": "icon.asyncHandleCount",
+          "equals": 1
+        },
+        {
+          "observation": "icon.perFrameRequestsIssued",
+          "equals": 0
+        },
+        {
+          "observation": "icon.syncWaitForCompletionUsed",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-exit-while-loading",
+      "title": "加载未完成时退出存档清理 Image 并释放引用且不复活旧 UI",
+      "category": "icon-lifecycle",
+      "prerequisites": [
+        "Done 状态且图标处于加载中。",
+        "可记录退出后残留对象与引用状态。"
+      ],
+      "steps": [
+        "在图标加载未完成时退出存档返回主菜单。",
+        "等待可能的延迟完成后统计残留自有 Image 与引用。",
+        "确认旧 UI 未被复活。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.exitWhileLoading",
+          "equals": true
+        },
+        {
+          "observation": "icon.imageAfterExit",
+          "equals": 0
+        },
+        {
+          "observation": "icon.addressableRefReleased",
+          "equals": true
+        },
+        {
+          "observation": "icon.uiResurrectedAfterExit",
+          "equals": false
+        },
+        {
+          "observation": "hud.instanceCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.trackedResourcesReleased",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-hud-rebuild-cleanup",
+      "title": "HUD 重建后销毁旧 Image 且仅保留一个实例并持有一个引用",
+      "category": "icon-lifecycle",
+      "prerequisites": [
+        "Done 状态且图标已成功加载。",
+        "可触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。"
+      ],
+      "steps": [
+        "触发原生 HUD 重建。",
+        "统计重建后自有 Image 实例数量与泄漏数量。",
+        "确认仍持有的自有 Addressables 引用数量。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.hudRebuilt",
+          "equals": true
+        },
+        {
+          "observation": "icon.oldImageDestroyed",
+          "equals": true
+        },
+        {
+          "observation": "icon.imageInstanceCountAfterRebuild",
+          "equals": 1
+        },
+        {
+          "observation": "icon.leakedImageCount",
+          "equals": 0
+        },
+        {
+          "observation": "icon.addressableReferencesHeld",
+          "numberRange": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "observation": "icon.asyncHandleCount",
+          "numberRange": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-load-failure-isolation-retry",
+      "title": "图标加载失败仅抑制 Done 图标且可重试恢复",
+      "category": "icon-fault",
+      "prerequisites": [
+        "Done 状态且可受控使图标加载失败。"
+      ],
+      "steps": [
+        "注入图标加载失败并观察 Done 文字与业务状态是否保持可读。",
+        "确认仅抑制依赖图标的显示且不影响无关倒计时/Ready。",
+        "解除故障后确认重试成功并恢复图标。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.loadFailed",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteLoaded",
+          "equals": false
+        },
+        {
+          "observation": "icon.ownImagePresent",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        },
+        {
+          "observation": "fault.reported",
+          "equals": false
+        },
+        {
+          "observation": "fault.fullUserNotificationDeferred",
+          "equals": true
+        },
+        {
+          "observation": "icon.retryAttemptedAfterFailure",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteLoadedAfterRetry",
+          "equals": true
+        },
+        {
+          "observation": "icon.imagePresentAfterRetry",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "icon-load-pending-no-stale-state",
+      "title": "图标加载待定期间不显示陈旧 Ready/Done 且完成后恢复",
+      "category": "icon-fault",
+      "prerequisites": [
+        "Done 状态且图标异步加载可受控处于待定。"
+      ],
+      "steps": [
+        "使图标加载处于待定状态。",
+        "确认业务状态仍正确且无陈旧 Ready/Done 呈现。",
+        "解除阻塞后确认加载完成并显示图标。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.addressablesReady",
+          "equals": true
+        },
+        {
+          "observation": "icon.loadPending",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteLoaded",
+          "equals": false
+        },
+        {
+          "observation": "icon.staleReadyShownWhilePending",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "hud.textKey",
+          "equals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "icon.spriteLoadedAfterResolve",
+          "equals": true
+        },
+        {
+          "observation": "icon.imagePresentAfterResolve",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "native-state-not-mutated",
+      "title": "不修改原生进度与共享资源且不复制 Sprite",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "Done 状态且图标已加载或已尝试加载。"
+      ],
+      "steps": [
+        "确认共享 Sprite 与材质未被修改。",
+        "统计模组对原生进度的写入次数与自有持久化。",
+        "确认未将原生 Sprite 复制进发行包且未使用替代图回退。"
+      ],
+      "expect": [
+        {
+          "observation": "icon.sharedSpriteUnmodified",
+          "equals": true
+        },
+        {
+          "observation": "icon.sharedMaterialUnmodified",
+          "equals": true
+        },
+        {
+          "observation": "icon.spriteCopiedIntoDistribution",
+          "equals": false
+        },
+        {
+          "observation": "icon.alternateImageFallbackUsed",
+          "equals": false
+        },
+        {
+          "observation": "state.nativeProgressModified",
+          "equals": false
+        },
+        {
+          "observation": "state.progressWriteCount",
+          "equals": 0
+        },
+        {
+          "observation": "state.ownPersistenceWritten",
+          "equals": false
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "unreadable-player-hidden-not-done",
+      "title": "玩家或存档缺失或读取异常时隐藏且不显示 Done",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使玩家或存档缺失、或使读取抛出异常。"
+      ],
+      "steps": [
+        "注入玩家/存档缺失或读取异常。",
+        "观察角落文字是否隐藏以及是否显示 Done。"
+      ],
+      "expect": [
+        {
+          "observation": "state.missingPlayerOrSave",
+          "equals": true
+        },
+        {
+          "observation": "state.readException",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "nonfinite-native-ready-unreadable",
+      "title": "原生 ready 浮点为非有限值时视为不可读而非 Done",
+      "category": "fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生 sermon_ready 返回非有限值。"
+      ],
+      "steps": [
+        "注入原生 ready 非有限值。",
+        "观察角落文字是否隐藏且未显示 Done。"
+      ],
+      "expect": [
+        {
+          "observation": "state.nativeReadyNonFinite",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textKey",
+          "notEquals": "gksr.hud.sermonDone"
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "language-change-refresh",
+      "title": "原生语言切换后刷新文字而不重载存档",
+      "category": "localization",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于 Ready 状态。",
+        "可在运行中切换原生语言。"
+      ],
+      "steps": [
+        "以简体中文观察 Ready 文字。",
+        "切换游戏语言为英语。",
+        "再次观察 Ready 文字是否在未重载存档的情况下刷新。"
+      ],
+      "expect": [
+        {
+          "observation": "language.activeBefore",
+          "equals": "zh_cn"
+        },
+        {
+          "observation": "hud.textKeyBefore",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textBefore",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN"
+        },
+        {
+          "observation": "language.activeAfter",
+          "equals": "en"
+        },
+        {
+          "observation": "hud.textKeyAfter",
+          "equals": "gksr.hud.sermonReminder"
+        },
+        {
+          "observation": "hud.textAfter",
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "en"
+        },
+        {
+          "observation": "language.hudRefreshedWithoutReload",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-retained-one-day",
+      "title": "非布道日剩余 1 天沿用 GKSA-10 倒计时",
+      "category": "countdown-retained",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 = 1。"
+      ],
+      "steps": [
+        "记录绝对日、星期编号与布道日星期编号 T。",
+        "读取角落倒计时文字与已显示天数。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "single-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "countdown": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-retained-multi-day",
+      "title": "非布道日多天倒计时沿用 GKSA-10 文案",
+      "category": "countdown-retained",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 在 2..5。"
+      ],
+      "steps": [
+        "记录绝对日、星期编号与布道日星期编号 T。",
+        "读取角落倒计时文字与实际选用文案键。"
+      ],
+      "expect": [
+        {
+          "dateCheck": {
+            "mode": "multi-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "countdown": "hud.countdownDays",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "language": "zh-CN"
+          }
+        },
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": false
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    }
+  ]
+}
