@@ -13,11 +13,14 @@
     "REPLACE placeholder from a real Proton run before validating.",
     "The popup uses the game's native titled dialog. Keep the title region separate:",
     "an empty title records a native error log. gksr.popup.sermon.body is a two-",
-    "paragraph sentence; join the two final paragraphs with a blank line and do not",
-    "leave Markdown bold markers in the observed text.",
-    "Dedup identity is the actual loaded slot (slotName, isDemoSave, slot-generation,",
-    "absoluteDay) captured immutably for that load; never a display name, a timestamp,",
-    "the platform, or a latest-slot guess.",
+    "paragraph sentence; record the rendered plain text with the two paragraphs",
+    "separated by a blank line; the Huly source emphasis tags are layout-only and",
+    "must not appear in the observed text.",
+    "Only the loaded slot identity (slotName, isDemoSave, slot-generation) is captured",
+    "immutably and frozen for the load. absoluteDay is read fresh at every trigger",
+    "evaluation, so a next sermon cycle within the same load uses the current date.",
+    "Never use a display name (native SaveSlotData has no user-editable display-name",
+    "field), a timestamp, the platform, or a latest-slot guess.",
     "All scenarios in tests/e2e/gksa13.json are UNEXECUTED. This example describes",
     "no run and contains no measured value."
   ],
@@ -58,6 +61,7 @@
   },
   "observations": {
     "popup-shown-when-enabled": {
+      "dedup.recordAbsentForThisSlotDayBeforeLoad": true,
       "save.churchUnlocked": true,
       "save.tutorialCompleted": true,
       "save.isSermonDay": true,
@@ -109,7 +113,9 @@
     "close-esc": {
       "popup.shown": true,
       "popup.closedByEsc": true,
-      "popup.openAfterClose": false
+      "popup.openAfterClose": false,
+      "pause.stuckPauseAfterClose": false,
+      "input.gameplayInputRestoredAfterClose": true
     }
   },
   "results": [
