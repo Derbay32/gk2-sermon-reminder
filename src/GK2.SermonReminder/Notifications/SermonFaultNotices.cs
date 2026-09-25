@@ -90,10 +90,27 @@ namespace GK2.SermonReminder.Notifications
             }
         }
 
+        /// <summary>Explicit pool-return ownership phase.</summary>
+        private enum PoolReturnPhase
+        {
+            /// <summary>Item is still ours and may be mutated before a transfer attempt.</summary>
+            PreReturn,
+
+            /// <summary>A release attempt had an unreadable outcome: only bounded read-only
+            /// checks are allowed, because the item may already be pooled and reused.</summary>
+            Uncertain,
+
+            /// <summary>The native pool now owns the item; ownership is dropped and the
+            /// item must never be mutated or released again.</summary>
+            Transferred
+        }
+
         /// <summary>
         /// A notice acquired from the native pool, together with the frozen
         /// identities needed to unwind it safely. Ownership is retained until every
-        /// cleanup step succeeds (or the item is destroyed).
+        /// cleanup step succeeds (or the item is destroyed), tracked through an
+        /// explicit <see cref="PoolReturnPhase"/> so a possibly-reused item is never
+        /// mutated again.
         /// </summary>
         private sealed class OwnedNotice
         {
@@ -102,6 +119,7 @@ namespace GK2.SermonReminder.Notifications
             internal readonly List<UIBaseNotification> List;
             internal readonly Pool Pool;
             internal float NextCleanupUnscaled;
+            internal PoolReturnPhase ReturnPhase = PoolReturnPhase.PreReturn;
 
             internal OwnedNotice(
                 UISimpleTextNotification item,
@@ -415,9 +433,11 @@ namespace GK2.SermonReminder.Notifications
 
             if (owned.Item == null)
             {
-                // Unity destroyed the object: nothing can be returned, but its stale
-                // entry must still be removed from the original backing list.
+                // Unity destroyed the object: nothing can be returned or mutated, but
+                // its stale entry must still be removed and the remaining notices
+                // repositioned when the notifier is still alive.
                 TryRemoveFromListOnly(owned);
+                TryRepositionRemaining(owned);
                 transaction = null;
                 return;
             }
@@ -439,9 +459,11 @@ namespace GK2.SermonReminder.Notifications
 
         /// <summary>
         /// Perform every required cleanup step idempotently against the frozen
-        /// original identities. Returns true only when the item has been fully
-        /// detached from the native list and verifiably returned to its original
-        /// pool. Any critical failure keeps the transaction for a bounded retry.
+        /// original identities. Returns true only when the item is fully detached
+        /// from the native list, position-repaired and verifiably transferred to its
+        /// original pool. Our own live partial display is suppressed FIRST and
+        /// independently, before any step that may throw, so a failing reposition or
+        /// list removal can never leave our unverified notice visible.
         /// </summary>
         private bool TryCompleteCleanup(OwnedNotice owned)
         {
@@ -449,55 +471,116 @@ namespace GK2.SermonReminder.Notifications
             if (item == null)
                 return true;
 
-            // 1. Remove ONLY our exact instance from the original backing list. A
-            //    destroyed notifier has no live list or tween to detach from, so only
-            //    the exact item is recovered instead of blocking forever.
-            bool notificatorAlive = owned.Notificator != null;
-            if (notificatorAlive)
-            {
-                if (!TryRemoveFromList(owned))
-                    return false;
+            // Already transferred: never mutate or re-release a possibly reused item.
+            if (owned.ReturnPhase == PoolReturnPhase.Transferred)
+                return true;
 
-                // 2. Reposition the remaining native notices via the exact native
-                //    method. Required: it is resolved before acquisition, so a missing
-                //    method here is a critical failure that keeps the transaction.
-                MethodInfo reposition = updateNotificationsPositionMethod;
-                if (reposition == null)
+            // Uncertain: a release may already have pushed the item (push happens
+            // first). Allow only bounded read-only identity/destruction checks.
+            if (owned.ReturnPhase == PoolReturnPhase.Uncertain)
+                return TryResolveUncertainReturn(owned, item);
+
+            // Before any item mutation, prove from the frozen pool whether a previous
+            // attempt already transferred the item; that proof revokes ownership.
+            if (owned.Pool != null)
+            {
+                bool? presentBeforeMutation = IsInPool(owned.Pool, item);
+                if (presentBeforeMutation == null)
                     return false;
-                try
+                if (presentBeforeMutation.Value)
                 {
-                    reposition.Invoke(owned.Notificator, null);
-                }
-                catch (Exception)
-                {
-                    return false;
+                    owned.ReturnPhase = PoolReturnPhase.Transferred;
+                    return true;
                 }
             }
 
-            // 3. Stop our timer and kill ONLY our own transform tween; other
-            //    notices' content and timers are never altered.
-            try { item.IsTimerActive = false; } catch (Exception) { return false; }
-            try { item.transform.DOKill(); } catch (Exception) { return false; }
+            // 1. Best-effort independent OWN suppression, before any throwing step:
+            //    stop our timer, kill only our transform tween, hide, and clear the
+            //    real rendered label plus the assigned text and key.
+            bool suppressed = SuppressOwnDisplay(item);
 
-            // 4. Clear the actual rendered label plus the assigned text and key.
+            // 2. Required: remove ONLY our exact instance from the original backing
+            //    list, then reposition the remaining native notices. A destroyed
+            //    notifier has no live list or tween to detach from.
+            bool removed = true;
+            bool repositioned = true;
+            if (owned.Notificator != null)
+            {
+                removed = TryRemoveFromList(owned);
+                if (removed)
+                    repositioned = TryRepositionRemaining(owned);
+            }
+
+            // 3. Transfer only after the suppression, exact removal and reposition all
+            //    succeeded; otherwise keep the transaction for a bounded retry. A
+            //    transferred item is never touched by a later reposition or cleanup.
+            if (!suppressed || !removed || !repositioned)
+                return false;
+
+            return TryTransferToOriginalPool(owned);
+        }
+
+        /// <summary>
+        /// Suppress our own partial display without touching any other notice. Each
+        /// step is attempted independently so one failing step never skips the rest;
+        /// the aggregate result keeps the transaction until every step succeeds.
+        /// </summary>
+        private bool SuppressOwnDisplay(UISimpleTextNotification item)
+        {
+            bool ok = true;
+
+            try { item.IsTimerActive = false; }
+            catch (Exception) { ok = false; }
+
+            try { item.transform.DOKill(); }
+            catch (Exception) { ok = false; }
+
             try
             {
-                if (labelField?.GetValue(item) as TextMeshProUGUI is TextMeshProUGUI label)
+                if (labelField?.GetValue(item) is TextMeshProUGUI label && label != null)
                     label.text = string.Empty;
             }
-            catch (Exception)
+            catch (Exception) { ok = false; }
+
+            try { item.Text = null; }
+            catch (Exception) { ok = false; }
+
+            try { item.LocalizationKey = null; }
+            catch (Exception) { ok = false; }
+
+            try { item.gameObject.SetActive(false); }
+            catch (Exception) { ok = false; }
+
+            return ok;
+        }
+
+        /// <summary>
+        /// Resolve an uncertain release using only read-only checks: pool membership
+        /// proves return, a destroyed item ends ownership, and anything else keeps the
+        /// quarantine for a later bounded retry. The item is never mutated here.
+        /// </summary>
+        private bool TryResolveUncertainReturn(OwnedNotice owned, UISimpleTextNotification item)
+        {
+            if (item == null)
             {
-                return false;
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
+                return true;
             }
-            try { item.Text = null; } catch (Exception) { return false; }
-            try { item.LocalizationKey = null; } catch (Exception) { return false; }
 
-            // 5. Hide before returning to the pool.
-            try { item.gameObject.SetActive(false); } catch (Exception) { return false; }
+            if (owned.Pool == null)
+                return false;
 
-            // 6. Return to the ORIGINAL pool using membership identity, never a
-            //    freshly resolved pool that a replacement could have changed.
-            return TryReturnToOriginalPool(owned);
+            bool? present = IsInPool(owned.Pool, item);
+            if (present == null)
+                return false;
+            if (present.Value)
+            {
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
+                return true;
+            }
+
+            // Not provably pooled and not destroyed: stay quarantined, keep waiting.
+            return false;
         }
 
         private bool TryRemoveFromList(OwnedNotice owned)
@@ -534,38 +617,92 @@ namespace GK2.SermonReminder.Notifications
         }
 
         /// <summary>
-        /// Return the item to the exact pool it was acquired from, using reference
-        /// membership in <c>Pool.Objects</c> before and after the release. An item
-        /// already present is never released again; an unreadable membership is not
-        /// proof of return, so ownership is preserved for a later bounded retry.
+        /// Invoke the exact native reposition on the frozen original notifier so the
+        /// remaining native notices are re-laid-out after our removal. Never rewrites
+        /// another notice's content or timer. Returns false when it cannot be proven
+        /// to have run, keeping the transaction for a bounded retry.
         /// </summary>
-        private static bool TryReturnToOriginalPool(OwnedNotice owned)
+        private bool TryRepositionRemaining(OwnedNotice owned)
+        {
+            if (owned.Notificator == null)
+                return true;
+
+            MethodInfo reposition = updateNotificationsPositionMethod;
+            if (reposition == null)
+                return false;
+
+            try
+            {
+                reposition.Invoke(owned.Notificator, null);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Transfer the item to its frozen original pool. A non-throwing
+        /// <c>ReleaseObject</c> is authoritative native transfer (the push happens
+        /// first), and a throwing call followed by identity membership is also proof
+        /// of return. Any unreadable outcome moves the transaction to the
+        /// <see cref="PoolReturnPhase.Uncertain"/> quarantine, which permits only
+        /// read-only checks and never a second release or further item mutation.
+        /// </summary>
+        private static bool TryTransferToOriginalPool(OwnedNotice owned)
         {
             UISimpleTextNotification item = owned.Item;
             if (item == null)
+            {
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
                 return true;
+            }
 
             Pool pool = owned.Pool;
             if (pool == null)
                 return false;
 
+            // Prove membership before releasing so an already-pooled item is never
+            // pushed (and thus never duplicated) a second time.
             bool? present = IsInPool(pool, item);
             if (present == null)
                 return false;
             if (present.Value)
-                return true;
-
-            try { pool.ReleaseObject(item); }
-            catch (Exception)
             {
-                // The push happens before reparent/deactivate, so the membership
-                // re-check below decides whether the object is actually in the pool.
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
+                return true;
             }
 
-            present = IsInPool(pool, item);
-            if (present == null)
+            bool threw = false;
+            try { pool.ReleaseObject(item); }
+            catch (Exception) { threw = true; }
+
+            if (!threw)
+            {
+                // Authoritative native transfer: ownership drops immediately, with no
+                // later read able to revoke it.
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
+                return true;
+            }
+
+            // The push happens before reparent/deactivate/callback, so a throw may
+            // still have transferred the item. Identity membership then proves return;
+            // anything unreadable is quarantined for read-only resolution only.
+            bool? afterThrow = IsInPool(pool, item);
+            if (afterThrow == null)
+            {
+                owned.ReturnPhase = PoolReturnPhase.Uncertain;
                 return false;
-            return present.Value;
+            }
+            if (afterThrow.Value)
+            {
+                owned.ReturnPhase = PoolReturnPhase.Transferred;
+                return true;
+            }
+
+            owned.ReturnPhase = PoolReturnPhase.Uncertain;
+            return false;
         }
 
         /// <summary>
