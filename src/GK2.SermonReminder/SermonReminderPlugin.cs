@@ -404,11 +404,21 @@ namespace GK2.SermonReminder
                 activeSave = null;
                 ResetDiagnostics();
 
-                // Best-effort initial capture; a null result leaves the identity pending
-                // and a later readable save is adopted once for this same ready period.
-                GameSave save = TryGetCurrentSave();
-                if (save != null)
+                // Best-effort initial capture; a null result without an exception leaves
+                // the identity pending and a later readable save is adopted once for this
+                // same ready period. A native read failure is preserved as its real
+                // exception and fed to the bounded state diagnostic; readiness and the
+                // already-opened notice budget are kept either way.
+                GameSave save = TryGetCurrentSave(out Exception saveReadFailure);
+                if (saveReadFailure != null)
+                {
+                    LogStateDiagnostic("save-read",
+                        "GKSR_STATE_UNREADABLE: initial save read failed", saveReadFailure);
+                }
+                else if (save != null)
+                {
                     activeSave = save;
+                }
 
                 SafeInfo("GKSR_READY");
             }
@@ -552,8 +562,9 @@ namespace GK2.SermonReminder
         /// State stage: resolve the current save, preserve the load identity, and read a
         /// fresh snapshot. Returns false when the tick must stop without a corner stage
         /// (not ready or a state-read failure); the two flags are left meaningful for the
-        /// caller's single delivery. State reads fail as state-read and suppress only
-        /// state-dependent displays, never the healthy beacon.
+        /// caller's single delivery. A state-read failure suppresses the state-dependent
+        /// displays, including the beacon, whose eligibility cannot be evaluated without a
+        /// readable state; only corner failures must preserve a healthy beacon.
         /// </summary>
         private bool TickState(out bool stateReadFailed, out SermonStateSnapshot snapshot)
         {
@@ -562,22 +573,29 @@ namespace GK2.SermonReminder
 
             if (!ready)
             {
-                // Not-ready tick: never a state fault. Retained notice cleanup is advanced
-                // by the caller's single delivery with both flags false.
-                SafeResetBeacon();
-                hud.Teardown();
-                ResetEligibility();
+                // Not-ready tick: never a state fault. Cleanup is contained locally so a
+                // throw here can never enter the outer state-fault classification; both
+                // flags stay false and retained notice cleanup is still advanced by the
+                // caller's single delivery.
+                try
+                {
+                    SafeResetBeacon();
+                    hud.Teardown();
+                    ResetEligibility();
+                }
+                catch (Exception)
+                {
+                }
                 return false;
             }
 
-            GameSave current;
-            try
+            // The helper preserves any real native exception instead of swallowing it, so
+            // the actual detail reaches the bounded diagnostic; a genuine null (no
+            // exception) is never turned into a fabricated one.
+            GameSave current = TryGetCurrentSave(out Exception saveReadFailure);
+            if (saveReadFailure != null)
             {
-                current = TryGetCurrentSave();
-            }
-            catch (Exception ex)
-            {
-                return StateFailure("save-read", "current save read failed", ex, out stateReadFailed, out snapshot);
+                return StateFailure("save-read", "current save read failed", saveReadFailure, out stateReadFailed, out snapshot);
             }
 
             if (activeSave == null && current != null)
@@ -625,9 +643,10 @@ namespace GK2.SermonReminder
         }
 
         /// <summary>
-        /// Common state-failure path: fail closed on owned state-dependent outputs and
-        /// preserve the expected load identity, readiness and the beacon episode. The
-        /// exception detail (when present) is logged as technical detail only.
+        /// Common state-failure path: fail closed on owned state-dependent outputs,
+        /// including resetting the state-dependent beacon, while preserving the expected
+        /// load identity and readiness so recovery is automatic. The exception detail
+        /// (when present) is logged as technical detail only.
         /// </summary>
         private bool StateFailure(
             string key,
@@ -734,6 +753,7 @@ namespace GK2.SermonReminder
 
                 NativeCheckSpritePoll icon = checkSprite.Poll(spriteEligible);
                 bool doneIconFailed = false;
+                string doneIconReason = null;
 
                 if (!spriteEligible || icon.Status == NativeCheckSpriteStatus.Ready)
                 {
@@ -742,13 +762,11 @@ namespace GK2.SermonReminder
                 else if (icon.Status == NativeCheckSpriteStatus.Failed && state == SermonDisplayState.Done)
                 {
                     // A native Done icon failed AND the current display requires it: a
-                    // corner-category fault. An unrelated icon failure on Ready/countdown
-                    // is not a fault and never clears the required display. The flag is
-                    // retained through the render result so a Pending suppression below
-                    // never cancels this real fault.
-                    string reason = checkSprite.LastFailure ?? "unknown";
-                    LogCornerDiagnostic("icon-failed:" + reason,
-                        "GKSR_HUD_FAILED: native done sprite unavailable (" + reason + ")", null);
+                    // corner-category fault. Logging is DEFERRED until the render result is
+                    // known so exactly one corner diagnostic is emitted per tick and an
+                    // immediate render failure is never overwritten by the icon message (or
+                    // vice versa) on the next frame.
+                    doneIconReason = checkSprite.LastFailure ?? "unknown";
                     doneIconFailed = true;
                 }
 
@@ -760,8 +778,9 @@ namespace GK2.SermonReminder
 
                 if (result.Status == SermonHudStatus.Failed)
                 {
-                    // Actual render failure: a corner-category fault; the episode is
-                    // preserved until a completed healthy render or a boundary.
+                    // Actual render failure takes priority as this tick's single corner
+                    // diagnostic; the episode is preserved until a completed healthy render
+                    // or a boundary.
                     LogCornerDiagnostic("hud-render-failed:" + result.Failure,
                         "GKSR_HUD_FAILED: " + result.Failure, null);
                     cornerHudFailed = true;
@@ -770,9 +789,12 @@ namespace GK2.SermonReminder
 
                 // A Done-required failed icon is a real corner fault even though it renders
                 // as Pending; genuine Pending (icon still loading, or an ordinary absent
-                // host) keeps cornerHudFailed false and is not a fault.
+                // host) keeps cornerHudFailed false and is not a fault. With no render
+                // failure this is this tick's single corner diagnostic.
                 if (doneIconFailed)
                 {
+                    LogCornerDiagnostic("icon-failed:" + doneIconReason,
+                        "GKSR_HUD_FAILED: native done sprite unavailable (" + doneIconReason + ")", null);
                     cornerHudFailed = true;
                 }
 
@@ -886,14 +908,19 @@ namespace GK2.SermonReminder
             return template.Replace("{days}", delta.ToString(CultureInfo.InvariantCulture));
         }
 
-        private static GameSave TryGetCurrentSave()
+        private static GameSave TryGetCurrentSave(out Exception failure)
         {
+            failure = null;
             try
             {
                 return MainGame.Instance?.GameSave;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Preserve the real native exception instead of swallowing it, so the
+                // bounded diagnostic can carry its actual detail. A successful native
+                // null is returned as-is and never turned into a fabricated exception.
+                failure = ex;
                 return null;
             }
         }
