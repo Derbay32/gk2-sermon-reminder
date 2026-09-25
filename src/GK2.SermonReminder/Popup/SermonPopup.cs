@@ -828,9 +828,15 @@ namespace GK2.SermonReminder.Popup
             // Recheck ownership around the callback-producing native close.
             if (!TryReadData(window, out object beforeClose))
                 return false;
+            if (beforeClose == null)
+            {
+                // A readable null is ambiguous, not a confirmed takeover: retain
+                // and defer rather than relinquishing our claim.
+                return false;
+            }
             if (!ReferenceEquals(beforeClose, tx.Data))
             {
-                // Confirmed takeover before the close: never close foreign content.
+                // Confirmed nonnull foreign content: permitted takeover end.
                 tx.Relinquished = true;
                 return tx.CallbacksCleared;
             }
@@ -850,10 +856,10 @@ namespace GK2.SermonReminder.Popup
                 }
             }
 
-            // Detach our own data claim ONLY after every prior required stage
-            // succeeded; otherwise the exact claim and stage state are retained so
-            // the unresolved work is reattempted.
-            if (tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed && !tx.DataDetached)
+            // Detach our own data claim ONLY after every required stage has
+            // succeeded (including CallbacksCleared); otherwise the exact claim
+            // and stage state are retained so the unresolved work is reattempted.
+            if (tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed && !tx.DataDetached)
             {
                 if (!TryReadData(window, out object preDetach))
                     return false;
@@ -950,15 +956,44 @@ namespace GK2.SermonReminder.Popup
             {
                 UIDialogWindowButton button = state.Button;
 
-                if (button == null)
+                if (state.Phase == ButtonPhase.Transferred)
+                    continue;
+
+                if (ReferenceEquals(button, null))
                 {
-                    // Genuine native destruction: this item's ownership ends.
+                    // Actual CLR null: no managed identity remains to remove.
                     state.Phase = ButtonPhase.Transferred;
                     continue;
                 }
 
-                if (state.Phase == ButtonPhase.Transferred)
+                if (button == null)
+                {
+                    // Unity fake-null: the native object is destroyed. While our data
+                    // claim is provably ours, drop the stale managed reference from
+                    // the ORIGINAL active list without touching the destroyed Unity
+                    // object, then end this item's ownership. Never mutate a foreign
+                    // or taken-over list.
+                    ButtonOwner destroyedOwner = ClassifyOwnership(tx);
+                    if (destroyedOwner == ButtonOwner.Foreign)
+                        return ButtonProcessResult.Relinquished;
+                    if (destroyedOwner == ButtonOwner.Unreadable)
+                    {
+                        allDone = false;
+                        continue;
+                    }
+
+                    if (!state.ListRemoved)
+                        state.ListRemoved = RemoveFromActiveList(tx, button);
+
+                    if (!state.ListRemoved)
+                    {
+                        allDone = false;
+                        continue;
+                    }
+
+                    state.Phase = ButtonPhase.Transferred;
                     continue;
+                }
 
                 if (state.Phase == ButtonPhase.Uncertain)
                 {
@@ -1076,8 +1111,14 @@ namespace GK2.SermonReminder.Popup
                 {
                     foreach (UIDialogWindowButton button in activeList)
                     {
-                        if (button != null && !ReferenceEquals(button, tx.Prefab) && !ContainsByIdentity(discovered, button))
-                            discovered.Add(button);
+                        // Distinguish actual CLR null from Unity fake-null: a
+                        // destroyed managed reference must still be tracked so its
+                        // stale original active-list entry can be removed later.
+                        if (ReferenceEquals(button, null))
+                            continue;
+                        if (ReferenceEquals(button, tx.Prefab) || ContainsByIdentity(discovered, button))
+                            continue;
+                        discovered.Add(button);
                     }
                 }
                 catch (Exception)
@@ -1206,16 +1247,23 @@ namespace GK2.SermonReminder.Popup
 
         private static bool RemoveByIdentity(List<UIDialogWindowButton> list, UIDialogWindowButton button)
         {
+            // Remove ALL exact-reference occurrences (managed identity only).
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                if (ReferenceEquals(list[i], button))
+                    list.RemoveAt(i);
+            }
+
+            // Verified absence is the required proof. An item that was already
+            // absent (e.g. the native Open acquire-parent-Draw-before-Add orphan)
+            // is idempotent success, not a removal that never happened.
             for (int i = 0; i < list.Count; i++)
             {
                 if (ReferenceEquals(list[i], button))
-                {
-                    list.RemoveAt(i);
-                    return true;
-                }
+                    return false;
             }
 
-            return false;
+            return true;
         }
 
         private static bool TryClearButton(UIDialogWindowButton button)
