@@ -1,0 +1,1042 @@
+{
+  "manifestVersion": 1,
+  "kind": "gksa10-e2e-manifest",
+  "ticket": "GKSA-10",
+  "title": "显示非布道日倒计时：真实游戏 E2E 场景清单",
+  "status": "requirements-not-results",
+  "notes": [
+    "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
+    "本票只交付非布道日倒计时文字；布道日当天与已布道状态文字由后续三态票交付，本票在该场景只要求停用非布道日倒计时。",
+    "验收边界为 CachyOS x86-64 上的 Steam Proton、真实游戏、完整加载模组。",
+    "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
+    "布局结论必须附带实测测量值或操作者明确观察记录，并附截图；仅日志不能作为布局证据。",
+    "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
+    "requiredEnvironmentPaths 的路径相对 capture.environment 解析。",
+    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。"
+  ],
+  "baselineCommit": "7b2a77271bd94bafb9236e2a0076ba4fbb057970",
+  "specRefs": [
+    "GKSA-1",
+    "GKSA-3",
+    "GKSA-4",
+    "GKSA-9",
+    "GKSA-10"
+  ],
+  "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
+  "finalText": {
+    "gksr.hud.sermonReminder": {
+      "zh-CN": "布道日！",
+      "en": "Sermon Day!"
+    },
+    "gksr.hud.sermonCountdown.one": {
+      "zh-CN": "明天是布道日！",
+      "en": "Sermon Day is Tomorrow!"
+    },
+    "gksr.hud.sermonCountdown.other": {
+      "zh-CN": "距离下一次布道日还有{days}天。",
+      "en": "{days} days before the Sermon Day."
+    },
+    "gksr.hud.sermonDone": {
+      "zh-CN": "已完成本周布道！",
+      "en": "This week’s sermon is complete!"
+    }
+  },
+  "observationVocabulary": {
+    "hud.visible": "bool: 角落倒计时文字当前是否可见",
+    "hud.text": "string: 角落倒计时文字的完整显示内容",
+    "hud.countdownDays": "int: 已显示的整数天数",
+    "hud.textKey": "string: 记录的实际选用文案键（gksr.hud.sermonCountdown.one 或 .other）",
+    "hud.instanceCount": "int: 模组自有的角落文字显示实例数量",
+    "hud.nonSermonCountdownShown": "bool: 布道日当天是否仍显示非布道日倒计时",
+    "hud.style.clonedFromNative": "bool: 字体、字号、材质、描边与颜色是否自原生幸福度文字复制",
+    "hud.style.nativeSource": "string: 样式复制来源标识，例如 happiness_text",
+    "hud.style.fontMatchesNative": "bool: 字体一致",
+    "hud.style.fontSizeMatchesNative": "bool: 字号一致",
+    "hud.style.materialMatchesNative": "bool: 材质一致",
+    "hud.style.outlineMatchesNative": "bool: 描边一致",
+    "hud.style.colorMatchesNative": "bool: 颜色一致",
+    "hud.visibilityInheritsNative": "bool: 可见性与界面层级是否继承原生 HUD",
+    "hud.layerEqualsNative": "bool: 界面层级与原生提示层一致",
+    "hud.separateMenuHideList": "bool: 是否新增了独立菜单隐藏名单",
+    "hud.staleTextFromPreviousSave": "bool: 是否残留上一存档的文字",
+    "hud.textFromPreviousSavePresent": "bool: 切档后是否残留旧存档文字",
+    "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
+    "layout.anchor": "string: 相对时钟的锚定关系，预期 below_clock",
+    "layout.clockOverlap": "bool: 文字是否与时钟重叠",
+    "layout.uiScaleFollowsNative": "bool: 是否随原生 UI 缩放",
+    "layout.measurement": "object: 实测数值（由测量探针或操作者记录，字段由设施定义）",
+    "layout.operatorObservation": "string: 无法数值化时的操作者明确观察记录",
+    "save.churchUnlocked": "bool: 教堂开启任务是否 Completed",
+    "save.tutorialCompleted": "bool: 首次布道教学任务是否 Completed",
+    "save.isSermonDay": "bool: 当前游戏日是否为布道日",
+    "save.gameDayNumber": "int: 当前游戏日期编号",
+    "save.priorGameDayNumber": "int: 跨日或周期边界前的游戏日期编号",
+    "save.afterDayNumber": "int: 跨日后游戏日期编号",
+    "save.beforeDayNumber": "int: 跨日前游戏日期编号",
+    "save.dayAdvanced": "bool: 操作期间游戏日期是否变化",
+    "save.previousSaveTutorialCompleted": "bool: 切换前存档的首次布道教学完成状态",
+    "save.tutorialWasCompletedEarlier": "bool: 同一进程先前已载入过教学完成存档",
+    "countdown.beforeDays": "int: 日期未变前后连续观察中的前一整数天数",
+    "countdown.afterDays": "int: 日期未变前后连续观察中的后一整数天数",
+    "language.active": "string: 当前游戏语言标识，例如 zh-CN、en、fr",
+    "state.readable": "bool: 必要状态是否可可靠读取",
+    "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定",
+    "fault.reported": "bool: 是否上报了故障",
+    "items.count": "int: 当前背包或基地物品数量",
+    "plugin.loaded": "bool: 插件是否在真实 Proton 环境中实际加载",
+    "framework.loaded": "bool: GK2 Mod Framework 是否实际加载"
+  },
+  "validation": {
+    "supportedCaptureVersions": [
+      1
+    ],
+    "requireLoadEvidenceLog": true,
+    "measurementObservationPaths": [
+      "layout.measurement",
+      "layout.operatorObservation"
+    ],
+    "requiredEnvironmentPaths": [
+      {
+        "path": "game.name",
+        "type": "string"
+      },
+      {
+        "path": "game.version",
+        "type": "string"
+      },
+      {
+        "path": "game.buildId",
+        "type": "string"
+      },
+      {
+        "path": "game.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "proton.version",
+        "type": "string"
+      },
+      {
+        "path": "proton.buildId",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.version",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "framework.name",
+        "type": "string"
+      },
+      {
+        "path": "framework.version",
+        "type": "string"
+      },
+      {
+        "path": "framework.commit",
+        "type": "string"
+      },
+      {
+        "path": "plugin.version",
+        "type": "string"
+      },
+      {
+        "path": "plugin.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "plugin.loaded",
+        "type": "boolean",
+        "equals": true
+      },
+      {
+        "path": "resolution.width",
+        "type": "positive-int"
+      },
+      {
+        "path": "resolution.height",
+        "type": "positive-int"
+      },
+      {
+        "path": "uiScale",
+        "type": "positive-number"
+      },
+      {
+        "path": "inputDevices",
+        "type": "nonempty-string-array"
+      },
+      {
+        "path": "os",
+        "type": "string"
+      },
+      {
+        "path": "capturedAt",
+        "type": "timestamp"
+      },
+      {
+        "path": "build.sourceCommit",
+        "type": "git-commit"
+      },
+      {
+        "path": "build.command",
+        "type": "string"
+      },
+      {
+        "path": "build.sdkVersion",
+        "type": "string"
+      },
+      {
+        "path": "build.artifactSha256",
+        "type": "sha256"
+      }
+    ],
+    "buildPluginHashConsistency": [
+      [
+        "build.artifactSha256",
+        "plugin.sha256"
+      ]
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "church-locked",
+      "title": "教堂未解锁时不显示倒计时",
+      "category": "gating",
+      "prerequisites": [
+        "当前存档中教堂开启任务不是 Completed。",
+        "其余解锁条件已满足或不影响判定。"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组并载入该存档。",
+        "等待存档加载完成并进入可操作画面。",
+        "观察左上角时钟下方区域。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "tutorial-incomplete",
+      "title": "首次布道教学未完成时不显示倒计时",
+      "category": "gating",
+      "prerequisites": [
+        "当前存档中教堂开启任务为 Completed。",
+        "当前存档中首次布道教学任务不是 Completed。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "观察左上角时钟下方区域。"
+      ],
+      "expect": [
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-one-day-zh",
+      "title": "简体中文剩余 1 天显示无参数字数的完整定稿句式",
+      "category": "countdown-text",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "当前游戏日的下一游戏日为布道日。",
+        "游戏语言为简体中文。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "读取左上角时钟下方的倒计时文字。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equals": 1
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.one",
+          "language": "zh-CN"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-one-day-en",
+      "title": "英语剩余 1 天显示无参数字数的完整定稿句式",
+      "category": "countdown-text",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "当前游戏日的下一游戏日为布道日。",
+        "游戏语言为英语。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "读取左上角时钟下方的倒计时文字。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "equals": 1
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.one",
+          "language": "en"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-multi-day-zh",
+      "title": "简体中文多天倒计时使用大于 1 的整数 {days} 参数",
+      "category": "countdown-text",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "当前游戏日距离下一布道日大于 1 天。",
+        "游戏语言为简体中文。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "读取左上角时钟下方的倒计时文字与记录的整数天数。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "countdown-multi-day-en",
+      "title": "英语多天倒计时使用大于 1 的整数 {days} 参数",
+      "category": "countdown-text",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "当前游戏日距离下一布道日大于 1 天。",
+        "游戏语言为英语。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "读取左上角时钟下方的倒计时文字与记录的整数天数。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "en",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "same-day-unchanged",
+      "title": "游戏日期未变时倒计时保持不变",
+      "category": "countdown-time",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日。"
+      ],
+      "steps": [
+        "记录当前整数天数。",
+        "在游戏日期未变化的前提下推进游戏时间。",
+        "再次记录整数天数与显示文字。"
+      ],
+      "expect": [
+        {
+          "observation": "save.dayAdvanced",
+          "equals": false
+        },
+        {
+          "observation": "countdown.afterDays",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "countdown.afterDays",
+          "equalsObservation": "countdown.beforeDays"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "zh-CN",
+          "daysObservation": "countdown.afterDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "midnight-update",
+      "title": "非布道日跨日后倒计时正确更新",
+      "category": "countdown-time",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "跨日后仍为非布道日且距离下一布道日大于 1 天。"
+      ],
+      "steps": [
+        "记录跨日前的游戏日期编号与倒计时天数。",
+        "在游戏中推进到下一游戏日。",
+        "记录跨日后的游戏日期编号与倒计时天数。"
+      ],
+      "expect": [
+        {
+          "observation": "save.afterDayNumber",
+          "greaterThanObservation": "save.beforeDayNumber"
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "hud.countdownDays",
+          "notEqualsObservation": "countdown.beforeDays"
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "sermon-day-hidden",
+      "title": "进入布道日后停止显示非布道日倒计时",
+      "category": "countdown-time",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "跨入布道日当天。"
+      ],
+      "steps": [
+        "推进游戏时间进入布道日。",
+        "观察左上角时钟下方区域。"
+      ],
+      "expect": [
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "hud.nonSermonCountdownShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "cycle-wrap",
+      "title": "跨越六日周期边界时日期差保持正确正整数",
+      "category": "countdown-time",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "游戏日期编号位于调查基线六日循环的末尾附近。"
+      ],
+      "steps": [
+        "记录周期边界前的游戏日期编号。",
+        "推进游戏时间跨越周期边界。",
+        "读取倒计时文字与实际选用的文案键。"
+      ],
+      "expect": [
+        {
+          "observation": "save.priorGameDayNumber",
+          "present": true
+        },
+        {
+          "observation": "save.gameDayNumber",
+          "present": true
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.countdownDays",
+          "integerGreaterThan": 0
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKeyFromObservation": "hud.textKey",
+          "finalTextKeysAnyOf": [
+            "gksr.hud.sermonCountdown.one",
+            "gksr.hud.sermonCountdown.other"
+          ],
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "language-unsupported-fallback",
+      "title": "游戏语言缺少译文时倒计时回退为英语",
+      "category": "localization",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日且距离下一布道日大于 1 天。",
+        "游戏语言不是简体中文也不是英语。"
+      ],
+      "steps": [
+        "将游戏语言设为受支持之外的语言。",
+        "载入该存档并等待加载完成。",
+        "读取左上角时钟下方的倒计时文字。"
+      ],
+      "expect": [
+        {
+          "observation": "language.active",
+          "notEquals": "zh-CN"
+        },
+        {
+          "observation": "language.active",
+          "notEquals": "en"
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKey": "gksr.hud.sermonCountdown.other",
+          "language": "en",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "hud-style-clone",
+      "title": "文字样式复制运行时原生 HUD 幸福度文字",
+      "category": "layout",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "对比倒计时文字与原生幸福度文字的字体、字号、材质、描边与颜色。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.clonedFromNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.nativeSource",
+          "equals": "happiness_text"
+        },
+        {
+          "observation": "hud.style.fontMatchesNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.fontSizeMatchesNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.materialMatchesNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.outlineMatchesNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.colorMatchesNative",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "layout-clock-non-overlap",
+      "title": "受测布局不与时钟重叠",
+      "category": "layout",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "在受测分辨率下测量时钟区域与倒计时文字区域。",
+        "记录测量值或明确观察结论并留存截图。"
+      ],
+      "expect": [
+        {
+          "observation": "layout.anchor",
+          "equals": "below_clock"
+        },
+        {
+          "observation": "layout.clockOverlap",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "layout-ui-scale",
+      "title": "不同 UI 缩放下文字保持时钟下方可读布局",
+      "category": "layout",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "在受测分辨率与原生 UI 缩放设置下测量文字位置。",
+        "记录测量值或明确观察结论并留存截图。"
+      ],
+      "expect": [
+        {
+          "observation": "layout.anchor",
+          "equals": "below_clock"
+        },
+        {
+          "observation": "layout.uiScaleFollowsNative",
+          "equals": true
+        },
+        {
+          "observation": "layout.clockOverlap",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": true
+      }
+    },
+    {
+      "id": "native-visibility",
+      "title": "倒计时继承原生 HUD 可见性与层级且不新增隐藏名单",
+      "category": "layout",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "打开背包或菜单观察 HUD 显隐表现。",
+        "对比原生提示层与本模组文字层级。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visibilityInheritsNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.layerEqualsNative",
+          "equals": true
+        },
+        {
+          "observation": "hud.separateMenuHideList",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "loading-menu-unload-hidden",
+      "title": "主菜单、正常加载或卸载时隐藏文字",
+      "category": "lifecycle",
+      "prerequisites": [
+        "同一进程内至少有一个可载入的存档。"
+      ],
+      "steps": [
+        "返回主菜单观察是否存在残留文字。",
+        "再次载入存档过程中观察是否存在残留文字。",
+        "卸载存档返回菜单后观察显示实例数量。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.instanceCount",
+          "equals": 0
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "old-save-rollback",
+      "title": "读取教学完成前旧存档后重新隐藏文字",
+      "category": "lifecycle",
+      "prerequisites": [
+        "同一进程先前已载入过教学已完成并显示倒计时的存档。",
+        "待载入的存档首次布道教学尚未完成。"
+      ],
+      "steps": [
+        "在已显示倒计时的存档中确认文字存在。",
+        "载入教学未完成的旧存档并等待加载完成。",
+        "观察是否残留先前文字。"
+      ],
+      "expect": [
+        {
+          "observation": "save.tutorialWasCompletedEarlier",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.staleTextFromPreviousSave",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "switch-saves",
+      "title": "切换存档后按目标存档重新判定且不残留旧文字",
+      "category": "lifecycle",
+      "prerequisites": [
+        "存档 A：解锁与教学条件满足，显示倒计时。",
+        "存档 B：解锁条件满足但教学未完成。"
+      ],
+      "steps": [
+        "载入存档 A 并确认倒计时可见。",
+        "切换到存档 B 并等待加载完成。",
+        "观察是否按存档 B 隐藏且无旧文字残留。"
+      ],
+      "expect": [
+        {
+          "observation": "save.previousSaveTutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.textFromPreviousSavePresent",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "hud-rebuild-uniqueness",
+      "title": "HUD 重建后重新绑定唯一显示实例",
+      "category": "lifecycle",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。",
+        "统计模组倒计时显示实例数量并读取文字。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.instanceCount",
+          "equals": 1
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKeyFromObservation": "hud.textKey",
+          "finalTextKeysAnyOf": [
+            "gksr.hud.sermonCountdown.one",
+            "gksr.hud.sermonCountdown.other"
+          ],
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "exit-cleanup",
+      "title": "退出存档后清理模组显示实例",
+      "category": "lifecycle",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "steps": [
+        "在倒计时可见状态下退出存档返回主菜单。",
+        "统计模组显示实例数量并观察残留资源。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "hud.instanceCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.trackedResourcesReleased",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "unreadable-state-stale-hide",
+      "title": "必要状态不可读时隐藏文字且不沿用旧结果",
+      "category": "fault",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足、且倒计时已显示的当前存档。",
+        "测试设施可受控使必要状态读取失败。"
+      ],
+      "steps": [
+        "在倒计时可见状态下注入必要状态读取故障。",
+        "观察角落文字是否隐藏以及是否沿用故障前天数。"
+      ],
+      "expect": [
+        {
+          "observation": "state.readable",
+          "equals": false
+        },
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "fault.staleValueReused",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "normal-hide-no-fault",
+      "title": "正常加载或原生 HUD 隐藏不误报故障",
+      "category": "fault",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。"
+      ],
+      "steps": [
+        "正常载入存档并让原生 HUD 自然隐藏（例如打开菜单）。",
+        "观察是否出现故障消息或故障日志。"
+      ],
+      "expect": [
+        {
+          "observation": "hud.visible",
+          "equals": false
+        },
+        {
+          "observation": "fault.reported",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": false
+      }
+    },
+    {
+      "id": "item-count-independence",
+      "title": "物品数量不参与提醒判定",
+      "category": "fault",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "背包与基地物品数量为 0。",
+        "当前为非布道日。"
+      ],
+      "steps": [
+        "在物品数量为 0 的状态下载入存档。",
+        "观察倒计时是否仍按游戏状态显示。"
+      ],
+      "expect": [
+        {
+          "observation": "items.count",
+          "equals": 0
+        },
+        {
+          "observation": "hud.visible",
+          "equals": true
+        },
+        {
+          "observation": "hud.text",
+          "finalTextKeyFromObservation": "hud.textKey",
+          "finalTextKeysAnyOf": [
+            "gksr.hud.sermonCountdown.one",
+            "gksr.hud.sermonCountdown.other"
+          ],
+          "language": "zh-CN",
+          "daysObservation": "hud.countdownDays"
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": false,
+        "measurement": false
+      }
+    },
+    {
+      "id": "plugin-load-proton",
+      "title": "在目标 Proton 环境证明插件实际加载",
+      "category": "environment",
+      "prerequisites": [
+        "CachyOS x86-64 PC 上的 Steam Proton 环境。",
+        "BepInEx 5.4.23.5 Windows x64 Unity Mono 加载路线。",
+        "可重复构建的插件工程与 GK2 Mod Framework 发布包。"
+      ],
+      "steps": [
+        "记录游戏、Proton、BepInEx、框架与插件的版本与指纹。",
+        "启动真实游戏并载入存档。",
+        "保留 BepInEx 日志中证明插件实际加载的记录。"
+      ],
+      "expect": [
+        {
+          "observation": "plugin.loaded",
+          "equals": true
+        },
+        {
+          "observation": "framework.loaded",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": false,
+        "log": true,
+        "measurement": false
+      }
+    }
+  ]
+}

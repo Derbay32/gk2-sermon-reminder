@@ -1,0 +1,59 @@
+{
+  "kind": "gksa10-e2e-capture-example",
+  "captureVersion": 1,
+  "_note": [
+    "SCHEMA EXAMPLE ONLY — THIS FILE IS NOT EVIDENCE.",
+    "Its kind is deliberately not 'gksa10-e2e-capture', so tests/e2e/verify.py",
+    "rejects it as an unsupported schema. Replace the placeholder paths with real",
+    "artifacts produced by an actual Proton run and copy it to a capture file whose",
+    "kind is 'gksa10-e2e-capture'.",
+    "The validator never generates a capture and never marks a scenario passed."
+  ],
+  "environment": {
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "proton.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "bepinex.version": "5.4.23.5",
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "plugin.version": "REPLACE",
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.loaded": true,
+    "resolution.width": 1920,
+    "resolution.height": 1080,
+    "uiScale": 1.0,
+    "inputDevices": ["keyboard", "mouse"],
+    "os": "CachyOS x86-64",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "evidenceFiles": {
+      "screenshots/church-locked.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    }
+  },
+  "observations": {
+    "church-locked": {
+      "save.churchUnlocked": false,
+      "hud.visible": false
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "church-locked",
+      "status": "passed",
+      "evidence": {
+        "screenshot": "screenshots/church-locked.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+    }
+  ]
+}
