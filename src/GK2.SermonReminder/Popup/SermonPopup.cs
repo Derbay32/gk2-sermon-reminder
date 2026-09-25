@@ -780,19 +780,18 @@ namespace GK2.SermonReminder.Popup
                 }
             }
 
+            // A confirmed ownership end (genuine destruction or foreign takeover)
+            // leaves only the managed closures to finish.
+            if (tx.Relinquished)
+                return tx.CallbacksCleared;
+
             UIDialogWindow window = tx.Window;
             if (window == null)
             {
-                // Genuinely destroyed: ownership ends with no native cleanup left.
-                tx.ContentCleared = true;
-                tx.ButtonsResolved = true;
-                tx.WindowsClosed = true;
-                tx.DataDetached = true;
+                // Genuine native destruction: nothing remains that we may clean.
+                tx.Relinquished = true;
                 return tx.CallbacksCleared;
             }
-
-            if (tx.DataDetached)
-                return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed;
 
             if (!TryReadData(window, out object current))
                 return false; // Unreadable is not a confirmed takeover.
@@ -803,10 +802,7 @@ namespace GK2.SermonReminder.Popup
             if (!ReferenceEquals(current, tx.Data))
             {
                 // Confirmed takeover: never touch foreign content/buttons/window.
-                tx.ContentCleared = true;
-                tx.ButtonsResolved = true;
-                tx.WindowsClosed = true;
-                tx.DataDetached = true;
+                tx.Relinquished = true;
                 return tx.CallbacksCleared;
             }
 
@@ -820,14 +816,24 @@ namespace GK2.SermonReminder.Popup
 
             // Buttons are attempted independently so visible content is suppressed
             // even if another cleanup step failed.
-            if (ProcessOwnedButtons(tx))
-                tx.ButtonsResolved = true;
+            ButtonProcessResult buttonResult = ProcessOwnedButtons(tx);
+            if (buttonResult == ButtonProcessResult.Relinquished)
+            {
+                tx.Relinquished = true;
+                return tx.CallbacksCleared;
+            }
+
+            tx.ButtonsResolved = buttonResult == ButtonProcessResult.Complete;
 
             // Recheck ownership around the callback-producing native close.
             if (!TryReadData(window, out object beforeClose))
                 return false;
             if (!ReferenceEquals(beforeClose, tx.Data))
-                return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved;
+            {
+                // Confirmed takeover before the close: never close foreign content.
+                tx.Relinquished = true;
+                return tx.CallbacksCleared;
+            }
 
             if (!tx.WindowsClosed)
             {
@@ -844,16 +850,18 @@ namespace GK2.SermonReminder.Popup
                 }
             }
 
-            if (!tx.DataDetached)
+            // Detach our own data claim ONLY after every prior required stage
+            // succeeded; otherwise the exact claim and stage state are retained so
+            // the unresolved work is reattempted.
+            if (tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed && !tx.DataDetached)
             {
                 if (!TryReadData(window, out object preDetach))
                     return false;
 
                 if (preDetach == null)
-                {
-                    tx.DataDetached = true;
-                }
-                else if (ReferenceEquals(preDetach, tx.Data))
+                    return false; // Ambiguous: never invented as successful cleanup.
+
+                if (ReferenceEquals(preDetach, tx.Data))
                 {
                     try
                     {
@@ -862,16 +870,25 @@ namespace GK2.SermonReminder.Popup
                     }
                     catch (Exception)
                     {
+                        return false;
                     }
                 }
                 else
                 {
                     // Taken over between steps: not ours to detach.
-                    tx.DataDetached = true;
+                    tx.Relinquished = true;
+                    return tx.CallbacksCleared;
                 }
             }
 
-            return tx.CallbacksCleared && tx.ContentCleared && tx.ButtonsResolved && tx.WindowsClosed && tx.DataDetached;
+            bool complete = tx.CallbacksCleared
+                && tx.ContentCleared
+                && tx.ButtonsResolved
+                && tx.WindowsClosed
+                && tx.DataDetached;
+            if (complete)
+                tx.Relinquished = true;
+            return complete;
         }
 
         private static void ClearManagedCallbacks(UIDialogWindowData data)
@@ -919,18 +936,23 @@ namespace GK2.SermonReminder.Popup
         /// by reference identity before any mutation, an already returned item is
         /// never touched, and an uncertain item is only re-checked read-only.
         /// </summary>
-        private bool ProcessOwnedButtons(OwnedTransaction tx)
+        private ButtonProcessResult ProcessOwnedButtons(OwnedTransaction tx)
         {
-            List<UIDialogWindowButton> candidates = DiscoverOwnedButtons(tx);
-            foreach (UIDialogWindowButton candidate in candidates)
+            // Discover the frozen candidates and ALWAYS track whatever was found,
+            // so a discovery failure never hides an already-known owned item.
+            bool discoverySucceeded = DiscoverOwnedButtons(tx, out List<UIDialogWindowButton> discovered);
+            foreach (UIDialogWindowButton candidate in discovered)
                 EnsureButtonState(tx, candidate);
 
-            bool allDone = true;
+            bool allDone = discoverySucceeded;
+
             foreach (ButtonState state in tx.Buttons.ToArray())
             {
-                if (state.Button == null)
+                UIDialogWindowButton button = state.Button;
+
+                if (button == null)
                 {
-                    // Genuinely destroyed: ownership ends.
+                    // Genuine native destruction: this item's ownership ends.
                     state.Phase = ButtonPhase.Transferred;
                     continue;
                 }
@@ -940,8 +962,8 @@ namespace GK2.SermonReminder.Popup
 
                 if (state.Phase == ButtonPhase.Uncertain)
                 {
-                    // Read-only identity rechecks only; never re-mutate or release.
-                    if (!IsInPoolReadable(tx.Pool, state.Button, out bool uncertainInPool))
+                    // Read-only membership rechecks only; never re-mutate or release.
+                    if (!IsInPoolReadable(tx.Pool, button, out bool uncertainInPool))
                     {
                         allDone = false;
                         continue;
@@ -955,7 +977,7 @@ namespace GK2.SermonReminder.Popup
                 }
 
                 // Owned: membership must be readable before we touch the item.
-                if (!IsInPoolReadable(tx.Pool, state.Button, out bool inPool))
+                if (!IsInPoolReadable(tx.Pool, button, out bool inPool))
                 {
                     allDone = false;
                     continue;
@@ -968,15 +990,43 @@ namespace GK2.SermonReminder.Popup
                     continue;
                 }
 
+                // Revalidate exact window-data ownership immediately before any
+                // mutable step: an earlier release may have let another system take
+                // over the same shared window and reuse these buttons. A cached
+                // candidate array never grants permission to touch reused content.
+                ButtonOwner owner = ClassifyOwnership(tx);
+                if (owner == ButtonOwner.Unreadable)
+                {
+                    allDone = false;
+                    continue;
+                }
+
+                if (owner == ButtonOwner.Foreign)
+                    return ButtonProcessResult.Relinquished;
+
                 if (!state.Cleared)
-                    state.Cleared = TryClearButton(state.Button);
+                    state.Cleared = TryClearButton(button);
 
                 if (!state.Hidden)
-                    state.Hidden = TryHideButton(state.Button);
+                    state.Hidden = TryHideButton(button);
 
-                RemoveFromActiveList(tx, state.Button);
+                // Re-check ownership after the callback-producing hide.
+                owner = ClassifyOwnership(tx);
+                if (owner == ButtonOwner.Unreadable)
+                {
+                    allDone = false;
+                    continue;
+                }
 
-                if (!state.Cleared)
+                if (owner == ButtonOwner.Foreign)
+                    return ButtonProcessResult.Relinquished;
+
+                if (!state.ListRemoved)
+                    state.ListRemoved = RemoveFromActiveList(tx, button);
+
+                // Required actual clearing, hiding AND verified exact-reference
+                // removal from the original active list must succeed first.
+                if (!state.Cleared || !state.Hidden || !state.ListRemoved)
                 {
                     allDone = false;
                     continue;
@@ -984,19 +1034,20 @@ namespace GK2.SermonReminder.Popup
 
                 if (tx.Pool == null)
                 {
-                    state.Phase = ButtonPhase.Transferred;
+                    // Absence of a pool is NOT evidence of return: retain.
+                    allDone = false;
                     continue;
                 }
 
                 try
                 {
                     // Nonthrowing ReleaseObject transfers ownership (it pushes first).
-                    tx.Pool.ReleaseObject(state.Button);
+                    tx.Pool.ReleaseObject(button);
                     state.Phase = ButtonPhase.Transferred;
                 }
                 catch (Exception)
                 {
-                    if (IsInPoolReadable(tx.Pool, state.Button, out bool afterThrow) && afterThrow)
+                    if (IsInPoolReadable(tx.Pool, button, out bool afterThrow) && afterThrow)
                         state.Phase = ButtonPhase.Transferred;
                     else
                         state.Phase = ButtonPhase.Uncertain;
@@ -1006,25 +1057,41 @@ namespace GK2.SermonReminder.Popup
                     allDone = false;
             }
 
-            return allDone;
+            return allDone ? ButtonProcessResult.Complete : ButtonProcessResult.Incomplete;
         }
 
-        private static List<UIDialogWindowButton> DiscoverOwnedButtons(OwnedTransaction tx)
+        private static bool DiscoverOwnedButtons(OwnedTransaction tx, out List<UIDialogWindowButton> discovered)
         {
-            var result = new List<UIDialogWindowButton>();
+            discovered = new List<UIDialogWindowButton>();
+            bool success = true;
 
             List<UIDialogWindowButton> activeList = tx.ActiveList;
-            if (activeList != null)
+            if (activeList == null)
             {
-                foreach (UIDialogWindowButton button in activeList)
+                success = false;
+            }
+            else
+            {
+                try
                 {
-                    if (button != null && !ReferenceEquals(button, tx.Prefab) && !result.Contains(button))
-                        result.Add(button);
+                    foreach (UIDialogWindowButton button in activeList)
+                    {
+                        if (button != null && !ReferenceEquals(button, tx.Prefab) && !ContainsByIdentity(discovered, button))
+                            discovered.Add(button);
+                    }
+                }
+                catch (Exception)
+                {
+                    success = false;
                 }
             }
 
             RectTransform content = tx.Content;
-            if (content != null)
+            if (content == null)
+            {
+                success = false;
+            }
+            else
             {
                 int count;
                 try
@@ -1033,42 +1100,81 @@ namespace GK2.SermonReminder.Popup
                 }
                 catch (Exception)
                 {
-                    count = 0;
+                    count = -1;
                 }
 
-                for (int i = 0; i < count; i++)
+                if (count < 0)
                 {
-                    Transform child;
-                    try
+                    // Unknown orphan set: discovery did not complete.
+                    success = false;
+                }
+                else
+                {
+                    for (int i = 0; i < count; i++)
                     {
-                        child = content.GetChild(i);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
+                        Transform child;
+                        try
+                        {
+                            child = content.GetChild(i);
+                        }
+                        catch (Exception)
+                        {
+                            success = false;
+                            continue;
+                        }
 
-                    if (child == null)
-                        continue;
+                        if (child == null)
+                        {
+                            // Genuine destroyed child may end its ownership; an
+                            // unreadable live component below is not destroyed.
+                            continue;
+                        }
 
-                    UIDialogWindowButton button;
-                    try
-                    {
-                        button = child.GetComponent<UIDialogWindowButton>();
+                        UIDialogWindowButton button;
+                        try
+                        {
+                            button = child.GetComponent<UIDialogWindowButton>();
+                        }
+                        catch (Exception)
+                        {
+                            success = false;
+                            continue;
+                        }
+
+                        if (button == null || ReferenceEquals(button, tx.Prefab) || ContainsByIdentity(discovered, button))
+                            continue;
+
+                        discovered.Add(button);
                     }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
-
-                    if (button == null || ReferenceEquals(button, tx.Prefab) || result.Contains(button))
-                        continue;
-
-                    result.Add(button);
                 }
             }
 
-            return result;
+            return success;
+        }
+
+        private static bool ContainsByIdentity(List<UIDialogWindowButton> list, UIDialogWindowButton button)
+        {
+            foreach (UIDialogWindowButton existing in list)
+            {
+                if (ReferenceEquals(existing, button))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static ButtonOwner ClassifyOwnership(OwnedTransaction tx)
+        {
+            if (tx == null || tx.Window == null || tx.Data == null)
+                return ButtonOwner.Unreadable;
+
+            if (!TryReadData(tx.Window, out object current))
+                return ButtonOwner.Unreadable;
+
+            if (current == null)
+                return ButtonOwner.Unreadable;
+
+            return ReferenceEquals(current, tx.Data) ? ButtonOwner.Owned : ButtonOwner.Foreign;
         }
 
         private static void EnsureButtonState(OwnedTransaction tx, UIDialogWindowButton button)
@@ -1082,15 +1188,34 @@ namespace GK2.SermonReminder.Popup
             tx.Buttons.Add(new ButtonState { Button = button });
         }
 
-        private static void RemoveFromActiveList(OwnedTransaction tx, UIDialogWindowButton button)
+        private static bool RemoveFromActiveList(OwnedTransaction tx, UIDialogWindowButton button)
         {
+            if (tx.ActiveList == null)
+                return false;
+
             try
             {
-                tx.ActiveList?.Remove(button);
+                return RemoveByIdentity(tx.ActiveList, button);
             }
             catch (Exception)
             {
+                // A failed removal must not be treated as success.
+                return false;
             }
+        }
+
+        private static bool RemoveByIdentity(List<UIDialogWindowButton> list, UIDialogWindowButton button)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (ReferenceEquals(list[i], button))
+                {
+                    list.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool TryClearButton(UIDialogWindowButton button)
@@ -1153,7 +1278,17 @@ namespace GK2.SermonReminder.Popup
                 Stack<MonoBehaviour> objects = pool.Objects;
                 if (objects == null)
                     return false;
-                inPool = objects.Contains(button);
+
+                // Reference identity, not Stack.Contains default Unity equality.
+                foreach (MonoBehaviour item in objects)
+                {
+                    if (ReferenceEquals(item, button))
+                    {
+                        inPool = true;
+                        break;
+                    }
+                }
+
                 return true;
             }
             catch (Exception)
@@ -1341,12 +1476,27 @@ namespace GK2.SermonReminder.Popup
             Transferred
         }
 
+        private enum ButtonOwner
+        {
+            Owned,
+            Foreign,
+            Unreadable
+        }
+
+        private enum ButtonProcessResult
+        {
+            Complete,
+            Incomplete,
+            Relinquished
+        }
+
         private sealed class ButtonState
         {
             internal UIDialogWindowButton Button;
             internal ButtonPhase Phase;
             internal bool Cleared;
             internal bool Hidden;
+            internal bool ListRemoved;
         }
 
         /// <summary>
@@ -1373,6 +1523,10 @@ namespace GK2.SermonReminder.Popup
             internal bool ButtonsResolved;
             internal bool WindowsClosed;
             internal bool DataDetached;
+
+            // A confirmed foreign takeover or genuine destruction is a distinct,
+            // allowed ownership-end path that leaves only management cleanup.
+            internal bool Relinquished;
 
             internal readonly List<ButtonState> Buttons = new List<ButtonState>();
         }
