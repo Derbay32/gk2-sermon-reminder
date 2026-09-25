@@ -19,7 +19,8 @@
     "(beacon.slotWidthPx == native.slotWidthPx etc.), never against a guessed",
     "constant, so no fixed pixel size or PathID777 literal appears here.",
     "REPLACE every placeholder with real Proton-run results; never mark an",
-    "unexecuted scenario as passed."
+    "unexecuted scenario as passed.",
+    "Corrections applied: geometry uses original prefab slot dimensions (not the native Draw bubble SetNativeSize result) and observed-vs-observed equality against the same effective routed target/camera/viewport/frame; raw projection is distinguished from final clamped placement; the faith icon identity is compared against the native faith static definition after Draw."
   ],
   "environment": {
     "game.name": "Graveyard Keeper 2 (Steam Windows build)",
@@ -72,7 +73,12 @@
       "beacon.enabled": true,
       "beacon.underNativeHud": true,
       "hud.visible": true,
-      "hud.textKey": "gksr.hud.sermonReminder"
+      "hud.textKey": "gksr.hud.sermonReminder",
+      "beacon.targetAvailable": true,
+      "beacon.iconAvailable": true,
+      "beacon.componentAvailable": true,
+      "beacon.visibleNormal": true,
+      "native.hudVisibleNormal": true
     },
     "beacon-off-keeps-corner-text": {
       "save.sermonWeekday": 2,
@@ -89,10 +95,12 @@
     "beacon-slot-and-pointer-match-native": {
       "save.sermonWeekday": 2,
       "beacon.enabled": true,
-      "beacon.slotWidthPx": 40,
-      "beacon.slotHeightPx": 36,
-      "native.slotWidthPx": 40,
-      "native.slotHeightPx": 36,
+      "beacon.effectiveTargetId": "REPLACE_WITH_OBSERVED_EFFECTIVE_TARGET",
+      "native.referenceTargetId": "REPLACE_WITH_OBSERVED_EFFECTIVE_TARGET",
+      "beacon.originalPrefabSlotWidthPx": 40,
+      "beacon.originalPrefabSlotHeightPx": 36,
+      "native.originalPrefabSlotWidthPx": 40,
+      "native.originalPrefabSlotHeightPx": 36,
       "beacon.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID",
       "native.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID"
     }
@@ -132,12 +140,12 @@
       },
       "measurement": {
         "values": {
-          "beacon.slotWidthPx": 40,
-          "beacon.slotHeightPx": 36,
-          "native.slotWidthPx": 40,
-          "native.slotHeightPx": 36
+          "beacon.originalPrefabSlotWidthPx": 40,
+          "beacon.originalPrefabSlotHeightPx": 36,
+          "native.originalPrefabSlotWidthPx": 40,
+          "native.originalPrefabSlotHeightPx": 36
         },
-        "operatorObservation": "REPLACE: owned slot equals the native slot measured in the same scene."
+        "operatorObservation": "REPLACE: owned original prefab slot equals the native original prefab slot measured for the same effective target."
       },
       "notes": "REPLACE with the observed run notes."
     }
