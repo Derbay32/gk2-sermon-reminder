@@ -58,6 +58,16 @@ namespace GK2.SermonReminder.State
                 if (currentDayNumber < 1 || currentDayNumber > week)
                     return SermonStateSnapshot.Unreadable("current day number out of range: " + currentDayNumber);
 
+                // The weekday must be consistent with the absolute day; otherwise the
+                // two native reads do not describe one coherent day and no state can
+                // be trusted from them.
+                int expectedDayNumber = ((absoluteDay - 1) % week) + 1;
+                if (currentDayNumber != expectedDayNumber)
+                {
+                    return SermonStateSnapshot.Unreadable(
+                        "day/weekday inconsistency: day=" + absoluteDay + " weekday=" + currentDayNumber);
+                }
+
                 ConstDef sermonDay = ConstDef.Get(SermonWeekdayConst);
                 if (sermonDay == null)
                     return SermonStateSnapshot.Unreadable("const '" + SermonWeekdayConst + "' is not defined");

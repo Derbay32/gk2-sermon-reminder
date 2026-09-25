@@ -16,34 +16,47 @@ namespace GK2.SermonReminder.Hud
     /// </summary>
     internal enum SermonHudStatus
     {
-        /// <summary>Bound and current (or deliberately suppressed while an icon load is pending).</summary>
+        /// <summary>Usable: binding resolved and safe to render.</summary>
         Healthy,
 
-        /// <summary>Native HUD not usable yet (loading/menu/rebuild); ordinary, never a fault.</summary>
+        /// <summary>Not usable yet (loading/menu/rebuild), or a render dependency is unavailable; ordinary, never a fault.</summary>
         Pending,
 
-        /// <summary>Unusable native style source or canvas: a resource failure.</summary>
+        /// <summary>Unusable native member, style source or canvas: a resource failure.</summary>
         Failed
     }
 
-    /// <summary>Outcome of one HUD update.</summary>
-    internal readonly struct SermonHudResult
+    /// <summary>Outcome of the binding phase.</summary>
+    internal readonly struct SermonBindingResult
     {
         internal SermonHudStatus Status { get; }
         internal string Failure { get; }
 
         /// <summary>
-        /// True when the native HUD was rebuilt/rebound during this update, so the
-        /// caller must drop its owned sprite reference and let the new binding
-        /// request it again.
+        /// True when a previously owned display or host binding was destroyed or
+        /// replaced during this preparation, so the caller must drop its owned
+        /// sprite reference before requesting it for the new binding.
         /// </summary>
         internal bool Rebound { get; }
 
-        internal SermonHudResult(SermonHudStatus status, string failure, bool rebound)
+        internal SermonBindingResult(SermonHudStatus status, string failure, bool rebound)
         {
             Status = status;
             Failure = failure;
             Rebound = rebound;
+        }
+    }
+
+    /// <summary>Outcome of the render phase.</summary>
+    internal readonly struct SermonHudResult
+    {
+        internal SermonHudStatus Status { get; }
+        internal string Failure { get; }
+
+        internal SermonHudResult(SermonHudStatus status, string failure)
+        {
+            Status = status;
+            Failure = failure;
         }
     }
 
@@ -53,17 +66,21 @@ namespace GK2.SermonReminder.Hud
     /// original HUD's visibility and layering; it never creates its own Canvas or
     /// sorting order.
     ///
-    /// The root always carries exactly one TextMeshProUGUI. One
-    /// UnityEngine.UI.Image is created only while the Done state needs it and the
-    /// sprite is actually resolved, and destroyed when leaving Done. Countdown and
-    /// Ready reserve zero icon space and own no Image. While a Done icon load is
-    /// pending or has failed, the whole dependent Done presentation is suppressed
-    /// by the caller; the caller keeps the readable Done business state and leaves
-    /// the owned request in flight.
+    /// The work is split into two phases. <see cref="PrepareBinding"/> resolves and
+    /// validates the native host, detects a replaced or destroyed binding, and
+    /// applies the native-derived style; only after it reports Healthy may the
+    /// caller poll the owned sprite and call <see cref="Update"/>. This ordering is
+    /// what keeps a sprite released for a replaced binding from being assigned to
+    /// the new display.
     ///
-    /// Styling is fail-closed: if the native font/material cannot be read or a
-    /// style value cannot be copied, the owned display is destroyed rather than
-    /// left showing partial or substitute styling, and a later tick retries.
+    /// The root always carries exactly one owned TMP text child. One
+    /// UnityEngine.UI.Image is created only while the Done state needs it and the
+    /// sprite is actually resolved, placed before the Done text, and destroyed when
+    /// leaving Done. Countdown and Ready reserve zero icon space and own no Image.
+    ///
+    /// Styling is fail-closed: every failure path removes the owned presentation
+    /// synchronously, so a partial, stale or substitute label is never left visible
+    /// while the caller keeps running.
     /// </summary>
     internal sealed class SermonHudAdapter
     {
@@ -81,34 +98,41 @@ namespace GK2.SermonReminder.Hud
         private const float IconAspectWidth = 20f;
         private const float IconAspectHeight = 18f;
 
-        // Neutral single-line probe used only to measure the native font's line
-        // height; it is never displayed.
-        private const string LineHeightProbe = "0";
-        private const float LineHeightProbeWidth = 4096f;
-
         private bool fieldsResolved;
         private FieldInfo happinessLabelField;
         private FieldInfo wheelField;
         private FieldInfo leftUpGroupField;
 
+        // Explicit ownership of a created binding: the flag survives external Unity
+        // destruction, while the CLR references identify the host instance.
+        private bool bindingActive;
         private HUD boundHud;
         private GameObject boundGroup;
         private TextMeshProUGUI boundStyleSource;
-        private Material ownedMaterial;
 
         private GameObject displayObject;
+        private GameObject textObject;
         private TextMeshProUGUI label;
         private GameObject iconObject;
         private Image icon;
+        private Material ownedMaterial;
 
-        private string appliedLanguage;
+        // Geometry captured during a healthy binding preparation.
+        private RectTransform boundParentRect;
+        private RectTransform boundWheelRect;
+        private float canvasMinX;
+        private float canvasMaxX;
+
+        // Layout cache.
         private string appliedText;
         private float appliedAvailable = -1f;
         private SermonDisplayState appliedState = SermonDisplayState.Hidden;
         private Sprite appliedIcon;
-        private bool styleDirty;
 
+        // Style cache.
+        private bool styleDirty;
         private bool styleApplied;
+        private string appliedLanguage;
         private TMP_FontAsset appliedFont;
         private Material appliedSharedMaterial;
         private float appliedFontSize;
@@ -117,73 +141,67 @@ namespace GK2.SermonReminder.Hud
         private float appliedOutlineWidth;
         private Color32 appliedOutlineColor;
 
-        private bool reboundThisUpdate;
+        private bool reboundThisPrepare;
 
         internal void MarkStyleDirty() => styleDirty = true;
 
-        private SermonHudResult Failed(string reason) =>
-            new SermonHudResult(SermonHudStatus.Failed, reason, reboundThisUpdate);
-
-        private SermonHudResult Pending() =>
-            new SermonHudResult(SermonHudStatus.Pending, null, reboundThisUpdate);
-
-        private SermonHudResult Healthy() =>
-            new SermonHudResult(SermonHudStatus.Healthy, null, reboundThisUpdate);
-
-        /// <summary>Hide without destroying; the caller's owned sprite handle is untouched.</summary>
-        internal void Hide()
-        {
-            if (displayObject != null) displayObject.SetActive(false);
-        }
-
         /// <summary>
-        /// Show the given display state with its already-resolved text.
-        /// <paramref name="iconSprite"/> non-null means Done may present its icon; a
-        /// null sprite with state Done means the dependent Done presentation is
-        /// suppressed (the caller keeps the request in flight).
+        /// Resolve and validate the native host and style before any sprite work.
+        /// A previously owned binding that was replaced or destroyed is destroyed
+        /// here and reported through <see cref="SermonBindingResult.Rebound"/>, so
+        /// the caller can release the old sprite reference before acquiring one for
+        /// the new binding.
         /// </summary>
-        internal SermonHudResult Update(SermonDisplayState state, string text, Sprite iconSprite)
+        internal SermonBindingResult PrepareBinding()
         {
-            reboundThisUpdate = false;
+            reboundThisPrepare = false;
 
             if (!EnsureFields())
-                return Failed("native HUD members unavailable");
+                return FailBinding("native HUD members unavailable");
 
             HUD hud = TryGetHud();
-            if (hud == null)
+            GameObject group = null;
+            TextMeshProUGUI source = null;
+            UIHUDWheel wheel = null;
+            bool hostReadable = false;
+
+            if (hud != null)
             {
-                // No live HUD right now (loading, menu, or between rebuilds): a
-                // normal pending condition, never a native resource fault. If a
-                // display was bound before, the host was rebuilt, so the caller
-                // releases the old sprite reference for the new binding.
-                if (displayObject != null) reboundThisUpdate = true;
-                DestroyOwnedDisplay();
-                return Pending();
+                group = ReadMember<GameObject>(leftUpGroupField, hud);
+                source = ReadMember<TextMeshProUGUI>(happinessLabelField, hud);
+                wheel = ReadMember<UIHUDWheel>(wheelField, hud);
+                hostReadable = group != null && source != null && wheel != null;
             }
 
-            GameObject group = ReadMember<GameObject>(leftUpGroupField, hud);
-            TextMeshProUGUI source = ReadMember<TextMeshProUGUI>(happinessLabelField, hud);
-            UIHUDWheel wheel = ReadMember<UIHUDWheel>(wheelField, hud);
-
-            // A normally inactive native group is not a failure; a missing or
-            // destroyed member is. We never fall back to alternate names.
-            if (group == null || source == null || wheel == null)
-                return Failed("native HUD members unavailable");
-
-            if (displayObject == null)
-                ResetBindingRefs();
-            else if (!ReferenceEquals(boundHud, hud)
-                     || !ReferenceEquals(boundGroup, group)
-                     || !ReferenceEquals(boundStyleSource, source))
+            if (!hostReadable)
             {
-                // Native HUD or source instance was replaced: replace our display
-                // too and report the rebind so the caller re-requests the sprite.
-                DestroyOwnedDisplay();
-                reboundThisUpdate = true;
+                // The native HUD is simply not live right now (menu, loading, or a
+                // rebuild). A previously owned binding is gone; report it so the
+                // caller drops the old sprite reference.
+                if (DestroyOwnedDisplay())
+                    reboundThisPrepare = true;
+
+                // A normally inactive native group is not a failure.
+                return new SermonBindingResult(SermonHudStatus.Pending, null, reboundThisPrepare);
+            }
+
+            // Replacement detection: an explicit ownership flag plus host reference
+            // identity, and separately a Unity-destroyed owned root. Unity's
+            // fake-null is never the only signal.
+            bool hostReplaced = bindingActive
+                && (!ReferenceEquals(boundHud, hud)
+                    || !ReferenceEquals(boundGroup, group)
+                    || !ReferenceEquals(boundStyleSource, source));
+            bool displayDestroyed = bindingActive && displayObject == null;
+
+            if (hostReplaced || displayDestroyed)
+            {
+                if (DestroyOwnedDisplay())
+                    reboundThisPrepare = true;
             }
 
             if (displayObject == null && !TryCreateDisplay(hud, group, source))
-                return Failed("display creation failed");
+                return FailBinding("display creation failed");
 
             string language = SermonReminderLocalization.CurrentLanguageId;
             if (!styleApplied || styleDirty || !string.Equals(appliedLanguage, language, StringComparison.Ordinal)
@@ -193,31 +211,55 @@ namespace GK2.SermonReminder.Hud
                 {
                     // Missing/unreadable style source: never keep a partial or
                     // substitute style. Destroy the display and retry later.
-                    DestroyOwnedDisplay();
-                    return Failed("native style source unavailable");
+                    return FailBinding("native style source unavailable");
                 }
             }
 
-            RectTransform parentRect = group.transform as RectTransform;
-            RectTransform wheelRect = wheel.transform as RectTransform;
+            var parentRect = group.transform as RectTransform;
+            var wheelRect = wheel.transform as RectTransform;
             if (parentRect == null || wheelRect == null)
-            {
-                DestroyOwnedDisplay();
-                return Failed("native rect transforms unavailable");
-            }
+                return FailBinding("native rect transforms unavailable");
 
-            if (!TryGetCanvasLocalBounds(parentRect, out float canvasMinX, out float canvasMaxX))
+            if (!TryGetCanvasLocalBounds(parentRect, out float minX, out float maxX))
             {
                 // No resolvable canvas bounds: a resource failure, not a reason to
                 // invent placeholder dimensions. Fail closed and retry later.
-                DestroyOwnedDisplay();
-                return Failed("native canvas bounds unavailable");
+                return FailBinding("native canvas bounds unavailable");
             }
 
-            bool done = state == SermonDisplayState.Done;
-            bool iconReady = done && iconSprite != null;
+            boundParentRect = parentRect;
+            boundWheelRect = wheelRect;
+            canvasMinX = minX;
+            canvasMaxX = maxX;
+            return new SermonBindingResult(SermonHudStatus.Healthy, null, reboundThisPrepare);
+        }
 
-            float available = Mathf.Max(1f, (canvasMaxX - canvasMinX) - LocalGap * 2f);
+        /// <summary>
+        /// Render the given display state with its already-resolved text. Only valid
+        /// after <see cref="PrepareBinding"/> reported Healthy.
+        ///
+        /// A non-null <paramref name="iconSprite"/> with state Done presents the icon
+        /// row; a null sprite with state Done suppresses the whole dependent Done
+        /// presentation instead of falling back to Done without its icon.
+        /// </summary>
+        internal SermonHudResult Update(SermonDisplayState state, string text, Sprite iconSprite)
+        {
+            if (displayObject == null || label == null || textObject == null)
+                return FailRender("binding not prepared");
+
+            if (boundParentRect == null || boundWheelRect == null)
+                return FailRender("native rect transforms unavailable");
+
+            bool done = state == SermonDisplayState.Done;
+            if (done && iconSprite == null)
+            {
+                Suppress();
+                return new SermonHudResult(SermonHudStatus.Pending, "done icon unavailable");
+            }
+
+            float available = (canvasMaxX - canvasMinX) - LocalGap * 2f;
+            if (!IsPositiveFinite(available))
+                return FailRender("canvas width unusable");
 
             bool layoutCurrent = displayObject.activeSelf
                 && appliedState == state
@@ -227,20 +269,32 @@ namespace GK2.SermonReminder.Hud
 
             if (!layoutCurrent)
             {
-                if (iconReady)
-                {
-                    if (!LayoutWithIcon(text, iconSprite, available))
-                        return Failed("native text metrics unavailable");
-                }
-                else
-                {
-                    LayoutWithoutIcon(state, text, available);
-                }
+                bool laidOut = done
+                    ? LayoutWithIcon(text, iconSprite, available)
+                    : LayoutWithoutIcon(state, text, available);
+
+                if (!laidOut)
+                    return FailRender("native text metrics unavailable");
             }
 
-            PositionDisplay(wheelRect, parentRect, canvasMinX, canvasMaxX);
+            PositionDisplay();
             displayObject.SetActive(true);
-            return Healthy();
+            return new SermonHudResult(SermonHudStatus.Healthy, null);
+        }
+
+        /// <summary>
+        /// Suppress the presentation while a dependency is unavailable: remove the
+        /// conditional icon and hide the label, but keep the binding and the cached
+        /// style so a later tick can render again without a rebind.
+        /// </summary>
+        internal void Suppress()
+        {
+            DestroyOwnedIcon();
+
+            if (displayObject != null)
+                displayObject.SetActive(false);
+
+            ResetLayoutCache();
         }
 
         /// <summary>
@@ -253,49 +307,68 @@ namespace GK2.SermonReminder.Hud
             styleDirty = false;
         }
 
-        /// <summary>Countdown/Ready: full available width, no icon and no reserved space.</summary>
-        private void LayoutWithoutIcon(SermonDisplayState state, string text, float available)
+        /// <summary>Countdown/Ready: full available width, original Top alignment, no icon and no reserved space.</summary>
+        private bool LayoutWithoutIcon(SermonDisplayState state, string text, float available)
         {
             DestroyOwnedIcon();
+            label.alignment = TextAlignmentOptions.Top;
+            label.textWrappingMode = TextWrappingModes.Normal;
 
-            var preferred = Measure(text, available);
-            float height = Mathf.Max(preferred.y, 1f);
+            Vector2 preferred = label.GetPreferredValues(text, available, 0f);
+            if (!IsPositiveFinite(preferred.x) || !IsPositiveFinite(preferred.y))
+                return false;
+
             float width = Mathf.Clamp(preferred.x, 1f, available);
-
-            ApplyTextLayout(text, width, height);
-            ApplyDisplaySize(width, height);
+            ApplyTextLayout(text, 0f, width, preferred.y);
+            ApplyDisplaySize(width, preferred.y);
             RememberLayout(state, text, available, null);
+            return true;
         }
 
         /// <summary>
-        /// Done: reserve the icon row space, measure the remaining text width,
-        /// then size the icon from the actual native text line height so the
-        /// combined display stays inside the real canvas.
+        /// Done: place the icon first and the text beside it, sizing the icon from
+        /// the actual localized Done sentence's unwrapped line height. The combined
+        /// row is refused when it cannot fit the real canvas width.
         /// </summary>
         private bool LayoutWithIcon(string text, Sprite sprite, float available)
         {
-            float lineHeight = MeasureLineHeight();
-            if (lineHeight <= 0f)
-            {
-                DestroyOwnedDisplay();
-                return false;
-            }
+            // Done reads as an icon row, so its text starts at the row's left edge.
+            label.alignment = TextAlignmentOptions.TopLeft;
+            label.textWrappingMode = TextWrappingModes.Normal;
 
+            // Measure the actual Done sentence unwrapped: this is the real single
+            // line height, never a probe glyph or a wrapped paragraph height.
+            Vector2 unwrapped = label.GetPreferredValues(text, float.PositiveInfinity, 0f);
+            if (!IsPositiveFinite(unwrapped.x) || !IsPositiveFinite(unwrapped.y))
+                return false;
+
+            float lineHeight = unwrapped.y;
             float iconHeight = lineHeight;
             float iconWidth = lineHeight * (IconAspectWidth / IconAspectHeight);
             float reserved = iconWidth + LocalGap;
-            float remaining = Mathf.Max(1f, available - reserved);
 
-            var preferred = Measure(text, remaining);
-            float textHeight = Mathf.Max(preferred.y, 1f);
-            float textWidth = Mathf.Clamp(preferred.x, 1f, remaining);
+            if (!IsPositiveFinite(iconWidth) || !IsPositiveFinite(iconHeight) || !(reserved < available))
+                return false;
 
-            float displayWidth = Mathf.Min(textWidth + reserved, available);
+            // Wrap only the text layout inside the width left by the icon and gap.
+            float remaining = available - reserved;
+            Vector2 wrapped = label.GetPreferredValues(text, remaining, 0f);
+            if (!IsPositiveFinite(wrapped.x) || !IsPositiveFinite(wrapped.y))
+                return false;
+            if (wrapped.x > remaining)
+                return false;
+
+            float textWidth = wrapped.x;
+            float textHeight = wrapped.y;
+            float displayWidth = iconWidth + LocalGap + textWidth;
             float displayHeight = Mathf.Max(textHeight, iconHeight);
-            float finalTextWidth = Mathf.Max(1f, displayWidth - reserved);
 
-            ApplyTextLayout(text, finalTextWidth, textHeight);
+            // Never extend the row past the real canvas width.
+            if (!IsPositiveFinite(displayWidth) || !IsPositiveFinite(displayHeight) || displayWidth > available)
+                return false;
+
             ApplyDisplaySize(displayWidth, displayHeight);
+            ApplyTextLayout(text, reserved, textWidth, displayHeight);
 
             if (iconObject == null && !TryCreateIcon())
                 return false;
@@ -307,11 +380,32 @@ namespace GK2.SermonReminder.Hud
             }
 
             var iconRect = (RectTransform)iconObject.transform;
-            iconRect.anchoredPosition = new Vector2(finalTextWidth + LocalGap, 0f);
+            iconRect.anchoredPosition = Vector2.zero;
             iconRect.sizeDelta = new Vector2(iconWidth, iconHeight);
 
             RememberLayout(SermonDisplayState.Done, text, available, sprite);
             return true;
+        }
+
+        private SermonBindingResult FailBinding(string reason)
+        {
+            // Every real binding failure removes the owned presentation before the
+            // caller can continue, so no stale label survives. If a binding was
+            // actually destroyed, the caller is told to drop the old sprite
+            // reference so it can never be left orphaned.
+            if (DestroyOwnedDisplay())
+                reboundThisPrepare = true;
+
+            return new SermonBindingResult(SermonHudStatus.Failed, reason, reboundThisPrepare);
+        }
+
+        private SermonHudResult FailRender(string reason)
+        {
+            // A render that cannot produce a valid layout hides the owned
+            // presentation (removing the conditional Image and clearing the cached
+            // text) while keeping the binding so a later tick can retry.
+            Suppress();
+            return new SermonHudResult(SermonHudStatus.Failed, reason);
         }
 
         private bool EnsureFields()
@@ -362,25 +456,29 @@ namespace GK2.SermonReminder.Hud
         private bool TryCreateDisplay(HUD hud, GameObject group, TextMeshProUGUI source)
         {
             GameObject root = null;
+            GameObject textGo = null;
             try
             {
                 root = new GameObject(DisplayObjectName, typeof(RectTransform));
 
-                // Register for cleanup immediately: if parenting or component
-                // creation fails, the object can never be orphaned.
+                // Register both objects for cleanup immediately: if parenting or
+                // component creation fails, neither can be orphaned.
                 displayObject = root;
+                bindingActive = true;
 
                 var rootRect = (RectTransform)root.transform;
                 rootRect.anchorMin = new Vector2(0f, 1f);
                 rootRect.anchorMax = new Vector2(0f, 1f);
                 rootRect.pivot = new Vector2(0.5f, 1f);
 
+                // Stay hidden until a successful render, so a rebuild never shows
+                // an unfinished label.
+                root.SetActive(false);
                 root.transform.SetParent(group.transform, false);
 
-                // One owned TMP child carries the text so the conditional Done
-                // Image can keep sibling order before it. Destroying the root
-                // disposes the child with it.
-                var textGo = new GameObject(TextObjectName, typeof(RectTransform));
+                textGo = new GameObject(TextObjectName, typeof(RectTransform));
+                textObject = textGo;
+
                 textGo.transform.SetParent(root.transform, false);
 
                 var text = textGo.AddComponent<TextMeshProUGUI>();
@@ -391,14 +489,21 @@ namespace GK2.SermonReminder.Hud
                 boundGroup = group;
                 boundStyleSource = source;
                 styleApplied = false;
+                appliedLanguage = null;
                 ResetLayoutCache();
                 return true;
             }
             catch (Exception)
             {
+                if (textGo != null) UnityEngine.Object.Destroy(textGo);
                 if (root != null) UnityEngine.Object.Destroy(root);
                 displayObject = null;
+                textObject = null;
                 label = null;
+                iconObject = null;
+                icon = null;
+                bindingActive = false;
+                ResetBindingRefs();
                 return false;
             }
         }
@@ -412,8 +517,7 @@ namespace GK2.SermonReminder.Hud
                 iconObject = go;
 
                 // Owned by the display root and forced to sibling index 0, so the
-                // Image sits under the native HUD and renders before the Done
-                // text child.
+                // Image renders before the Done text child.
                 go.transform.SetParent(displayObject.transform, false);
                 go.transform.SetSiblingIndex(0);
 
@@ -496,7 +600,6 @@ namespace GK2.SermonReminder.Hud
                 label.outlineWidth = outlineWidth;
                 label.outlineColor = outlineColor;
 
-                label.alignment = TextAlignmentOptions.TopLeft;
                 label.textWrappingMode = TextWrappingModes.Normal;
                 label.overflowMode = TextOverflowModes.Overflow;
                 label.richText = false;
@@ -514,8 +617,7 @@ namespace GK2.SermonReminder.Hud
                 styleDirty = false;
 
                 // The reapply changed the font metrics, so any cached measurement
-                // and icon size are stale. Invalidate them so the next Update
-                // recomputes wrapping and the icon geometry.
+                // and icon size are stale.
                 ResetLayoutCache();
                 return true;
             }
@@ -551,33 +653,7 @@ namespace GK2.SermonReminder.Hud
             }
         }
 
-        /// <summary>
-        /// Measure the sentence directly from the font metrics. This does not depend
-        /// on the label's active state, unlike a mesh update, so a normally
-        /// inactive native group still yields correct dimensions.
-        /// </summary>
-        private Vector2 Measure(string text, float width)
-        {
-            return label.GetPreferredValues(text, Mathf.Max(1f, width), 0f);
-        }
-
-        /// <summary>
-        /// The native font's single unwrapped line height, measured from the styled
-        /// label's own font metrics. A single-line preferred-value measurement is
-        /// independent of the displayed sentence (it is never the whole wrapped
-        /// paragraph height) and scales with the applied native font size, so the
-        /// icon follows native canvas scaling instead of a hardcoded pixel height.
-        /// </summary>
-        private float MeasureLineHeight()
-        {
-            if (label == null) return 0f;
-
-            Vector2 measured = label.GetPreferredValues(LineHeightProbe, LineHeightProbeWidth, 0f);
-            float lineHeight = measured.y;
-            return lineHeight > 0f ? lineHeight : 0f;
-        }
-
-        private void ApplyTextLayout(string text, float width, float height)
+        private void ApplyTextLayout(string text, float offsetX, float width, float height)
         {
             if (!string.Equals(appliedText, text, StringComparison.Ordinal))
             {
@@ -585,23 +661,23 @@ namespace GK2.SermonReminder.Hud
                 appliedText = text;
             }
 
-            label.rectTransform.anchorMin = new Vector2(0f, 1f);
-            label.rectTransform.anchorMax = new Vector2(0f, 1f);
-            label.rectTransform.pivot = new Vector2(0f, 1f);
-            label.rectTransform.anchoredPosition = Vector2.zero;
-            label.rectTransform.sizeDelta = new Vector2(width, height);
+            var rect = label.rectTransform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = new Vector2(offsetX, 0f);
+            rect.sizeDelta = new Vector2(width, height);
         }
 
         private void ApplyDisplaySize(float width, float height)
         {
-            if (displayObject != null)
-            {
-                var rect = (RectTransform)displayObject.transform;
-                rect.anchorMin = new Vector2(0f, 1f);
-                rect.anchorMax = new Vector2(0f, 1f);
-                rect.pivot = new Vector2(0.5f, 1f);
-                rect.sizeDelta = new Vector2(width, height);
-            }
+            if (displayObject == null) return;
+
+            var rect = (RectTransform)displayObject.transform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.sizeDelta = new Vector2(width, height);
         }
 
         /// <summary>
@@ -609,17 +685,19 @@ namespace GK2.SermonReminder.Hud
         /// canvas width. Anchors are (0,1); anchoredPosition is measured from the
         /// parent's top-left corner in parent-local units.
         /// </summary>
-        private void PositionDisplay(RectTransform wheelRect, RectTransform parentRect, float canvasMinX, float canvasMaxX)
+        private void PositionDisplay()
         {
+            if (displayObject == null || boundWheelRect == null || boundParentRect == null) return;
+
             var corners = new Vector3[4];
-            wheelRect.GetWorldCorners(corners);
+            boundWheelRect.GetWorldCorners(corners);
 
             float minX = float.MaxValue;
             float maxX = float.MinValue;
             float minY = float.MaxValue;
             for (int i = 0; i < 4; i++)
             {
-                Vector3 local = parentRect.InverseTransformPoint(corners[i]);
+                Vector3 local = boundParentRect.InverseTransformPoint(corners[i]);
                 if (local.x < minX) minX = local.x;
                 if (local.x > maxX) maxX = local.x;
                 if (local.y < minY) minY = local.y;
@@ -635,8 +713,8 @@ namespace GK2.SermonReminder.Hud
                 : (canvasMinX + canvasMaxX) * 0.5f;
             float pivotLocalY = minY - LocalGap;
 
-            float anchorLeftX = parentRect.rect.xMin;
-            float anchorTopY = parentRect.rect.yMax;
+            float anchorLeftX = boundParentRect.rect.xMin;
+            float anchorTopY = boundParentRect.rect.yMax;
             rect.anchoredPosition = new Vector2(pivotLocalX - anchorLeftX, pivotLocalY - anchorTopY);
         }
 
@@ -656,13 +734,14 @@ namespace GK2.SermonReminder.Hud
                 return false;
             }
 
+            // A bounds read that yields non-finite values is not usable.
             if (canvasRect == parentRect)
             {
                 // The parent is the canvas itself: its own rect is already the
                 // canvas space, so use it directly rather than 0..width.
                 minX = parentRect.rect.xMin;
                 maxX = parentRect.rect.xMax;
-                return true;
+                return IsFinite(minX) && IsFinite(maxX) && maxX > minX;
             }
 
             var corners = new Vector3[4];
@@ -677,7 +756,7 @@ namespace GK2.SermonReminder.Hud
                 if (local.x > maxX) maxX = local.x;
             }
 
-            return true;
+            return IsFinite(minX) && IsFinite(maxX) && maxX > minX;
         }
 
         private void RememberLayout(SermonDisplayState state, string text, float available, Sprite iconSprite)
@@ -689,6 +768,10 @@ namespace GK2.SermonReminder.Hud
 
         private void DestroyOwnedIcon()
         {
+            // Drop the reference to the (shared) sprite before destroying the Image,
+            // so a released sprite is never left referenced by a live Image.
+            icon = null;
+
             if (iconObject != null)
             {
                 iconObject.SetActive(false);
@@ -696,15 +779,34 @@ namespace GK2.SermonReminder.Hud
             }
 
             iconObject = null;
-            icon = null;
         }
 
-        private void DestroyOwnedDisplay()
+        private bool DestroyOwnedDisplay()
         {
+            // Whether an owned binding really existed, so callers can decide if the
+            // owned sprite reference must be released.
+            bool hadBinding = bindingActive;
+
+            icon = null;
+
+            if (iconObject != null)
+            {
+                iconObject.SetActive(false);
+                UnityEngine.Object.Destroy(iconObject);
+                iconObject = null;
+            }
+
+            if (textObject != null)
+            {
+                UnityEngine.Object.Destroy(textObject);
+                textObject = null;
+            }
+
             if (displayObject != null)
             {
                 displayObject.SetActive(false);
                 UnityEngine.Object.Destroy(displayObject);
+                displayObject = null;
             }
 
             if (ownedMaterial != null)
@@ -713,12 +815,11 @@ namespace GK2.SermonReminder.Hud
                 ownedMaterial = null;
             }
 
-            displayObject = null;
             label = null;
-            iconObject = null;
-            icon = null;
+            bindingActive = false;
             appliedLanguage = null;
             ResetBindingRefs();
+            return hadBinding;
         }
 
         private void ResetLayoutCache()
@@ -734,8 +835,16 @@ namespace GK2.SermonReminder.Hud
             boundHud = null;
             boundGroup = null;
             boundStyleSource = null;
+            boundParentRect = null;
+            boundWheelRect = null;
+            canvasMinX = 0f;
+            canvasMaxX = 0f;
             styleApplied = false;
             ResetLayoutCache();
         }
+
+        private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+
+        private static bool IsPositiveFinite(float value) => IsFinite(value) && value > 0f;
     }
 }
