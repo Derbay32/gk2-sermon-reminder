@@ -41,6 +41,17 @@
       "en": "This week’s sermon is complete!"
     }
   },
+  "languageMapping": {
+    "catalogLabelToRawGameLanguageId": {
+      "zh-CN": "zh_cn",
+      "en": "en"
+    },
+    "knownRawGameLanguageIds": [
+      "zh_cn",
+      "en"
+    ],
+    "note": "观察字段 language.active 记录游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。knownRawGameLanguageIds 仅为结构校验示例；其他受测语言的原始标识（如 fr）仍可作为不受支持语言回退场景的取值。"
+  },
   "observationVocabulary": {
     "hud.visible": "bool: 角落倒计时文字当前是否可见",
     "hud.text": "string: 角落倒计时文字的完整显示内容",
@@ -78,7 +89,7 @@
     "save.tutorialWasCompletedEarlier": "bool: 同一进程先前已载入过教学完成存档",
     "countdown.beforeDays": "int: 日期未变前后连续观察中的前一整数天数",
     "countdown.afterDays": "int: 日期未变前后连续观察中的后一整数天数",
-    "language.active": "string: 当前游戏语言标识，例如 zh-CN、en、fr",
+    "language.active": "string: 游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages，例如 zh_cn、en、fr；命名原始 game language，使用 zh_cn 而非文案目录标签 zh-CN",
     "state.readable": "bool: 必要状态是否可可靠读取",
     "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定",
     "fault.reported": "bool: 是否上报了故障",
@@ -286,6 +297,10 @@
           "equals": 1
         },
         {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        },
+        {
           "observation": "hud.text",
           "finalTextKey": "gksr.hud.sermonCountdown.one",
           "language": "zh-CN"
@@ -318,6 +333,10 @@
         {
           "observation": "hud.countdownDays",
           "equals": 1
+        },
+        {
+          "observation": "language.active",
+          "equals": "en"
         },
         {
           "observation": "hud.text",
@@ -354,6 +373,10 @@
           "integerGreaterThan": 1
         },
         {
+          "observation": "language.active",
+          "equals": "zh_cn"
+        },
+        {
           "observation": "hud.text",
           "finalTextKey": "gksr.hud.sermonCountdown.other",
           "language": "zh-CN",
@@ -387,6 +410,10 @@
         {
           "observation": "hud.countdownDays",
           "integerGreaterThan": 1
+        },
+        {
+          "observation": "language.active",
+          "equals": "en"
         },
         {
           "observation": "hud.text",
@@ -571,7 +598,7 @@
       "expect": [
         {
           "observation": "language.active",
-          "notEquals": "zh-CN"
+          "notEquals": "zh_cn"
         },
         {
           "observation": "language.active",

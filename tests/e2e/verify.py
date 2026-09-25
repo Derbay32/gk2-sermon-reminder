@@ -143,11 +143,37 @@ def load_json(path):
 
 
 def validate_manifest(manifest):
-    """Strictly check the manifest shape and return the scenario list."""
+    """Strictly check the manifest shape and return the scenario list.
+
+    This is structural validation only: it proves the manifest can be used by
+    the full evidence validator. It never asserts that any game scenario passed.
+    """
     if manifest.get("kind") != "gksa10-e2e-manifest":
         raise Fail(f"unsupported manifest kind: {manifest.get('kind')!r}")
     if not is_positive_int(manifest.get("manifestVersion")):
         raise Fail("manifestVersion must be a positive integer")
+    final_text = manifest.get("finalText")
+    if not isinstance(final_text, dict) or not final_text:
+        raise Fail("manifest must declare finalText for every required key")
+    for key, translations in final_text.items():
+        if not isinstance(translations, dict) or not translations:
+            raise Fail(f"finalText[{key!r}] must map languages to complete sentences")
+        for language, text in translations.items():
+            if not isinstance(text, str) or not text.strip():
+                raise Fail(f"finalText[{key!r}][{language!r}] must be a non-empty sentence")
+        if "{" in translations.get("en", ""):
+            en_params = set(re.findall(r"\{(\w+)\}", translations["en"]))
+            zh_params = set(re.findall(r"\{(\w+)\}", translations.get("zh-CN", "")))
+            if en_params != zh_params:
+                raise Fail(
+                    f"finalText[{key!r}] placeholder mismatch between en and zh-CN: "
+                    f"{sorted(en_params)} vs {sorted(zh_params)}"
+                )
+
+    language_mapping = manifest.get("languageMapping")
+    if not isinstance(language_mapping, dict) or not language_mapping:
+        raise Fail("manifest must declare languageMapping between catalog labels and raw game ids")
+
     scenarios = manifest.get("scenarios")
     if not isinstance(scenarios, list) or not scenarios:
         raise Fail("manifest must declare a non-empty scenarios array")
@@ -176,6 +202,31 @@ def validate_manifest(manifest):
                 or "finalTextKeyFromObservation" in condition
             ):
                 raise Fail(f"scenario {sid} expectation without a check: {condition!r}")
+            if ("finalTextKey" in condition or "finalTextKeyFromObservation" in condition):
+                language = condition.get("language")
+                if language not in ("zh-CN", "en"):
+                    raise Fail(
+                        f"scenario {sid} references catalog language {language!r}; "
+                        "finalText languages are catalog labels (zh-CN, en)"
+                    )
+            if condition["observation"] == "language.active":
+                label_map = language_mapping["catalogLabelToRawGameLanguageId"]
+                raw_ids = set(label_map.values())
+                for key in ("equals", "notEquals"):
+                    value = condition.get(key)
+                    if not isinstance(value, str):
+                        continue
+                    # A catalog label is only valid here when it is also a raw
+                    # game id (e.g. 'en'). Labels like 'zh-CN' are catalog-only
+                    # and must never appear in a language.active comparison.
+                    # Other raw ids (e.g. an unsupported 'fr') stay allowed so the
+                    # unsupported-language fallback scenario remains expressible.
+                    if value in label_map and value not in raw_ids:
+                        raise Fail(
+                            f"scenario {sid} compares language.active against catalog-only "
+                            f"label {value!r}; raw game language ids are required "
+                            f"(known: {sorted(raw_ids)})"
+                        )
         evidence = scenario.get("evidence")
         if not isinstance(evidence, dict):
             raise Fail(f"scenario {sid} must declare an evidence object")
@@ -185,6 +236,26 @@ def validate_manifest(manifest):
 # --------------------------------------------------------------------------
 # capture validation
 # --------------------------------------------------------------------------
+
+def check_language_observations(capture, manifest):
+    """Reject a capture whose raw game language observation uses a
+    catalog-only label (e.g. 'zh-CN' instead of 'zh_cn')."""
+    mapping = manifest.get("languageMapping", {})
+    label_map = mapping.get("catalogLabelToRawGameLanguageId", {})
+    raw_ids = set(label_map.values())
+    catalog_only = {label for label in label_map if label not in raw_ids}
+    for sid, observations in (capture.get("observations") or {}).items():
+        if not isinstance(observations, dict):
+            continue
+        value = observations.get("language.active")
+        if not isinstance(value, str):
+            continue
+        if value in catalog_only:
+            raise Fail(
+                f"scenario {sid} recorded language.active = {value!r}, a catalog-only "
+                f"label; raw game language ids are required (known: {sorted(raw_ids)})"
+            )
+
 
 def validate_capture_shape(capture, manifest):
     if not isinstance(capture, dict):
@@ -391,16 +462,102 @@ def evaluate_scenario(scenario, observations, final_text, record):
     return failures
 
 
+def check_manifest_only(manifest_path, output_path):
+    """Structural-only manifest check for CI.
+
+    This proves the manifest is well-formed and usable by the evidence
+    validator. It NEVER asserts that any game scenario passed and is not an
+    E2E verdict; the artifact records assertion="structure" explicitly.
+    """
+    artifact = {
+        "artifactVersion": 1,
+        "kind": "gksa10-manifest-check-result",
+        "assertion": "structure-only",
+        "e2eVerdict": None,
+        "ok": False,
+        "manifest": str(manifest_path),
+        "manifestSha256": None,
+        "error": None,
+        "scenarioCount": 0,
+        "scenarioIds": [],
+        "note": (
+            "Structural validation only. This artifact does not represent real "
+            "game execution or business acceptance; only a complete capture "
+            "validated by the evidence mode can do that."
+        ),
+    }
+
+    def emit():
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as handle:
+            json.dump(artifact, handle, ensure_ascii=False, indent=2, sort_keys=True)
+            handle.write("\n")
+
+    try:
+        manifest = load_json(manifest_path)
+        scenarios = validate_manifest(manifest)
+    except Fail as exc:
+        artifact["error"] = str(exc)
+        emit()
+        sys.stderr.write(f"FAIL [manifest] {exc}\n")
+        sys.stderr.write("RESULT: FAIL (manifest structure)\n")
+        return 2
+    except OSError as exc:
+        artifact["error"] = str(exc)
+        emit()
+        sys.stderr.write(f"FAIL [manifest] {exc}\n")
+        sys.stderr.write("RESULT: FAIL (manifest structure)\n")
+        return 2
+
+    artifact["ok"] = True
+    artifact["manifestSha256"] = sha256_file(manifest_path)
+    artifact["scenarioCount"] = len(scenarios)
+    artifact["scenarioIds"] = [s["id"] for s in scenarios]
+    artifact["ticket"] = manifest.get("ticket", "")
+    emit()
+    sys.stderr.write(
+        f"RESULT: PASS (manifest structure only; {len(scenarios)} scenarios declared; "
+        "no game execution asserted)\n"
+    )
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Validate a GKSA-10 E2E capture.")
     parser.add_argument("--manifest", required=True)
-    parser.add_argument("--capture", required=True)
+    parser.add_argument(
+        "--check-manifest",
+        action="store_true",
+        help=(
+            "Structural-only manifest check for CI. Asserts schema validity and "
+            "emits a structure artifact; NEVER asserts game execution or E2E pass. "
+            "Requires --output and rejects --capture."
+        ),
+    )
+    parser.add_argument("--capture")
     parser.add_argument("--output", required=True)
     args = parser.parse_args(argv)
 
     manifest_path = Path(args.manifest)
-    capture_path = Path(args.capture)
     output_path = Path(args.output)
+
+    if args.check_manifest:
+        if args.capture:
+            sys.stderr.write(
+                "FAIL [cli] --check-manifest proves manifest structure only and must "
+                "not be combined with --capture; use the evidence mode for a capture.\n"
+            )
+            return 2
+        return check_manifest_only(manifest_path, output_path)
+
+    if not args.capture:
+        sys.stderr.write(
+            "FAIL [cli] evidence mode requires --capture; use --check-manifest for a "
+            "structural-only check.\n"
+        )
+        return 2
+
+    capture_path = Path(args.capture)
 
     def fail_early(stage, message, code=2):
         """Always emit a deterministic artifact, even when the run fails closed
@@ -441,6 +598,7 @@ def main(argv=None):
     try:
         capture = load_json(capture_path)
         validate_capture_shape(capture, manifest)
+        check_language_observations(capture, manifest)
         env = capture["environment"]
         evidence_files = validate_environment(env, manifest, capture_path.parent)
         validated_evidence = validate_evidence_files(env, evidence_files, capture_path.parent)

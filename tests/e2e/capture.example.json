@@ -42,7 +42,8 @@
   "observations": {
     "church-locked": {
       "save.churchUnlocked": false,
-      "hud.visible": false
+      "hud.visible": false,
+      "language.active": "zh_cn"
     }
   },
   "results": [
