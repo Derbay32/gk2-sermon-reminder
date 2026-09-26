@@ -9,5 +9,10 @@
   "gksr.status.reminderUnavailable": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。",
   "gksr.status.hudUnavailable": "[布道提醒] 角落信息栏提醒不可用。",
   "gksr.diagnostics.reminderUnavailable": "[布道提醒] 必要游戏状态读取失败。查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。",
-  "gksr.diagnostics.hudUnavailable": "[布道提醒] 提醒信息无法在角落信息栏显示，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
+  "gksr.diagnostics.hudUnavailable": "[布道提醒] 提醒信息无法在角落信息栏显示，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。",
+  "gksr.popup.sermon.title": "布道日",
+  "gksr.popup.sermon.body": "今天是布道日！记得去教堂布道！\n\n你会看到这个弹窗是因为你手动启用了究极提醒。如果你觉得这个弹窗很多余，可以到设置里关闭它。",
+  "gksr.popup.sermon.confirm": "确认",
+  "gksr.settings.popup.label": "究极提醒",
+  "gksr.settings.popup.description": "在布道日来临时强行开启一个弹窗的究极提醒。默认值为关闭。"
 }

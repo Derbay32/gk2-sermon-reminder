@@ -8,6 +8,7 @@ using GK2.SermonReminder.Beacon;
 using GK2.SermonReminder.Hud;
 using GK2.SermonReminder.Localization;
 using GK2.SermonReminder.Notifications;
+using GK2.SermonReminder.Popup;
 using GK2.SermonReminder.Settings;
 using GK2.SermonReminder.State;
 using HarmonyLib;
@@ -49,15 +50,24 @@ namespace GK2.SermonReminder
     {
         internal static SermonReminderMod Active { get; private set; }
 
-        // Stable opaque config identity and default for the one beacon toggle.
+        // Stable opaque config identities and defaults for the two own toggles.
+        // The beacon keeps its accepted identity/default/order; the popup toggle is
+        // added with its own identity, default false and order 1. Both share the one
+        // approved localized settings group.
         private const string BeaconSection = "Beacon";
         private const string BeaconKey = "EnabledChurchBeacon";
+        private const string PopupSection = "Popup";
+        private const string PopupKey = "EnabledSermonPopup";
 
         private readonly IReadOnlyList<Gk2ModDependency> dependencies;
         private readonly SermonStateReader reader = new SermonStateReader();
         private readonly SermonHudAdapter hud = new SermonHudAdapter();
         private readonly NativeCheckSprite checkSprite = new NativeCheckSprite();
         private readonly ChurchBeacon beacon = new ChurchBeacon();
+
+        // One popup instance for the lifetime of this mod object, preserved across
+        // ordinary menu/load/enable cycles rather than reconstructed per load or tick.
+        private readonly SermonPopup popup = new SermonPopup();
 
         // The single accepted two-category fault-notice module, created once at
         // registration with the registration logger and reused for every tick.
@@ -85,6 +95,17 @@ namespace GK2.SermonReminder
         // changes only affect the next load.
         private bool beaconEnabledForLoad;
 
+        // The mod's own registered popup toggle, captured during registration as the
+        // stable ConfigEntry value source. Null until registration AND own-descriptor
+        // localization both succeed, which fails the popup closed (disabled) rather
+        // than falling back to an unlocalized descriptor or a silent default-on.
+        private ConfigEntry<bool> popupEntry;
+
+        // Snapshot of the persisted popup toggle for the current load, established
+        // exactly once at genuine readiness and immutable for that load. Runtime
+        // changes only affect the next load, so process dedup is independent of it.
+        private bool popupEnabledForLoad;
+
         // Independently deduplicated diagnostic channels: state read, corner
         // rendering (including the Done icon), the sprite handle and the beacon. Each
         // holds its own last-logged episode so a healthy channel never clears or
@@ -94,6 +115,7 @@ namespace GK2.SermonReminder
         private string lastCornerDiagnostic;
         private string lastIconDiagnostic;
         private string lastBeaconDiagnostic;
+        private string lastPopupDiagnostic;
         private SermonDisplayState loggedDisplay;
         private bool hasLoggedDisplay;
 
@@ -185,163 +207,68 @@ namespace GK2.SermonReminder
             try { notices = new SermonFaultNotices(log); }
             catch (Exception) { notices = null; }
 
-            RegisterBeaconSetting(context);
+            RegisterOwnSettings(context);
         }
 
         /// <summary>
-        /// Register the one beacon toggle and localize its presentation. A failure is
-        /// contained: the beacon then fails closed (disabled) for every load instead of
-        /// silently defaulting on, while the corner presentation keeps working.
+        /// Register both own toggles and localize their presentations. Each feature is
+        /// registered through the same owned transaction helper with its own identity,
+        /// default and order; a failure in one is contained so the other still runs,
+        /// and the failed feature stays closed (disabled) instead of silently
+        /// defaulting on.
         /// </summary>
-        private void RegisterBeaconSetting(Gk2ModContext context)
+        private void RegisterOwnSettings(Gk2ModContext context)
         {
             // Fail closed until registration and own-descriptor wrapping both succeed.
             beaconEntry = null;
+            popupEntry = null;
 
-            try
+            Gk2Settings settings;
+            try { settings = context?.Settings; }
+            catch (Exception) { settings = null; }
+
+            var groupTitle = new Func<string>(
+                () => SermonReminderLocalization.Get(SermonReminderLocalization.SettingsGroupTitleKey));
+
+            // Section/key/default/order and label/description catalog keys are the only
+            // per-feature inputs to the shared registration transaction.
+            OwnToggleRegistration beaconRegistration = LocalizedSettingRegistration.RegisterOwnToggle(
+                settings,
+                BeaconSection,
+                BeaconKey,
+                true,
+                0,
+                SermonReminderLocalization.SettingsBeaconLabelKey,
+                SermonReminderLocalization.SettingsBeaconDescriptionKey,
+                groupTitle);
+
+            if (beaconRegistration.Succeeded)
             {
-                Gk2Settings settings = context?.Settings;
-
-                // Validate the mutable list shape and readability BEFORE any registration.
-                if (!BeaconSettingLocalization.TryGetMutableList(settings, out IList<IGk2Setting> list, out string listFailure))
-                {
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: " + listFailure);
-                    return;
-                }
-
-                if (!TrySnapshotItems(list, out HashSet<IGk2Setting> before, out string snapshotFailure))
-                {
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: " + snapshotFailure);
-                    return;
-                }
-
-                ConfigEntry<bool> entry = settings.AddToggle(
-                    BeaconSection, BeaconKey, true, string.Empty, string.Empty, 0);
-
-                // Identify our exact new descriptor by proven reference delta AND the
-                // expected stable identity, requiring one unambiguous candidate; never
-                // fall back to an arbitrary item.
-                IGk2Setting registered = FindOwnDescriptor(list, before);
-                if (registered == null)
-                {
-                    // Cannot prove which entry is ours: leave the list untouched and
-                    // fail closed rather than remove or change an unidentified item.
-                    SafeLogError("GKSR_BEACON_SETTING_FAILED: registration produced no unambiguous own descriptor");
-                    return;
-                }
-
-                if (entry == null)
-                {
-                    RollBackOwnDescriptor(list, registered, "registration returned no config entry");
-                    return;
-                }
-
-                var localized = new BeaconSettingDescriptor(
-                    registered,
-                    () => SermonReminderLocalization.Get(SermonReminderLocalization.SettingsGroupTitleKey));
-
-                if (!BeaconSettingLocalization.TryReplaceOwnDescriptor(list, registered, localized, out string replaceFailure))
-                {
-                    // Fail closed: never keep an unlocalized descriptor usable. Roll back
-                    // only our own just-added entry when that is safely possible.
-                    RollBackOwnDescriptor(list, registered, "localization swap failed (" + replaceFailure + ")");
-                    return;
-                }
-
-                // Only a fully registered and localized toggle becomes the value source.
-                beaconEntry = entry;
-            }
-            catch (Exception ex)
-            {
-                beaconEntry = null;
-                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + ex.GetType().Name);
-            }
-        }
-
-        /// <summary>
-        /// Remove exactly our own just-added descriptor after a failed localization
-        /// step, so no unlocalized beacon setting remains registered. Never removes or
-        /// changes another mod's entry; a failed rollback is reported, not forced.
-        /// </summary>
-        private void RollBackOwnDescriptor(IList<IGk2Setting> list, IGk2Setting registered, string reason)
-        {
-            if (BeaconSettingLocalization.TryRemoveOwnDescriptor(list, registered, out string rollbackFailure))
-            {
-                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + reason + "; own descriptor rolled back");
+                beaconEntry = beaconRegistration.Entry;
             }
             else
             {
-                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + reason
-                    + "; rollback failed (" + rollbackFailure + ")");
+                SafeLogError("GKSR_BEACON_SETTING_FAILED: " + beaconRegistration.Failure);
             }
-        }
 
-        private static bool TrySnapshotItems(
-            IList<IGk2Setting> list,
-            out HashSet<IGk2Setting> snapshot,
-            out string failure)
-        {
-            snapshot = null;
-            failure = null;
-            try
+            OwnToggleRegistration popupRegistration = LocalizedSettingRegistration.RegisterOwnToggle(
+                settings,
+                PopupSection,
+                PopupKey,
+                false,
+                1,
+                SermonReminderLocalization.SettingsPopupLabelKey,
+                SermonReminderLocalization.SettingsPopupDescriptionKey,
+                groupTitle);
+
+            if (popupRegistration.Succeeded)
             {
-                var captured = new HashSet<IGk2Setting>();
-                for (int i = 0; i < list.Count; i++)
-                {
-                    IGk2Setting item = list[i];
-                    if (item != null) captured.Add(item);
-                }
-
-                snapshot = captured;
-                return true;
+                popupEntry = popupRegistration.Entry;
             }
-            catch (Exception ex)
+            else
             {
-                failure = "settings snapshot unreadable (" + ex.GetType().Name + ")";
-                return false;
+                SafeLogError("GKSR_POPUP_SETTING_FAILED: " + popupRegistration.Failure);
             }
-        }
-
-        /// <summary>
-        /// Find the one descriptor this registration added: it must be absent from the
-        /// proven pre-registration snapshot AND carry the expected stable identity
-        /// (Beacon / EnabledChurchBeacon / bool). Zero or multiple matches report null
-        /// so the caller fails closed instead of selecting an arbitrary or pre-existing
-        /// descriptor.
-        /// </summary>
-        private static IGk2Setting FindOwnDescriptor(IList<IGk2Setting> list, HashSet<IGk2Setting> before)
-        {
-            IGk2Setting candidate = null;
-            int matches = 0;
-            for (int i = 0; i < list.Count; i++)
-            {
-                IGk2Setting item = list[i];
-                if (item == null || before.Contains(item))
-                    continue;
-
-                string section;
-                string key;
-                Type valueType;
-                try
-                {
-                    section = item.Section;
-                    key = item.Key;
-                    valueType = item.ValueType;
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-
-                if (!string.Equals(section, BeaconSection, StringComparison.Ordinal)) continue;
-                if (!string.Equals(key, BeaconKey, StringComparison.Ordinal)) continue;
-                if (valueType != typeof(bool)) continue;
-
-                candidate = item;
-                matches++;
-            }
-
-            return matches == 1 ? candidate : null;
         }
 
         public override void OnEnable()
@@ -394,6 +321,13 @@ namespace GK2.SermonReminder
                 // a missing/throwing initial save can never change the setting.
                 beaconEnabledForLoad = ReadBeaconEnabledSnapshot();
 
+                // Snapshot the popup toggle exactly once for this genuine ready
+                // transition, then begin the popup's current-load work against the
+                // actual current native slot object captured at the entry prefix. The
+                // mutable identity is never recaptured here.
+                popupEnabledForLoad = ReadPopupEnabledSnapshot();
+                BeginPopupLoad();
+
                 // Open exactly one notice load period for this ready period, even when
                 // the initial save read is missing or throws: a prior successful state
                 // read is not required before a fault can be reported.
@@ -442,6 +376,44 @@ namespace GK2.SermonReminder
         internal void HandleReturnedToMenu() => HandleLifecycleEnd();
 
         /// <summary>
+        /// Native load-entry prefix (ContinueGame): end the prior load, then freeze the
+        /// immutable entry identity from the actual native slot argument. Every native
+        /// read is contained here, never used unguarded as an argument outside it.
+        /// </summary>
+        internal void HandleLoadEntry(SaveSlotData saveSlotData)
+        {
+            HandleLifecycleEnd();
+            try { popup.CaptureLoadIdentity(saveSlotData); }
+            catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Native new-game load-entry prefix (CreateGameSaveAndStart): end the prior
+        /// load, then freeze the identity from the native instance's already-allocated
+        /// slot, contained so a failing getter never escapes into the native method.
+        /// </summary>
+        internal void HandleNewGameLoadEntry(MainGame instance)
+        {
+            HandleLifecycleEnd();
+            try
+            {
+                SaveSlotData slot = instance != null ? instance.SaveSlotData : null;
+                popup.CaptureLoadIdentity(slot);
+            }
+            catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Advance the process slot generation for an actual successful native slot
+        /// deletion, bound to the exact owner captured per invocation.
+        /// </summary>
+        internal void HandleSuccessfulDeletion(string slotName, bool isDemoSave)
+        {
+            try { popup.RecordSuccessfulDeletion(slotName, isDemoSave); }
+            catch (Exception) { }
+        }
+
+        /// <summary>
         /// A genuine lifecycle boundary (native load start, menu return, disable or
         /// shutdown). Closes the notice load period so no stale notice can show, then
         /// drops readiness. Duplicate calls are harmless: only a real OnGameStarted
@@ -451,7 +423,58 @@ namespace GK2.SermonReminder
         {
             try { notices?.EndLoad(); }
             catch (Exception) { }
+
+            // End the popup's current-load work independently; retained cleanup
+            // continues to be driven by later ticks even after EndLoad.
+            try { popup.EndLoad(); }
+            catch (Exception) { }
+
             ResetReadinessSafely();
+        }
+
+        /// <summary>
+        /// Begin the popup's current-load work with the once-per-load toggle snapshot
+        /// and the actual current native slot object. Contained: a missing identity or
+        /// a mismatched slot is failed closed by the popup itself.
+        /// </summary>
+        private void BeginPopupLoad()
+        {
+            try
+            {
+                SaveSlotData slot = MainGame.Instance?.SaveSlotData;
+                popup.BeginLoad(slot, popupEnabledForLoad);
+            }
+            catch (Exception ex)
+            {
+                SafeLogError("GKSR_POPUP_LOAD_FAILED: " + ex.GetType().Name);
+            }
+        }
+
+        /// <summary>
+        /// Read the persisted popup toggle once for this load. A missing registration or
+        /// a failed read is contained and fails the popup closed (disabled) for the
+        /// load, never a silent default-on.
+        /// </summary>
+        private bool ReadPopupEnabledSnapshot()
+        {
+            try
+            {
+                ConfigEntry<bool> entry = popupEntry;
+                if (entry == null)
+                {
+                    SafeLogError("GKSR_POPUP_SETTING_FAILED: toggle unavailable; popup disabled for this load");
+                    return false;
+                }
+
+                // The successfully registered ConfigEntry is the stable value source.
+                return entry.Value;
+            }
+            catch (Exception ex)
+            {
+                SafeLogError("GKSR_POPUP_SETTING_FAILED: read failed (" + ex.GetType().Name
+                    + "); popup disabled for this load");
+                return false;
+            }
         }
 
         /// <summary>
@@ -488,19 +511,25 @@ namespace GK2.SermonReminder
             bool cornerHudFailed = false;
             bool stateReady = false;
 
+            // The popup is fed the same fresh snapshot the other reminders use. If the
+            // state read does not succeed (or the tick never reaches it) this stays an
+            // unreadable snapshot, so the popup never reuses a stale Ready/day.
+            SermonStateSnapshot popupSnapshot = default;
+
             try
             {
                 if (!enabled)
                 {
                     // A disabled entry never starts a load or shows a notice. It still
-                    // advances retained notice cleanup through the single finally call
-                    // below, which cannot show because the notice load period is closed.
+                    // advances retained popup/notice cleanup through the single finally
+                    // deliveries below, which cannot show while disabled.
                     return;
                 }
 
                 if (!TickState(out stateReadFailed, out SermonStateSnapshot snapshot))
                     return;
 
+                popupSnapshot = snapshot;
                 stateReady = true;
                 TickCorner(snapshot, ref cornerHudFailed);
             }
@@ -530,10 +559,61 @@ namespace GK2.SermonReminder
             }
             finally
             {
+                // Exactly one contained popup delivery per tick, independent of the
+                // corner/state early returns, so an eligible popup is never skipped by a
+                // missing corner text, a HUD/icon failure, or a healthy beacon update.
+                // The popup contains its own failures and never suppresses them here.
+                TickPopup(popupSnapshot);
+
                 // Exactly one contained flag delivery per tick for every path, so a
                 // buffered failure is never discarded by a scattered flush.
                 try { notices?.Update(stateReadFailed, cornerHudFailed); }
                 catch (Exception) { }
+            }
+        }
+
+        /// <summary>
+        /// Deliver one contained popup evaluation for the fresh snapshot. A Failed
+        /// outcome is logged with a bounded technical stage/detail diagnostic and its
+        /// episode is preserved through Pending; it is cleared only on an actual Healthy
+        /// completion or a true lifecycle/eligibility (Inactive) boundary. A popup
+        /// failure is never classified as a state or corner fault, and never suppresses
+        /// the other reminders.
+        /// </summary>
+        private void TickPopup(SermonStateSnapshot snapshot)
+        {
+            try
+            {
+                SermonPopupOutcome outcome = popup.Update(snapshot);
+                switch (outcome.Status)
+                {
+                    case SermonPopupStatus.Failed:
+                        LogPopupDiagnostic(
+                            "popup-failed:" + outcome.Stage + ":" + (outcome.Detail ?? "unknown"),
+                            "GKSR_POPUP_FAILED: stage=" + outcome.Stage
+                                + " detail=" + (outcome.Detail ?? "unknown"));
+                        break;
+
+                    case SermonPopupStatus.Healthy:
+                        // The only point where the popup episode is complete.
+                        ClearPopupDiagnostic();
+                        break;
+
+                    default:
+                        // Pending keeps the episode (a persisting failure is not re-logged
+                        // per tick); Inactive is a true eligibility boundary that clears it.
+                        if (outcome.Status == SermonPopupStatus.Inactive)
+                            ClearPopupDiagnostic();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                // The popup core contains every native failure; this is a defensive net.
+                // It stays a popup-category diagnostic, never a state or corner fault.
+                LogPopupDiagnostic(
+                    "popup-tick:" + ex.GetType().Name,
+                    "GKSR_POPUP_FAILED: tick " + ex.GetType().Name);
             }
         }
 
@@ -971,6 +1051,12 @@ namespace GK2.SermonReminder
             // period before dropping readiness so no stale notice can show afterwards.
             try { notices?.EndLoad(); }
             catch (Exception) { }
+
+            // End the popup's current-load work; retained cleanup keeps being driven by
+            // later ticks rather than being discarded here.
+            try { popup.EndLoad(); }
+            catch (Exception) { }
+
             ResetReadinessSafely();
 
             if (ReferenceEquals(Active, this)) Active = null;
@@ -996,6 +1082,7 @@ namespace GK2.SermonReminder
             ready = false;
             activeSave = null;
             beaconEnabledForLoad = false;
+            popupEnabledForLoad = false;
         }
 
         /// <summary>
@@ -1036,6 +1123,26 @@ namespace GK2.SermonReminder
         }
 
         private void ClearBeaconDiagnostic() => lastBeaconDiagnostic = null;
+
+        /// <summary>
+        /// One bounded diagnostic per distinct popup failure episode, on its own channel.
+        /// It is preserved through Pending and cleared only on an actual Healthy
+        /// completion or a true lifecycle/eligibility boundary. It is never a state or
+        /// corner category and never emits an approved user-facing fault-notice sentence
+        /// (the four-category notices stay with GKSA-15).
+        /// </summary>
+        private void LogPopupDiagnostic(string key, string message)
+        {
+            try
+            {
+                if (string.Equals(lastPopupDiagnostic, key, StringComparison.Ordinal)) return;
+                lastPopupDiagnostic = key;
+                SafeWarn(message);
+            }
+            catch (Exception) { }
+        }
+
+        private void ClearPopupDiagnostic() => lastPopupDiagnostic = null;
 
         /// <summary>Contained logger call for the newly added beacon paths.</summary>
         private void SafeLogError(string message)
@@ -1141,6 +1248,7 @@ namespace GK2.SermonReminder
             lastCornerDiagnostic = null;
             lastIconDiagnostic = null;
             lastBeaconDiagnostic = null;
+            lastPopupDiagnostic = null;
             hasLoggedDisplay = false;
         }
 
