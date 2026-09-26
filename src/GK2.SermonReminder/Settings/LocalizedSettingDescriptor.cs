@@ -185,8 +185,8 @@ namespace GK2.SermonReminder.Settings
 
                 if (entry == null)
                 {
-                    RollBackOwnDescriptor(list, registered);
-                    return new OwnToggleRegistration(null, false, "registration returned no config entry");
+                    string rollback = RollBackOwnDescriptor(list, registered, "registration returned no config entry");
+                    return new OwnToggleRegistration(null, false, rollback);
                 }
 
                 var localized = new LocalizedSettingDescriptor(registered, groupTitle, labelKey, descriptionKey);
@@ -195,9 +195,9 @@ namespace GK2.SermonReminder.Settings
                 {
                     // Fail closed: never keep an unlocalized descriptor usable. Roll back
                     // only our own just-added entry when that is safely possible.
-                    RollBackOwnDescriptor(list, registered);
-                    return new OwnToggleRegistration(null, false,
+                    string rollback = RollBackOwnDescriptor(list, registered,
                         "localization swap failed (" + replaceFailure + ")");
+                    return new OwnToggleRegistration(null, false, rollback);
                 }
 
                 return new OwnToggleRegistration(entry, true, null);
@@ -211,11 +211,16 @@ namespace GK2.SermonReminder.Settings
         /// <summary>
         /// Remove exactly our own just-added descriptor after a failed step, so no
         /// unlocalized setting remains registered. Never removes or changes another
-        /// mod's entry; a failed rollback is reported, not forced.
+        /// mod's entry. Returns the original reason combined with whether the rollback
+        /// succeeded or failed (with the actual rollback failure), so the owning
+        /// feature's one diagnostic carries both the cause and the outcome.
         /// </summary>
-        private static void RollBackOwnDescriptor(IList<IGk2Setting> list, IGk2Setting registered)
+        private static string RollBackOwnDescriptor(IList<IGk2Setting> list, IGk2Setting registered, string reason)
         {
-            TryRemoveOwnDescriptor(list, registered, out _);
+            if (TryRemoveOwnDescriptor(list, registered, out string rollbackFailure))
+                return reason + "; own descriptor rolled back";
+
+            return reason + "; rollback failed (" + rollbackFailure + ")";
         }
 
         /// <summary>
