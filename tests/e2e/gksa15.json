@@ -176,8 +176,8 @@
     "resource.nativeHealthyAtBaseline": "bool: 注入前独立确认的原生资源健康状态，不由本模组输出推断",
     "resource.nativeVisiblyObservedAtBaseline": "bool: 注入前原生可见性是否独立观察确认",
     "resource.nativeHealthIndependentlyObserved": "bool: 原生资源健康是否由独立原生观察确认",
-    "corner.visibleAtBaseline": "bool: 注入前健康基线下角落文字是否可见",
     "corner.visibleDuringFault": "bool: 目标故障尚未清除阶段角落文字是否仍可见",
+    "corner.visibleAtSafeUi": "bool: 清空安全门并按需用原生输入关闭自有弹窗后，在原生 HUD 可见的安全时机角落文字是否可见（局部故障仍存在时验证不受影响通道）",
     "corner.visibleAfterRecovery": "bool: 受控恢复后角落文字是否再次可见",
     "corner.requiredTextResolved": "bool: 必需角落文案是否可解析",
     "corner.suppressedByBeaconFault": "bool: 角落文字是否因信标故障被抑制",
@@ -186,8 +186,8 @@
     "corner.iconDoneResourceAvailable": "bool: Done 打勾图标资源是否可用",
     "corner.iconDoneSuppressedCountdown": "bool: 打勾图标故障是否错误抑制了倒计时",
     "corner.iconDoneRenderAttempted": "bool: Done 阶段是否实际触发图标渲染",
-    "beacon.visibleAtBaseline": "bool: 注入前健康基线下信标是否实际可见",
     "beacon.visibleDuringFault": "bool: 目标故障尚未清除阶段信标是否仍可见",
+    "beacon.visibleAtSafeUi": "bool: 清空安全门并按需用原生输入关闭自有弹窗后，在原生 HUD 可见的安全时机信标是否可见（局部故障仍存在时验证受影响通道）",
     "beacon.visibleAfterRecovery": "bool: 受控恢复后信标是否再次可见",
     "beacon.targetAvailable": "bool: 教堂目标点是否可用",
     "beacon.faithIconAvailable": "bool: 信仰图标资源是否可用",
@@ -370,16 +370,51 @@
     "pause.unpauseAllInvoked": "bool: 是否不加区分地调用全局解除暂停",
     "pause.timeScaleChangedByMod": "bool: 模组是否改写时间缩放",
     "pause.otherPauseSourceAbsentAtStart": "bool: 场景开始时是否不存在其他暂停来源",
-    "cleanup.partialOpenResiduePresent": "bool: 原生打开部分失败后是否存在未完成的自有清理",
     "cleanup.cleanupPending": "bool: 自有清理是否仍处于未完成状态",
     "cleanup.quarantined": "bool: 未完成旧清理是否被隔离而非同时建立替换",
     "cleanup.duplicateReplacementCreated": "bool: 未完成清理期间是否创建了重复的自有替换实例",
     "cleanup.foreignMutationDuringCleanup": "bool: 清理期间是否改写了他方或共享对象",
-    "cleanup.boundedRetryCount": "int: 有限观察区间内清理重试次数",
     "cleanup.unrelatedChannelsContinue": "bool: 未完成清理期间不相关的合格提醒是否继续",
     "cleanup.restorationRecorded": "string: 操作者记录的受控清理恢复方法，供 GKSA-16 复现",
     "cleanup.recoveredAfterRestoration": "bool: 受控恢复清理后是否按当前资格恢复正常",
     "cleanup.actualShowDedupRespected": "bool: 清理恢复后实际显示是否尊重该槽该日已显示记录",
+    "cleanup.retryCount": "int: 初始失败后有限观察区间内观察到的清理重试次数（严格整数，至少 2）",
+    "cleanup.minRetryIntervalSeconds": "finite number: 初始失败后相邻清理重试之间的最小观测间隔秒数（至少 2 秒）",
+    "cleanup.observationDurationSeconds": "finite number: 记录重试节奏所用的有限观察时长秒数",
+    "cleanup.retryTimestampsRecorded": "string: 操作者记录的实际清理重试时间戳，供 GKSA-16 复现",
+    "cleanup.transferredObjectMutationRetries": "int: 对可能已转移对象执行的可疑变更重试次数（不确定转移口径下为 0）",
+    "cleanup.readOnlyOwnershipChecksContinue": "bool: 不确定转移期间只读的自有所有权检查是否继续",
+    "cleanup.uncertainTransferReadOnly": "bool: 不确定池转移是否按只读所有权证据处理而非重复变更",
+    "popup.cleanupFaultObserved": "bool: 自有正常弹窗关闭/清理事务中的受控清理故障是否被观察到",
+    "popup.ownCloseCleanupFaultInjected": "string: 操作者记录的受控自有弹窗关闭/清理故障注入方法，供 GKSA-16 复现",
+    "popup.recordRetainedAfterCleanupFault": "bool: 自有弹窗清理故障后该槽该日正常弹窗已显示记录是否仍保留",
+    "popup.newDisplaysAfterCleanupFault": "int: 清理故障后该区间内新增的正常弹窗实际显示次数（区间增量口径）",
+    "popup.actualDisplaysAfterCleanupFault": "int: 自当前载入起累计的正常弹窗实际显示次数，在清理故障后观察（累计口径）",
+    "popup.reopenAfterCleanupRepair": "bool: 受控修复清理后是否错误重开同槽同日正常弹窗",
+    "popup.windowCloseCompletedBeforeCleanupFault": "bool: 注入清理故障前原生窗口关闭与模态栈移除是否已完成且界面安全",
+    "settings.popupEnabledBeforeRecovery": "bool: 同一活动载入内恢复前的弹窗开关快照值",
+    "settings.popupEnabledAfterRecovery": "bool: 同一活动载入内恢复后的弹窗开关快照值",
+    "settings.snapshotUnchangedBeforeAfter": "bool: 同一活动载入内恢复前后快照值是否未变",
+    "settings.returnedToMainMenuStepDone": "bool: 是否已单独执行返回主菜单动作",
+    "settings.modsPageOpenedStepDone": "bool: 是否已单独执行打开 Mods 设置页动作",
+    "settings.settingChangedStepDone": "bool: 是否已单独执行修改开关动作",
+    "settings.loadPerformedStepDone": "bool: 是否已单独执行载入目标存档动作",
+    "save.churchUnlockedPhase1": "bool: 第一次载入时教堂开启门槛是否 Completed",
+    "save.tutorialCompletedPhase1": "bool: 第一次载入时教学门槛是否 Completed",
+    "save.isSermonDayPhase1": "bool: 第一次载入时原生日是否为布道日",
+    "state.readablePhase1": "bool: 第一次载入时必要状态是否可读",
+    "resource.nativeHealthyPhase1": "bool: 第一次载入时原生资源是否独立确认健康",
+    "ui.safeControllablePhase1": "bool: 第一次载入安全/可操作比较阶段是否安全可操作",
+    "save.churchUnlockedPhase2": "bool: 第二次载入时教堂开启门槛是否 Completed",
+    "save.tutorialCompletedPhase2": "bool: 第二次载入时教学门槛是否 Completed",
+    "save.isSermonDayPhase2": "bool: 第二次载入时原生日是否为布道日",
+    "state.readablePhase2": "bool: 第二次载入时必要状态是否可读",
+    "resource.nativeHealthyPhase2": "bool: 第二次载入时原生资源是否独立确认健康",
+    "ui.safeControllablePhase2": "bool: 第二次载入安全/可操作比较阶段是否安全可操作",
+    "settings.phase1GateHeldToAvoidSpend": "bool: 第一次 ON 阶段是否保持普通 UI 门以避免花费去重记录",
+    "save.sameSlotDayAcrossLoads": "bool: 两次载入是否为同一槽同一实际游戏日",
+    "popup.phase1RecordAbsent": "bool: 第一次载入阶段该槽该日显示前是否不存在正常弹窗记录",
+    "popup.phase2RecordAbsent": "bool: 第二次载入阶段该槽该日显示前是否不存在正常弹窗记录",
     "cleanup.newOwnedReplacementAttempts": "int: 未完成清理期间实际创建出自有替换实例的新尝试次数",
     "layout.measurement": "string: 布局实测值或测量方法说明",
     "layout.operatorObservation": "string: 操作者对可见结果的明确观察记录",
@@ -516,18 +551,20 @@
       "id": "healthy-reference-setup",
       "title": "健康基线：全部提醒资格成立且不产生任何故障消息",
       "category": "baseline",
-      "phaseNote": "阶段含义：BeforeFault=注入前的资源健康独立确认（不花费弹窗机会）、AfterGateCleared=清空安全门后累计正常弹窗显示次数；popup.actualDisplays* 为自当前载入起累计口径，popup.newDisplays* 为其命名区间增量口径。",
+      "phaseNote": "阶段含义：BeforeFault=注入前的资源健康独立确认（不花费弹窗机会，且不要求门保持期间自有 HUD 可见）、AfterGateCleared=清空安全门后累计正常弹窗显示次数、AfterClose/SafeUi=用原生输入关闭自有弹窗后原生 HUD 可见时的健康通道可见性；popup.actualDisplays* 为自当前载入起累计口径，popup.newDisplays* 为其命名区间增量口径。",
       "prerequisites": [
         "完整模组在真实 Proton 环境加载。",
         "存档满足两个解锁门槛且处于布道日、当日布道机会未消费。",
         "正常弹窗开关开启，信标开关开启。",
-        "首个正常弹窗机会前先保持普通安全门，用于先独立确认资源健康。",
+        "首个正常弹窗机会前先保持普通安全门，用于先独立确认资源健康并避免过早花费弹窗机会。",
         "未注入任何故障。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期进入可操作画面且安全门先保持；检查 save.loaded=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
-        "在花费该槽该日弹窗机会前独立确认资源健康；预期原生资源健康且可见；检查 resource.nativeHealthyAtBaseline=true、resource.nativeVisiblyObservedAtBaseline=true、resource.nativeHealthIndependentlyObserved=true、hud.nativeHudPresent=true、beacon.visibleAtBaseline=true、corner.visibleAtBaseline=true、popup.available=true。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康（不要求门保持期间自有 HUD 或信标可见）；检查 resource.nativeHealthyAtBaseline=true、resource.nativeVisiblyObservedAtBaseline=true、resource.nativeHealthIndependentlyObserved=true、hud.nativeHudPresent=true、popup.available=true。",
         "清空安全门到安全可操作时机；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、ui.playerControllable=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在原生 HUD 可见的安全时机观察健康通道；预期角落与信标均可见；检查 corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
         "观察四类故障消息计数；预期全部为零；检查 notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=0。"
       ],
       "expect": [
@@ -571,14 +608,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -652,6 +681,22 @@
           "equals": true
         },
         {
+          "observation": "popup.closedWithNativeInput",
+          "equals": true
+        },
+        {
+          "observation": "input.gameplayInputRestoredAfterClose",
+          "equals": true
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
           "observation": "notice.stateReadDisplayedCount",
           "integerBetween": {
             "min": 0,
@@ -697,20 +742,21 @@
       "id": "beacon-missing-church-target",
       "title": "教堂目标点缺失时仅停用信标且不影响其他合格提醒",
       "category": "beacon-fault",
-      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复，不使用游戏目录内不得改写的资源。",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复，不使用游戏目录内不得改写的资源。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
         "首个正常弹窗机会前先保持普通安全门。",
-        "注入前独立确认信标与角落资源健康，不花费该槽该日弹窗机会。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
         "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
-        "在花费该槽该日弹窗机会前独立确认原生资源健康；预期信标与角落均可见；检查 resource.nativeHealthyAtBaseline=true、beacon.visibleAtBaseline=true、corner.visibleAtBaseline=true。",
-        "在清空安全门前注入受控信标故障；预期仅停用信标且角落仍可见；检查 beacon.visibleDuringFault=false、corner.visibleDuringFault=true、beacon.suppressedByCornerFault=false、beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing church target。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing church target。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
         "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
         "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
         "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
       ],
@@ -755,14 +801,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -813,18 +851,6 @@
           "equals": "missing church target"
         },
         {
-          "observation": "beacon.visibleDuringFault",
-          "equals": false
-        },
-        {
-          "observation": "corner.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
-          "equals": false
-        },
-        {
           "observation": "popup.suppressedByBeaconFault",
           "equals": false
         },
@@ -853,6 +879,18 @@
         {
           "observation": "input.gameplayInputRestoredAfterClose",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
+          "equals": false
         },
         {
           "observation": "beacon.restorationRecorded",
@@ -912,20 +950,21 @@
       "id": "beacon-missing-faith-icon",
       "title": "信仰图标缺失时仅停用信标且不影响其他合格提醒",
       "category": "beacon-fault",
-      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
         "首个正常弹窗机会前先保持普通安全门。",
-        "注入前独立确认信标与角落资源健康，不花费该槽该日弹窗机会。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
         "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
-        "在花费该槽该日弹窗机会前独立确认原生资源健康；预期信标与角落均可见；检查 resource.nativeHealthyAtBaseline=true、beacon.visibleAtBaseline=true、corner.visibleAtBaseline=true。",
-        "在清空安全门前注入受控信标故障；预期仅停用信标且角落仍可见；检查 beacon.visibleDuringFault=false、corner.visibleDuringFault=true、beacon.suppressedByCornerFault=false、beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing faith icon。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing faith icon。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
         "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
         "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
         "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
       ],
@@ -973,14 +1012,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -1024,18 +1055,6 @@
           "equals": "missing faith icon"
         },
         {
-          "observation": "beacon.visibleDuringFault",
-          "equals": false
-        },
-        {
-          "observation": "corner.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
-          "equals": false
-        },
-        {
           "observation": "popup.suppressedByBeaconFault",
           "equals": false
         },
@@ -1064,6 +1083,18 @@
         {
           "observation": "input.gameplayInputRestoredAfterClose",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
+          "equals": false
         },
         {
           "observation": "beacon.restorationRecorded",
@@ -1123,20 +1154,21 @@
       "id": "beacon-missing-or-broken-component",
       "title": "信标组件缺失或损坏时仅停用信标且不影响其他合格提醒",
       "category": "beacon-fault",
-      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
         "首个正常弹窗机会前先保持普通安全门。",
-        "注入前独立确认信标与角落资源健康，不花费该槽该日弹窗机会。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
         "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
-        "在花费该槽该日弹窗机会前独立确认原生资源健康；预期信标与角落均可见；检查 resource.nativeHealthyAtBaseline=true、beacon.visibleAtBaseline=true、corner.visibleAtBaseline=true。",
-        "在清空安全门前注入受控信标故障；预期仅停用信标且角落仍可见；检查 beacon.visibleDuringFault=false、corner.visibleDuringFault=true、beacon.suppressedByCornerFault=false、beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing or broken beacon component。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing or broken beacon component。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
         "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
         "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
         "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
       ],
@@ -1184,14 +1216,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -1231,18 +1255,6 @@
           "equals": "missing or broken beacon component"
         },
         {
-          "observation": "beacon.visibleDuringFault",
-          "equals": false
-        },
-        {
-          "observation": "corner.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
-          "equals": false
-        },
-        {
           "observation": "popup.suppressedByBeaconFault",
           "equals": false
         },
@@ -1271,6 +1283,18 @@
         {
           "observation": "input.gameplayInputRestoredAfterClose",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
+          "equals": false
         },
         {
           "observation": "beacon.restorationRecorded",
@@ -1330,20 +1354,21 @@
       "id": "beacon-failed-projection",
       "title": "屏幕投影失败时仅停用信标且不影响其他合格提醒",
       "category": "beacon-fault",
-      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
         "首个正常弹窗机会前先保持普通安全门。",
-        "注入前独立确认信标与角落资源健康，不花费该槽该日弹窗机会。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
         "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
-        "在花费该槽该日弹窗机会前独立确认原生资源健康；预期信标与角落均可见；检查 resource.nativeHealthyAtBaseline=true、beacon.visibleAtBaseline=true、corner.visibleAtBaseline=true。",
-        "在清空安全门前注入受控信标故障；预期仅停用信标且角落仍可见；检查 beacon.visibleDuringFault=false、corner.visibleDuringFault=true、beacon.suppressedByCornerFault=false、beacon.injectedFaultRecorded 存在、beacon.faultCondition=failed projection。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=failed projection。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
         "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
         "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
         "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
       ],
@@ -1388,14 +1413,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -1450,18 +1467,6 @@
           "equals": "failed projection"
         },
         {
-          "observation": "beacon.visibleDuringFault",
-          "equals": false
-        },
-        {
-          "observation": "corner.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
-          "equals": false
-        },
-        {
           "observation": "popup.suppressedByBeaconFault",
           "equals": false
         },
@@ -1490,6 +1495,18 @@
         {
           "observation": "input.gameplayInputRestoredAfterClose",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
+          "equals": false
         },
         {
           "observation": "beacon.restorationRecorded",
@@ -1559,7 +1576,7 @@
         "载入该存档并等待加载完成；预期弹窗开关关闭属主动缺省而非故障；检查 settings.popupEnabled=false、settings.popupOffDeliberate=true、dedup.recordAbsentWhenPopupOff=true。",
         "注入受控信标故障；预期信标停用；检查 beacon.visibleDuringFault=false、beacon.injectedFaultRecorded 存在。",
         "观察故障消息；预期信标类别消息仍显示一次且不产生弹窗类别消息；检查 notice.beaconDisplayedCount=1、notice.popupDisplayedCount=0。",
-        "确认弹窗未被视为故障通道且角落未受抑制；检查 popup.componentAvailable=true、popup.recordAfterDisplay=false、corner.visibleDuringFault=true、notice.popupBudgetConsumed=false。"
+        "确认弹窗未被视为故障通道且角落未受抑制；检查 popup.componentAvailable=true、popup.recordAfterDisplay=false、corner.visibleAtSafeUi=true、notice.popupBudgetConsumed=false。"
       ],
       "expect": [
         {
@@ -1605,14 +1622,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -1637,7 +1646,7 @@
           "present": true
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "corner.visibleAtSafeUi",
           "equals": true
         },
         {
@@ -1702,13 +1711,15 @@
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "角落文字与信标通道健康。",
         "正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门，避免先成功显示再注入。",
         "测试设施可受控仅使正常弹窗通道失效。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "载入该存档并等待加载完成；预期基线资源健康独立确认且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、popup.actualDisplaysBeforeRecovery=0。",
-        "注入原生对话框组件缺失；预期仅正常弹窗停用；检查 popup.nativeDialogAvailable=false、popup.available=false、popup.displayedDuringFault=false。",
-        "观察角落文字与信标；预期在故障阶段仍可见；检查 corner.visibleDuringFault=true、beacon.visibleDuringFault=true、popup.suppressedByCornerFault=false、corner.suppressedByPopupFault=false。",
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前注入原生对话框组件缺失；预期仅正常弹窗停用；检查 popup.nativeDialogAvailable=false、popup.available=false、popup.displayedDuringFault=false。",
+        "清空安全门到安全时机；预期弹窗通道不可用且不显示正常弹窗；检查 ui.safetyGateClear=true、popup.displayedDuringFault=false、popup.actualDisplaysAfterGateCleared=0。",
+        "在局部弹窗故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期角落与信标均可见；检查 corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true、corner.suppressedByPopupFault=false。",
         "观察类别计数；预期仅弹窗类别故障消息显示一次；检查 notice.popupDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=1。"
       ],
       "expect": [
@@ -1755,14 +1766,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -1775,12 +1778,23 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
           "equals": true
         },
         {
-          "observation": "beacon.visibleDuringFault",
+          "observation": "popup.readyEligibleUnshownAtLoad",
           "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "beacon.suppressedByPopupFault",
@@ -1799,13 +1813,6 @@
           "equals": false
         },
         {
-          "observation": "popup.actualDisplaysBeforeRecovery",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
-        },
-        {
           "observation": "popup.nativeDialogAvailable",
           "equals": false
         },
@@ -1816,6 +1823,25 @@
         {
           "observation": "popup.displayedDuringFault",
           "equals": false
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -1867,13 +1893,15 @@
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "角落文字与信标通道健康。",
         "正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门，避免先成功显示再注入。",
         "测试设施可受控仅使正常弹窗通道失效。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "载入该存档并等待加载完成；预期基线资源健康独立确认且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、popup.actualDisplaysBeforeRecovery=0。",
-        "使当前语言及英语回退均无法解析必需弹窗文案；预期仅正常弹窗停用；检查 popup.textResolved=false、popup.available=false、popup.displayedDuringFault=false。",
-        "观察角落文字与信标；预期在故障阶段仍可见；检查 corner.visibleDuringFault=true、beacon.visibleDuringFault=true、corner.suppressedByPopupFault=false。",
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前使当前语言及英语回退均无法解析必需弹窗文案；预期仅正常弹窗停用；检查 popup.textResolved=false、popup.available=false、popup.displayedDuringFault=false。",
+        "清空安全门到安全时机；预期仍不显示正常弹窗；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=0。",
+        "在局部弹窗故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期角落与信标均可见；检查 corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
         "观察类别计数；预期仅弹窗类别故障消息显示一次；检查 notice.popupDisplayedCount=1、notice.totalDisplayedCount=1。"
       ],
       "expect": [
@@ -1920,14 +1948,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -1940,12 +1960,23 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
           "equals": true
         },
         {
-          "observation": "beacon.visibleDuringFault",
+          "observation": "popup.readyEligibleUnshownAtLoad",
           "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "beacon.suppressedByPopupFault",
@@ -1964,13 +1995,6 @@
           "equals": false
         },
         {
-          "observation": "popup.actualDisplaysBeforeRecovery",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
-        },
-        {
           "observation": "popup.textResolved",
           "equals": false
         },
@@ -1981,6 +2005,25 @@
         {
           "observation": "popup.displayedDuringFault",
           "equals": false
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -2032,13 +2075,15 @@
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "角落文字与信标通道健康。",
         "正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门，避免先成功显示再注入。",
         "测试设施可受控仅使正常弹窗通道失效。",
         "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "载入该存档并等待加载完成；预期基线资源健康独立确认且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、popup.actualDisplaysBeforeRecovery=0。",
-        "注入原生打开调用部分失败；预期创建不成且不残留自有部分显示对象；检查 popup.openFailed=true、popup.ownedResidue=false、popup.available=false。",
-        "观察角落文字与信标；预期在故障阶段仍可见；检查 corner.visibleDuringFault=true、beacon.visibleDuringFault=true。",
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 resource.nativeHealthyAtBaseline=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前注入原生打开调用部分失败；预期创建不成且不残留自有部分显示对象；检查 popup.openFailed=true、popup.ownedResidue=false、popup.available=false。",
+        "清空安全门到安全时机；预期仍不显示正常弹窗；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=0。",
+        "在局部弹窗故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期角落与信标均可见；检查 corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
         "观察类别计数；预期仅弹窗类别故障消息显示一次；检查 notice.popupDisplayedCount=1、notice.totalDisplayedCount=1。"
       ],
       "expect": [
@@ -2085,14 +2130,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -2105,12 +2142,23 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
           "equals": true
         },
         {
-          "observation": "beacon.visibleDuringFault",
+          "observation": "popup.readyEligibleUnshownAtLoad",
           "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "beacon.suppressedByPopupFault",
@@ -2129,13 +2177,6 @@
           "equals": false
         },
         {
-          "observation": "popup.actualDisplaysBeforeRecovery",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
-        },
-        {
           "observation": "popup.openFailed",
           "equals": true
         },
@@ -2150,6 +2191,25 @@
         {
           "observation": "popup.displayedDuringFault",
           "equals": false
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -2200,10 +2260,11 @@
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门，避免先成功显示。",
         "测试设施可受控使正常弹窗通道失效并显示弹窗类别故障消息。"
       ],
       "steps": [
-        "注入正常弹窗通道故障；预期弹窗类别故障消息显示一次；检查 notice.popupDisplayedCount=1、notice.category=popup。",
+        "在清空安全门前注入正常弹窗通道故障；预期弹窗类别故障消息在安全时机显示一次；检查 notice.popupDisplayedCount=1、notice.category=popup、ui.safetyGateClear=true。",
         "检查正常弹窗去重记录；预期显示前后均未写入；检查 popup.recordBeforeDisplay=false、popup.recordAfterDisplay=false、dedup.recordWrittenOnFailedShow=false、dedup.recordWrittenOnUnreadableState=false、popup.actualDisplaysBeforeRecovery=0。",
         "检查故障消息是否消耗去重；预期未消耗；检查 popup.chanceConsumed=false。"
       ],
@@ -2251,19 +2312,23 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
         {
           "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
+          "equals": true
+        },
+        {
+          "observation": "popup.readyEligibleUnshownAtLoad",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateClear",
           "equals": true
         },
         {
@@ -2399,14 +2464,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -2519,19 +2576,20 @@
       "id": "corner-missing-copy-preserves-beacon-and-popup",
       "title": "就绪状态下角落文案缺失仅抑制角落且信标与正常弹窗继续",
       "category": "corner-fault",
-      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、AfterNotice=安全时机故障消息。",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "信标通道健康，正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
         "当前语言及英语回退均无法解析必需角落文案。",
-        "首个正常弹窗机会前先保持普通安全门；本场景为 Ready 上下文，用于与 Done 图标证明分离。"
+        "本场景为 Ready 上下文，用于与 Done 图标证明分离。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 state.readable=true、state.sermonReadyValue>=1、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
-        "使必需角落文案在当前语言与英语回退下均缺失；预期仅抑制角落呈现；检查 corner.requiredTextResolved=false、corner.visibleDuringFault=false、hud.dependentPresentationSuppressed=true、hud.visible=false。",
-        "观察信标；预期在故障阶段仍可见；检查 beacon.visibleDuringFault=true、beacon.suppressedByCornerFault=false。",
+        "在清空安全门前使必需角落文案在当前语言与英语回退下均缺失；预期仅抑制角落呈现；检查 corner.requiredTextResolved=false、hud.dependentPresentationSuppressed=true、hud.visible=false。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.suppressedByCornerFault=false、popup.available=true。",
         "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false、corner.visibleAtSafeUi=false。",
         "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。"
       ],
       "expect": [
@@ -2578,14 +2636,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -2598,23 +2648,11 @@
           "equals": false
         },
         {
-          "observation": "corner.visibleDuringFault",
-          "equals": false
-        },
-        {
           "observation": "hud.dependentPresentationSuppressed",
           "equals": true
         },
         {
           "observation": "hud.visible",
-          "equals": false
-        },
-        {
-          "observation": "beacon.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
           "equals": false
         },
         {
@@ -2657,6 +2695,18 @@
         {
           "observation": "popup.closedWithNativeInput",
           "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": false
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -2707,14 +2757,16 @@
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
         "信标通道健康，正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
         "测试设施可受控使角落文字必需资源缺失。",
-        "首个正常弹窗机会前先保持普通安全门；本场景为 Ready 上下文。"
+        "本场景为 Ready 上下文。"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 state.readable=true、state.sermonReadyValue>=1、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
-        "注入角落文字必需资源缺失；预期仅抑制角落呈现；检查 hud.requiredCornerResourcePresent=false、corner.visibleDuringFault=false、hud.dependentPresentationSuppressed=true、hud.unrelatedPresentationPreserved=true。",
-        "观察信标；预期在故障阶段仍可见；检查 beacon.visibleDuringFault=true、beacon.suppressedByCornerFault=false。",
+        "在清空安全门前注入角落文字必需资源缺失；预期仅抑制角落呈现；检查 hud.requiredCornerResourcePresent=false、hud.dependentPresentationSuppressed=true、hud.unrelatedPresentationPreserved=true。",
         "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 popup.actualDisplaysAfterGateCleared=1、popup.suppressedByCornerFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
         "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.totalDisplayedCount=1。"
       ],
       "expect": [
@@ -2761,14 +2813,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -2781,24 +2825,12 @@
           "equals": false
         },
         {
-          "observation": "corner.visibleDuringFault",
-          "equals": false
-        },
-        {
           "observation": "hud.dependentPresentationSuppressed",
           "equals": true
         },
         {
           "observation": "hud.unrelatedPresentationPreserved",
           "equals": true
-        },
-        {
-          "observation": "beacon.visibleDuringFault",
-          "equals": true
-        },
-        {
-          "observation": "beacon.suppressedByCornerFault",
-          "equals": false
         },
         {
           "observation": "ui.safetyGateHeldBeforePopupOpportunity",
@@ -2820,6 +2852,18 @@
         },
         {
           "observation": "popup.suppressedByCornerFault",
+          "equals": false
+        },
+        {
+          "observation": "popup.closedWithNativeInput",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.suppressedByCornerFault",
           "equals": false
         },
         {
@@ -2869,15 +2913,16 @@
       "title": "已布道 Done 上下文中打勾图标实际渲染失败归入角落类别一次",
       "category": "corner-fault",
       "prerequisites": [
-        "存档当日布道机会已消费（原生 sermon_ready 有限且 <1，含 0），属于已布道 Done 而不符合正常弹窗资格。",
+        "存档当日布道机会已消费（原生 sermon_ready 为任意有限且 <1 的值，含 0），属于已布道 Done 而不符合正常弹窗资格。",
         "角落文字组件存在且需在 Done 阶段实际渲染打勾图标。",
         "测试设施可受控使打勾图标资源加载或渲染失败。"
       ],
       "steps": [
-        "读取就绪状态；预期已布道且非弹窗资格；检查 state.readable=true、state.sermonReadyValue<1、state.sermonReadyValue>=0。",
-        "在 Done 阶段实际触发图标渲染并注入资源失败；预期 Done 呈现被抑制；检查 corner.iconDoneRenderAttempted=true、corner.iconDoneResourceAvailable=false、corner.dependentPresentationSuppressed=true、corner.visibleDuringFault=false。",
+        "读取就绪状态；预期已布道且非弹窗资格；检查 state.readable=true、state.sermonReadyValue<1。",
+        "在 Done 阶段实际触发图标渲染并注入资源失败；预期 Done 呈现被抑制；检查 corner.iconDoneRenderAttempted=true、corner.iconDoneResourceAvailable=false、corner.dependentPresentationSuppressed=true。",
         "确认图标故障不抑制倒计时语义；预期未错误抑制倒计时；检查 corner.iconDoneSuppressedCountdown=false。",
-        "观察类别计数与信标；预期仅角落类别故障消息显示一次且信标未被角落故障抑制；检查 notice.cornerHudDisplayedCount=1、notice.totalDisplayedCount=1、beacon.suppressedByCornerFault=false、beacon.visibleDuringFault=true。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.totalDisplayedCount=1。",
         "确认 Done 不是弹窗资格场景；预期不产生弹窗类别消息且正常弹窗不显示；检查 popup.componentAvailable=true、popup.actualDisplaysBeforeRecovery=0、notice.popupDisplayedCount=0。"
       ],
       "expect": [
@@ -2912,7 +2957,6 @@
         {
           "observation": "state.sermonReadyValue",
           "numberRange": {
-            "min": 0,
             "maxExclusive": 1
           }
         },
@@ -2941,16 +2985,12 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleDuringFault",
-          "equals": false
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
         },
         {
           "observation": "beacon.suppressedByCornerFault",
           "equals": false
-        },
-        {
-          "observation": "beacon.visibleDuringFault",
-          "equals": true
         },
         {
           "observation": "popup.componentAvailable",
@@ -4282,16 +4322,17 @@
       "id": "shown-popup-not-reopened-after-healthy-restore",
       "title": "共享状态恢复后同槽同日已显示弹窗不再重开",
       "category": "shared-state",
-      "phaseNote": "阶段含义：DuringFault=故障阶段自有内容关闭、AfterRecovery=独立重建合格条件后恢复阶段；popup.actualDisplaysAfterRecovery/newDisplaysAfterRecovery 描述恢复阶段输出，不使用 popup.displayedDuringFault 作为恢复期证明。",
+      "phaseNote": "阶段含义：DuringFault=同一载入内已成功显示一次后共享状态故障并关闭自有内容、AfterRecovery=独立重建合格条件后恢复阶段、AfterFurtherTicks=后续多帧；popup.actualDisplays* 为自当前载入起累计口径（同载入已显示 1 次故为 1），popup.newDisplaysAfterRecovery 为恢复区间增量（0）。",
       "prerequisites": [
         "该槽该日已实际显示过一次正常弹窗且去重记录存在。",
         "共享状态曾故障且自有弹窗已被关闭。",
         "恢复时独立重新建立 Ready、开关开启、资源健康、同一身份同一游戏日与安全可操作界面；已显示记录是唯一抑制条件。"
       ],
       "steps": [
+        "确认同一次载入内此前已成功显示过一次正常弹窗；预期累计显示次数为 1；检查 popup.actualDisplaysBeforeRecovery=1、popup.recordAfterDisplay=true。",
         "恢复共享状态并独立重新建立合格条件；预期自动恢复；检查 recovery.autoRecovered=true、state.readable=true、state.sermonReadyValue>=1、settings.popupEnabled=true、resource.nativeHealthIndependentlyObserved=true、beacon.visibleAfterRecovery=true、corner.visibleAfterRecovery=true、ui.safetyGateClear=true、ui.playerControllable=true。",
         "恢复后重新检查弹窗资格；预期因已有记录而不符合；检查 popup.eligibilityRechecked=true、popup.eligibleOnRecovery=false、popup.recordBeforeDisplay=true。",
-        "在恢复阶段观察是否重开；预期不重开且不显示成功消息；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、notice.successMessageShown=false、notice.recoveryToastShown=false。",
+        "在恢复阶段观察是否重开；预期不重开、累计仍为 1、新增为 0 且不显示成功消息；检查 popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=0、popup.actualDisplaysAfterFurtherTicks=1、notice.successMessageShown=false、notice.recoveryToastShown=false。",
         "检查去重记录与身份；预期保留；检查 dedup.recordRetainedAcrossRecovery=true、popup.recordAfterDisplay=true、dedup.capturedIdentityStable=true。"
       ],
       "expect": [
@@ -4358,10 +4399,17 @@
           "equals": true
         },
         {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
           "observation": "popup.actualDisplaysAfterRecovery",
           "integerBetween": {
-            "min": 0,
-            "max": 0
+            "min": 1,
+            "max": 1
           }
         },
         {
@@ -4369,6 +4417,13 @@
           "integerBetween": {
             "min": 0,
             "max": 0
+          }
+        },
+        {
+          "observation": "popup.actualDisplaysAfterFurtherTicks",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
           }
         },
         {
@@ -4602,14 +4657,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -4678,18 +4725,21 @@
     },
     {
       "id": "budget-popup-display-once-continuous-refault-no-replenish",
-      "title": "弹窗类别首次故障显示一次且持续或同次载入复发不补充预算",
+      "title": "弹窗类别首次故障显示一次，随后自有弹窗成功显示并在其关闭清理事务同次载入复发仍不补充预算",
       "category": "budget",
-      "phaseNote": "阶段含义：DuringFault=首次故障实际显示、BeforeRefault=持续故障多个检查点后、AfterRefault=同次载入再次失效后。",
+      "phaseNote": "阶段含义：DuringFault=首次弹窗故障消息显示一次、AfterGateCleared=清空门后正常弹窗成功显示一次、AfterRefault=自有弹窗原生关闭/清理事务中受控清理故障（同一清理故障类别复发）；累计与区间口径以 vocabulary 为准。",
       "prerequisites": [
-        "存档满足资格且目标通道健康，其他通道保持健康。",
-        "测试设施可受控反复使目标通道失效并恢复。",
-        "观察区间为一次存档载入内的多个阶段。"
+        "存档满足资格且正常弹窗通道健康，其他通道健康。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "首次故障消息显示后恢复通道，允许合格正常弹窗成功显示一次。",
+        "测试设施可在自有弹窗成功后于其原生关闭/清理事务中受控注入同类清理故障。",
+        "操作者记录实际注入、恢复与清理故障方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "注入目标故障；预期该类别故障消息实际显示一次；检查 notice.popupDisplayedCount=1 且 notice.popupBudgetConsumed=true。",
-        "保持故障持续多个检查点；预期不再增加；检查 notice.popupDisplayedCountBeforeRefault=1 且 notice.duplicateNoticeCount=0。",
-        "恢复目标通道后再同次载入再次失效；预期不补充预算；检查 notice.popupDisplayedCountAfterRefault=1 且 notice.popupBudgetConsumedAfterRefault=true。"
+        "在清空安全门前注入首次弹窗故障；预期弹窗类别故障消息显示一次且预算消耗；检查 notice.popupDisplayedCount=1、notice.popupBudgetConsumed=true。",
+        "清空安全门并恢复正常弹窗通道；预期合格正常弹窗成功显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "在自有弹窗原生关闭/清理事务中注入受控同类清理故障；预期窗口关闭与模态栈移除先完成且界面安全，随后清理故障被观察到；检查 popup.windowCloseCompletedBeforeCleanupFault=true、popup.cleanupFaultObserved=true、popup.ownCloseCleanupFaultInjected 存在。",
+        "观察同次载入复发后的类别计数与正常弹窗；预期不补充预算、记录仍已花费且不重开；检查 notice.popupDisplayedCountAfterRefault=1、notice.popupBudgetConsumedAfterRefault=true、popup.recordRetainedAfterCleanupFault=true、popup.actualDisplaysAfterCleanupFault=1、popup.newDisplaysAfterCleanupFault=0、popup.reopenAfterCleanupRepair=false。"
       ],
       "expect": [
         {
@@ -4735,14 +4785,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -4751,33 +4793,76 @@
           "equals": true
         },
         {
-          "observation": "popup.available",
-          "equals": false
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
+          "equals": true
         },
         {
-          "observation": "notice.popupDisplayedCount",
+          "observation": "popup.readyEligibleUnshownAtLoad",
+          "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
           "integerBetween": {
-            "min": 1,
-            "max": 1
+            "min": 0,
+            "max": 0
           }
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
         },
         {
           "observation": "notice.popupBudgetConsumed",
           "equals": true
         },
         {
-          "observation": "notice.popupDisplayedCountBeforeRefault",
+          "observation": "popup.actualDisplaysAfterGateCleared",
           "integerBetween": {
             "min": 1,
             "max": 1
           }
         },
         {
-          "observation": "notice.duplicateNoticeCount",
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
+          "observation": "popup.windowCloseCompletedBeforeCleanupFault",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupFaultObserved",
+          "equals": true
+        },
+        {
+          "observation": "popup.ownCloseCleanupFaultInjected",
+          "present": true
+        },
+        {
+          "observation": "popup.recordRetainedAfterCleanupFault",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterCleanupFault",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterCleanupFault",
           "integerBetween": {
             "min": 0,
             "max": 0
           }
+        },
+        {
+          "observation": "popup.reopenAfterCleanupRepair",
+          "equals": false
         },
         {
           "observation": "notice.popupDisplayedCountAfterRefault",
@@ -4791,16 +4876,39 @@
           "equals": true
         },
         {
-          "observation": "notice.cornerHudBudgetConsumed",
-          "equals": false
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
-          "observation": "notice.stateReadBudgetConsumedBeforeFault",
-          "equals": false
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
-          "observation": "notice.beaconBudgetConsumed",
-          "equals": false
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
         }
       ],
       "evidence": {
@@ -4865,14 +4973,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -5454,20 +5554,23 @@
     },
     {
       "id": "queue-popup-restore-notifier-and-gates-before-same-load-refault-displays-once",
-      "title": "先恢复消息组件与安全门再同次载入复发可使未消耗的弹窗预算显示一次",
+      "title": "弹窗故障在占用界面排队，恢复后正常弹窗显示一次，随后其自有关闭清理事务同次载入复发不补充预算",
       "category": "queue",
-      "phaseNote": "阶段含义：DuringQueue=占用界面下已排队未显示、AfterRecovery=故障先恢复并取消队列且预算未消耗、AfterNotifierRestore=消息组件恢复、AfterGateClear=安全门清空、AfterRefault=恢复全部先决后再同次载入失效显示一次。",
+      "phaseNote": "阶段含义：DuringQueue=占用界面下已排队未显示、AfterRecovery=故障先恢复并取消队列且预算未消耗、AfterGateCleared=清空门后正常弹窗成功显示一次、AfterRefault=其自有原生关闭/清理事务中受控清理故障（同一清理故障类别复发，不重新 Open）；累计与区间口径以 vocabulary 为准。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
-        "受控使目标通道故障并在不安全界面排队；随后故障先恢复。",
-        "恢复后先恢复消息组件与安全门，再在同次载入内再次使同一通道失效。"
+        "受控使正常弹窗通道故障并在不安全界面排队；随后故障先恢复。",
+        "恢复后先恢复消息组件与安全门，允许合格正常弹窗显示一次，再在其自有原生关闭/清理事务中受控注入同类清理故障。",
+        "操作者记录实际注入、恢复与清理故障方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在不安全界面注入目标通道故障；预期排队且未显示；检查 notice.queuePending=true、queue.countBefore=1、notice.displayAttemptCount=0。",
-        "单独一步使目标故障先恢复并取消队列；预期自动恢复且预算未消耗；检查 recovery.autoRecovered=true、queue.staleAfterRecovery=false、queue.countAfter=0、notice.popupDisplayedCountBeforeRefault=0、notice.popupBudgetConsumedBeforeRefault=false。",
+        "在不安全界面注入弹窗通道故障；预期排队且未显示；检查 notice.queuePending=true、queue.countBefore=1、notice.displayAttemptCount=0。",
+        "单独一步使弹窗故障先恢复并取消队列；预期自动恢复且预算未消耗；检查 recovery.autoRecovered=true、queue.staleAfterRecovery=false、queue.countAfter=0、notice.popupDisplayedCountBeforeRefault=0、notice.popupBudgetConsumedBeforeRefault=false。",
         "单独一步恢复消息组件；预期可用；检查 notice.notifierAvailable=true。",
         "单独一步清空安全门；预期安全门已清空；检查 ui.safetyGateClear=true。",
-        "在上述恢复之后同次载入再次使同一通道失效；预期未使用的类别预算可再显示一次；检查 notice.popupDisplayedCount=1、queue.refaultAfterRecovery=true、notice.popupBudgetConsumedAfterRefault=true。",
+        "允许合格正常弹窗成功显示一次；预期显示并写入记录；检查 popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "在自有弹窗原生关闭/清理事务中注入受控同类清理故障；预期窗口关闭与模态栈移除先完成且界面安全，随后清理故障被观察到；检查 popup.windowCloseCompletedBeforeCleanupFault=true、popup.cleanupFaultObserved=true、popup.ownCloseCleanupFaultInjected 存在。",
+        "在同次载入的清理故障后观察类别计数与正常弹窗；预期未使用的类别预算可显示一次、记录仍已花费且不重开；检查 queue.refaultAfterRecovery=true、notice.popupDisplayedCount=1、notice.popupBudgetConsumedAfterRefault=true、popup.recordRetainedAfterCleanupFault=true、popup.actualDisplaysAfterCleanupFault=1、popup.newDisplaysAfterCleanupFault=0、popup.reopenAfterCleanupRepair=false。",
         "确认无跨载入残留；预期无残留；检查 notice.queuedNoticeCarriedToNextLoad=false。"
       ],
       "expect": [
@@ -5562,15 +5665,53 @@
           "equals": true
         },
         {
-          "observation": "queue.refaultAfterRecovery",
-          "equals": true
-        },
-        {
-          "observation": "notice.popupDisplayedCount",
+          "observation": "popup.actualDisplaysAfterGateCleared",
           "integerBetween": {
             "min": 1,
             "max": 1
           }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
+          "observation": "popup.windowCloseCompletedBeforeCleanupFault",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupFaultObserved",
+          "equals": true
+        },
+        {
+          "observation": "popup.ownCloseCleanupFaultInjected",
+          "present": true
+        },
+        {
+          "observation": "queue.refaultAfterRecovery",
+          "equals": true
+        },
+        {
+          "observation": "popup.recordRetainedAfterCleanupFault",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterCleanupFault",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterCleanupFault",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.reopenAfterCleanupRepair",
+          "equals": false
         },
         {
           "observation": "notice.popupBudgetConsumedAfterRefault",
@@ -5581,8 +5722,39 @@
           "equals": false
         },
         {
-          "observation": "notice.popupBudgetConsumed",
-          "equals": true
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
         }
       ],
       "evidence": {
@@ -5645,14 +5817,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -5773,14 +5937,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -5895,14 +6051,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -6029,14 +6177,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -6170,14 +6310,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -6297,14 +6429,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -6430,14 +6554,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -6510,7 +6626,7 @@
       ],
       "steps": [
         "分别注入信标与弹窗故障；预期两者独立；检查 beacon.visibleDuringFault=false、popup.available=false。",
-        "观察通道抑制关系；预期无跨类别抑制；检查 corner.visibleDuringFault=true、popup.suppressedByBeaconFault=false、beacon.suppressedByPopupFault=false。",
+        "在局部故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期角落仍可见；检查 corner.visibleAtSafeUi=true、popup.suppressedByBeaconFault=false、beacon.suppressedByPopupFault=false。",
         "观察类别计数；预期信标与弹窗各显示一次故障消息；检查 notice.beaconDisplayedCount=1、notice.popupDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.totalDisplayedCount=2。"
       ],
       "expect": [
@@ -6557,14 +6673,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -6581,7 +6689,7 @@
           "equals": false
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "corner.visibleAtSafeUi",
           "equals": true
         },
         {
@@ -6644,8 +6752,10 @@
         "操作者记录各通道的实际注入与恢复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "分别注入角落与信标故障；预期两者独立；检查 corner.visibleDuringFault=false、beacon.visibleDuringFault=false。",
-        "观察通道抑制关系；预期角落故障不抑制信标、信标故障不抑制角落；检查 beacon.suppressedByCornerFault=false、corner.suppressedByBeaconFault=false。",
+        "在首个正常弹窗机会前保持普通安全门；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前分别注入角落与信标故障；预期两者独立；检查 corner.visibleDuringFault=false、beacon.visibleDuringFault=false、beacon.suppressedByCornerFault=false。",
+        "清空安全门；预期不受影响且合格的正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1。",
+        "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
         "观察类别计数；预期角落与信标各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=1、notice.popupDisplayedCount=0、notice.totalDisplayedCount=2。"
       ],
       "expect": [
@@ -6692,20 +6802,23 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
         {
           "observation": "settings.popupEnabled",
           "equals": true
+        },
+        {
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "corner.visibleDuringFault",
@@ -6720,8 +6833,26 @@
           "equals": false
         },
         {
-          "observation": "corner.suppressedByBeaconFault",
-          "equals": false
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.closedWithNativeInput",
+          "equals": true
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -6776,7 +6907,7 @@
       ],
       "steps": [
         "分别注入角落与弹窗故障；预期两者独立；检查 corner.visibleDuringFault=false、popup.available=false。",
-        "观察通道抑制关系；预期无跨类别抑制；检查 popup.suppressedByCornerFault=false、corner.suppressedByPopupFault=false。",
+        "在局部故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期信标仍可见；检查 beacon.visibleAtSafeUi=true、popup.suppressedByCornerFault=false、corner.suppressedByPopupFault=false。",
         "观察类别计数；预期角落与弹窗各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.popupDisplayedCount=1、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=2。"
       ],
       "expect": [
@@ -6823,14 +6954,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -6845,6 +6968,10 @@
         {
           "observation": "popup.available",
           "equals": false
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
         },
         {
           "observation": "popup.suppressedByCornerFault",
@@ -6907,7 +7034,7 @@
       ],
       "steps": [
         "分别注入角落、信标与弹窗故障；预期三者独立；检查 corner.visibleDuringFault=false、beacon.visibleDuringFault=false、popup.available=false。",
-        "观察健康通道；预期不依赖共享状态的健康通道保持；检查 state.readable=true、popup.suppressedByBeaconFault=false。",
+        "观察健康通道；预期不依赖共享状态的健康通道保持；检查 state.readable=true、popup.suppressedByBeaconFault=false、corner.suppressedByBeaconFault=false。",
         "观察类别计数；预期三个独立通道各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=1、notice.popupDisplayedCount=1、notice.stateReadDisplayedCount=0、notice.totalDisplayedCount=3。"
       ],
       "expect": [
@@ -6954,14 +7081,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -6987,6 +7106,10 @@
         },
         {
           "observation": "popup.suppressedByBeaconFault",
+          "equals": false
+        },
+        {
+          "observation": "corner.suppressedByBeaconFault",
           "equals": false
         },
         {
@@ -7193,14 +7316,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -7362,14 +7477,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -7469,7 +7576,6 @@
         {
           "observation": "state.sermonReadyValue",
           "numberRange": {
-            "min": 0,
             "maxExclusive": 1
           }
         },
@@ -7598,7 +7704,7 @@
     },
     {
       "id": "ineligible-catch-up-existing-normal-popup-record",
-      "title": "恢复时已有正常弹窗去重记录则不补发",
+      "title": "恢复时已有同载入正常弹窗去重记录则不补发",
       "category": "catch-up-negative",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日（除另有说明）。",
@@ -7606,9 +7712,9 @@
         "测试设施可受控使恢复时的资格条件不成立。"
       ],
       "steps": [
-        "恢复前该槽该日已存在正常弹窗已显示记录；预期记录存在；检查 popup.recordBeforeDisplay=true。",
+        "确认同一次载入内已成功显示过一次正常弹窗；预期累计显示次数为 1；检查 popup.actualDisplaysBeforeRecovery=1、popup.recordBeforeDisplay=true。",
         "恢复后重新检查；预期因已有记录不符合；检查 popup.eligibleOnRecovery=false。",
-        "观察恢复后新增显示；预期零新增；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、dedup.recordRetainedAcrossRecovery=true。"
+        "观察恢复后新增显示；预期累计仍为 1 且零新增且不写新记录；检查 popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=0、dedup.recordRetainedAcrossRecovery=true。"
       ],
       "expect": [
         {
@@ -7658,10 +7764,17 @@
           "equals": false
         },
         {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
           "observation": "popup.actualDisplaysAfterRecovery",
           "integerBetween": {
-            "min": 0,
-            "max": 0
+            "min": 1,
+            "max": 1
           }
         },
         {
@@ -8035,14 +8148,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -8407,14 +8512,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -8467,16 +8564,16 @@
     },
     {
       "id": "switch-save-preserves-process-dedup",
-      "title": "切换存档保留进程内存档 A 的正常弹窗去重记录",
+      "title": "切换存档保留进程内存档 A 的正常弹窗去重记录且 A、B 身份相异",
       "category": "switch-save",
-      "phaseNote": "阶段含义：PhaseA=存档 A 已显示并留有进程内存记录、PhaseB=切换到存档 B 后其活动身份在 B 载入内冻结；A 的记录跨切档保留，不要求同一身份跨 A→B 稳定。",
+      "phaseNote": "阶段含义：PhaseA=存档 A 已显示并留有进程内存记录、PhaseB=切换到明确不同原生槽 B 后其活动身份在 B 载入内冻结；要求捕获的 A、B 身份彼此不同（不要求 native generation 字段），A 的记录跨切档保留，不要求同一身份跨 A→B 稳定。",
       "prerequisites": [
         "存档 A 已实际显示过一次正常弹窗并写入进程内存记录。",
-        "随后切换到存档 B。"
+        "存档 B 为一个明确不同的原生槽；随后切换到存档 B。"
       ],
       "steps": [
         "切换前记录 A 阶段身份与去重；预期记录存在；检查 dedup.recordRetainedPhaseA=true、popup.recordAfterDisplay=true、dedup.capturedIdentityPhaseA 存在。",
-        "切换到存档 B 并读取 B 阶段身份；预期 A 的进程内存记录在切档后仍保留，且 B 的活动身份在 B 载入内冻结；检查 dedup.recordRetainedAcrossSaveSwitch=true、dedup.capturedIdentityPhaseB 存在、dedup.activeIdentityFrozenWithinPhaseB=true。",
+        "切换到明确不同的原生槽 B 并读取 B 阶段身份；预期 A、B 捕获身份彼此不同，且 A 的进程内存记录在切档后仍保留，且 B 的活动身份在 B 载入内冻结；检查 dedup.capturedIdentityPhaseB 存在且与 capturedIdentityPhaseA 不同（notEqualsObservation）、dedup.recordRetainedAcrossSaveSwitch=true、dedup.activeIdentityFrozenWithinPhaseB=true。",
         "确认身份来源与 A/B 相位；预期分别记录且不合并；检查 dedup.capturedIdentityPhaseA 存在、dedup.capturedIdentityPhaseB 存在、dedup.usedLatestSlotGuess=false。"
       ],
       "expect": [
@@ -8509,6 +8606,10 @@
           "present": true
         },
         {
+          "observation": "dedup.capturedIdentityPhaseB",
+          "notEqualsObservation": "dedup.capturedIdentityPhaseA"
+        },
+        {
           "observation": "dedup.activeIdentityFrozenWithinPhaseB",
           "equals": true
         },
@@ -8527,6 +8628,7 @@
       "id": "switch-save-fresh-new-save-independent-validation",
       "title": "新存档按自身槽与日期独立判定",
       "category": "switch-save",
+      "phaseNote": "阶段含义：PhaseB=全新载入；新载入自零累计，正常弹窗实际显示一次后累计为 1（actualDisplaysAfterGateCleared）且该区间增量为 1（newDisplaysAfterGateCleared）。",
       "prerequisites": [
         "存档 A 已实际显示过一次正常弹窗。",
         "存档 B 为不同的槽或不同游戏日，且满足所有资格条件。",
@@ -8535,7 +8637,7 @@
       "steps": [
         "切换到存档 B 并等待加载完成；预期识别为切档；检查 load.transition=switch-save。",
         "读取新存档身份与去重；预期新槽显示前无本槽本日记录；检查 popup.recordBeforeDisplay=false、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
-        "观察新存档；预期按自身资格独立显示一次并写入记录；检查 popup.eligibilityRechecked=true、popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=1、popup.recordAfterDisplay=true、popup.chanceConsumed=true。"
+        "观察新存档；预期按自身资格独立显示一次并写入记录；检查 popup.eligibilityRechecked=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true、popup.chanceConsumed=true。"
       ],
       "expect": [
         {
@@ -8581,14 +8683,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -8613,14 +8707,14 @@
           "equals": true
         },
         {
-          "observation": "popup.actualDisplaysAfterRecovery",
+          "observation": "popup.actualDisplaysAfterGateCleared",
           "integerBetween": {
             "min": 1,
             "max": 1
           }
         },
         {
-          "observation": "popup.newDisplaysAfterRecovery",
+          "observation": "popup.newDisplaysAfterGateCleared",
           "integerBetween": {
             "min": 1,
             "max": 1
@@ -8897,16 +8991,20 @@
       "id": "settings-snapshot-on-to-off-next-load-prevents-popup",
       "title": "弹窗开关 ON 到 OFF 的跨真实载入快照改变下一次载入的弹窗资格",
       "category": "settings",
-      "phaseNote": "阶段含义：Phase1=第一次载入快照 ON、Phase2=改开关后下一次载入快照 OFF；不使用实时菜单值。",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 ON，门保持以避免花费去重记录；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 OFF，OFF 为唯一抑制条件。不使用实时菜单值，不虚构游戏内设置页。",
       "prerequisites": [
-        "第一次载入时该槽该日尚未显示且弹窗开关为 ON。",
-        "返回主菜单，在 Mods 设置页把弹窗开关改为 OFF。",
-        "随后再次载入该槽。"
+        "第一次载入（Phase1）该槽该日尚未显示、弹窗开关为 ON、两个门槛与原生布道日成立、资源健康。",
+        "Phase1 期间保持普通 UI 门以避免花费该槽该日去重记录，然后退出。",
+        "返回主菜单并在 Mods 设置页把弹窗开关改为 OFF。",
+        "随后再次载入同一槽同一实际游戏日（Phase2）。"
       ],
       "steps": [
-        "第一次载入时读取快照；预期 ON 且合格未显示；检查 settings.popupEnabledPhase1=true、settings.snapshotOnLoadPhase1=true、popup.readyEligibleUnshownAtLoad=true。",
-        "返回主菜单并修改开关后再次载入；预期下一次载入捕获到已改变的 OFF 值；检查 settings.popupEnabledPhase2=false、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true。",
-        "观察该次载入的弹窗；预期因开关 OFF 不显示且不产生弹窗故障消息；检查 popup.actualDisplaysAfterRecovery=0、notice.popupDisplayedCount=0、settings.popupOffDeliberate=true。"
+        "Phase1：载入后读取快照并确认合格未显示且门先保持；检查 settings.popupEnabledPhase1=true、settings.snapshotOnLoadPhase1=true、popup.readyEligibleUnshownAtLoad=true、settings.phase1GateHeldToAvoidSpend=true、popup.phase1RecordAbsent=true。",
+        "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
+        "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
+        "单独一步修改弹窗开关为 OFF；预期改为 OFF；检查 settings.settingChangedStepDone=true。",
+        "单独一步再次载入同一槽同日；预期下一次载入捕获到已改变的 OFF 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=false、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
+        "Phase2：使除 OFF 外一切条件合格且安全；预期 OFF 是唯一抑制条件、正常弹窗不显示且不产生弹窗故障消息；检查 settings.popupOffDeliberate=true、ui.safetyGateClear=true、ui.playerControllable=true、popup.phase2RecordAbsent=true、popup.actualDisplaysAfterGateCleared=0、notice.popupDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -8946,7 +9044,87 @@
           "equals": false
         },
         {
+          "observation": "save.churchUnlockedPhase1",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompletedPhase1",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDayPhase1",
+          "equals": true
+        },
+        {
+          "observation": "state.readablePhase1",
+          "equals": true
+        },
+        {
+          "observation": "resource.nativeHealthyPhase1",
+          "equals": true
+        },
+        {
+          "observation": "ui.safeControllablePhase1",
+          "equals": true
+        },
+        {
           "observation": "popup.readyEligibleUnshownAtLoad",
+          "equals": true
+        },
+        {
+          "observation": "settings.phase1GateHeldToAvoidSpend",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase1RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "settings.returnedToMainMenuStepDone",
+          "equals": true
+        },
+        {
+          "observation": "ui.mainMenuReturn",
+          "equals": true
+        },
+        {
+          "observation": "settings.modsPageOpenedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "settings.settingChangedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "settings.loadPerformedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "save.sameSlotDayAcrossLoads",
+          "equals": true
+        },
+        {
+          "observation": "save.churchUnlockedPhase2",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompletedPhase2",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDayPhase2",
+          "equals": true
+        },
+        {
+          "observation": "state.readablePhase2",
+          "equals": true
+        },
+        {
+          "observation": "resource.nativeHealthyPhase2",
+          "equals": true
+        },
+        {
+          "observation": "ui.safeControllablePhase2",
           "equals": true
         },
         {
@@ -8954,7 +9132,19 @@
           "equals": true
         },
         {
-          "observation": "popup.actualDisplaysAfterRecovery",
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "ui.playerControllable",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase2RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
           "integerBetween": {
             "min": 0,
             "max": 0
@@ -8978,16 +9168,19 @@
       "id": "settings-snapshot-off-to-on-next-load-allows-popup",
       "title": "弹窗开关 OFF 到 ON 的跨真实载入快照在下一载入允许一次弹窗",
       "category": "settings",
-      "phaseNote": "阶段含义：Phase1=第一次载入快照 OFF、Phase2=改开关后下一次载入快照 ON；正常弹窗身份为未显示的新身份，不改写去重。",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 OFF（不花费该槽该日记录）；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 ON，正常弹窗显示一次。同一未花费槽同日可复用。",
       "prerequisites": [
-        "第一次载入时弹窗开关为 OFF。",
-        "返回主菜单，在 Mods 设置页把弹窗开关改为 ON。",
-        "随后再次载入一个该槽该日尚未显示的正常弹窗身份。"
+        "第一次载入（Phase1）弹窗开关为 OFF，两个门槛与原生布道日成立、资源健康。",
+        "返回主菜单并在 Mods 设置页把弹窗开关改为 ON。",
+        "随后再次载入同一未花费的槽与同一实际游戏日（Phase2），OFF 载入不会花费该去重记录。"
       ],
       "steps": [
-        "第一次载入时读取快照；预期 OFF；检查 settings.popupEnabledPhase1=false、settings.snapshotOnLoadPhase1=true。",
-        "返回主菜单并修改开关后再次载入；预期下一次载入捕获到已改变的 ON 值；检查 settings.popupEnabledPhase2=true、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true。",
-        "观察该次载入的弹窗；预期恰好在安全时机显示一次并写入记录；检查 popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
+        "Phase1：载入后读取快照并确认 OFF；检查 settings.popupEnabledPhase1=false、settings.snapshotOnLoadPhase1=true、popup.phase1RecordAbsent=true。",
+        "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
+        "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
+        "单独一步修改弹窗开关为 ON；预期改为 ON；检查 settings.settingChangedStepDone=true。",
+        "单独一步再次载入同一未花费槽同日；预期下一次载入捕获到已改变的 ON 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=true、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
+        "Phase2：使条件合格且在安全时机观察；预期正常弹窗恰好显示一次并写入记录；检查 popup.phase2RecordAbsent=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
       ],
       "expect": [
         {
@@ -9027,8 +9220,88 @@
           "equals": true
         },
         {
-          "observation": "popup.recordBeforeDisplay",
-          "equals": false
+          "observation": "save.churchUnlockedPhase1",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompletedPhase1",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDayPhase1",
+          "equals": true
+        },
+        {
+          "observation": "state.readablePhase1",
+          "equals": true
+        },
+        {
+          "observation": "resource.nativeHealthyPhase1",
+          "equals": true
+        },
+        {
+          "observation": "ui.safeControllablePhase1",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase1RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase2RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "settings.returnedToMainMenuStepDone",
+          "equals": true
+        },
+        {
+          "observation": "ui.mainMenuReturn",
+          "equals": true
+        },
+        {
+          "observation": "settings.modsPageOpenedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "settings.settingChangedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "settings.loadPerformedStepDone",
+          "equals": true
+        },
+        {
+          "observation": "save.sameSlotDayAcrossLoads",
+          "equals": true
+        },
+        {
+          "observation": "save.churchUnlockedPhase2",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompletedPhase2",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDayPhase2",
+          "equals": true
+        },
+        {
+          "observation": "state.readablePhase2",
+          "equals": true
+        },
+        {
+          "observation": "resource.nativeHealthyPhase2",
+          "equals": true
+        },
+        {
+          "observation": "ui.safeControllablePhase2",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
         },
         {
           "observation": "popup.actualDisplaysAfterGateCleared",
@@ -9059,15 +9332,16 @@
       "id": "settings-snapshot-retained-within-active-load",
       "title": "同一活动载入内沿用该载入快照而非实时菜单值",
       "category": "settings",
+      "phaseNote": "阶段含义：BeforeFault=活动载入快照 ON 与初始资源故障、AfterRecovery=同一载入内恢复资源并清空门后正常弹窗显示一次；不离开载入、不打开游戏内设置页、不修改配置、不虚构游戏内实时切换。",
       "prerequisites": [
-        "某活动载入已捕获弹窗开关快照。",
-        "在不离开该载入的情况下打开游戏内菜单并查看设置页（不虚构游戏内实时切换生效）。",
+        "某活动载入已捕获弹窗开关快照 ON，该槽该日合格且尚未显示。",
+        "不离开该载入、不修改任何配置；仅在同一载入内受控注入并恢复正常弹窗资源故障。",
         "恢复判定仍应使用该载入的快照。"
       ],
       "steps": [
-        "读取该载入快照；预期快照值生效；检查 settings.popupEnabled=true、settings.snapshotOnLoadPhase1=true。",
-        "在该载入内打开游戏内菜单；预期仍是同一载入；检查 ui.menuOpen=true、ui.mainMenuReturn=false。",
-        "恢复判定使用快照；预期沿用该载入快照而非实时菜单值；检查 settings.snapshotRetainedWithinActiveLoad=true、dedup.capturedIdentityStable=true。"
+        "读取该载入快照与初始故障；预期快照 ON 且注入前正常弹窗未显示；检查 settings.popupEnabledBeforeRecovery=true、settings.snapshotOnLoadPhase1=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前注入受控正常弹窗资源故障；预期通道停用；检查 popup.available=false。",
+        "在同一载入内受控恢复该资源故障并清空安全门；预期正常弹窗按当前资格恰好显示一次且快照值未变；检查 recovery.autoRecovered=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、settings.popupEnabledAfterRecovery=true、settings.snapshotUnchangedBeforeAfter=true、settings.snapshotRetainedWithinActiveLoad=true。"
       ],
       "expect": [
         {
@@ -9083,7 +9357,7 @@
           }
         },
         {
-          "observation": "settings.popupEnabled",
+          "observation": "settings.popupEnabledBeforeRecovery",
           "equals": true
         },
         {
@@ -9091,19 +9365,52 @@
           "equals": true
         },
         {
-          "observation": "ui.menuOpen",
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity",
           "equals": true
         },
         {
-          "observation": "ui.mainMenuReturn",
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.available",
           "equals": false
         },
         {
-          "observation": "settings.snapshotRetainedWithinActiveLoad",
+          "observation": "recovery.autoRecovered",
           "equals": true
         },
         {
-          "observation": "dedup.capturedIdentityStable",
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "settings.popupEnabledAfterRecovery",
+          "equals": true
+        },
+        {
+          "observation": "settings.snapshotUnchangedBeforeAfter",
+          "equals": true
+        },
+        {
+          "observation": "settings.snapshotRetainedWithinActiveLoad",
           "equals": true
         }
       ],
@@ -9115,19 +9422,21 @@
     },
     {
       "id": "cleanup-persistent-partial-open-quarantined",
-      "title": "部分 Open 后的持久自有清理失败被隔离且不重复替换",
+      "title": "原生窗口与栈已关闭但自有清理未完成时被隔离且不重复替换",
       "category": "cleanup",
-      "phaseNote": "阶段含义：DuringCleanup=清理未完成并隔离、AfterRestoration=受控恢复清理后按当前资格恢复。清理未完成时不承诺所有引用已消失或可在不安全模态下立即显示原生故障消息。",
+      "phaseNote": "阶段含义：DuringCleanup=原生窗口/栈已关闭、自有暂停不再生效但自有按钮清理未完成并隔离；重试节奏与最小间隔来自已接受的核心清理重试时钟；清理未完成时不承诺所有引用已消失。",
       "prerequisites": [
-        "测试设施可受控使原生 Open 部分失败，留有未完成的正常弹窗自有清理。",
-        "清理在有限观察区间内反复未完成。",
-        "角落与信标通道保持健康。"
+        "测试设施可受控使原生窗口关闭与模态栈移除已完成、自有模态暂停不再生效，但自有按钮清理/返回仍未完成。",
+        "该未完成清理在有限观察区间内为可重试故障（非不确定转移对象）。",
+        "角落与信标通道保持健康且原生 HUD 可见。"
       ],
       "steps": [
-        "先记录部分 Open 失败后的自有残留；预期存在未完成清理；检查 cleanup.partialOpenResiduePresent=true、cleanup.cleanupPending=true。",
+        "确认原生窗口与栈已关闭且自有暂停不再生效、但清理未完成；检查 popup.windowCloseCompletedBeforeCleanupFault=true、cleanup.cleanupPending=true、pause.otherPauseStillActive=false。",
         "在清理未完成时反复检查自有实例；预期不建立重复替换且不改写他方/共享对象；检查 cleanup.duplicateReplacementCreated=false、dedup.ownedReplacementCount<=1、cleanup.foreignMutationDuringCleanup=false。",
-        "确认清理处于隔离且重试有界；检查 cleanup.quarantined=true、cleanup.boundedRetryCount>=0（有限观察区间内）、log.boundedDuringLoop=true。",
-        "观察不相关通道；预期继续工作；检查 cleanup.unrelatedChannelsContinue=true、corner.visibleDuringFault=true、beacon.visibleDuringFault=true。"
+        "在有限观察区间内记录清理重试节奏；预期至少两次重试且相邻重试最小间隔不小于 2 秒；检查 cleanup.retryCount 为严格整数且 >=2、cleanup.minRetryIntervalSeconds 为有限数值且 >=2、cleanup.observationDurationSeconds 为有限数值。",
+        "记录重试时间戳；检查 cleanup.retryTimestampsRecorded 存在。",
+        "确认清理处于隔离且诊断有界；检查 cleanup.quarantined=true、log.boundedDuringLoop=true。",
+        "观察不相关通道；预期在原生 HUD 可见的安全时机继续工作；检查 cleanup.unrelatedChannelsContinue=true、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。"
       ],
       "expect": [
         {
@@ -9173,14 +9482,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -9189,12 +9490,16 @@
           "equals": true
         },
         {
-          "observation": "cleanup.partialOpenResiduePresent",
+          "observation": "popup.windowCloseCompletedBeforeCleanupFault",
           "equals": true
         },
         {
           "observation": "cleanup.cleanupPending",
           "equals": true
+        },
+        {
+          "observation": "pause.otherPauseStillActive",
+          "equals": false
         },
         {
           "observation": "cleanup.duplicateReplacementCreated",
@@ -9212,14 +9517,28 @@
           "equals": false
         },
         {
-          "observation": "cleanup.quarantined",
-          "equals": true
+          "observation": "cleanup.retryCount",
+          "integerGreaterThan": 1
         },
         {
-          "observation": "cleanup.boundedRetryCount",
+          "observation": "cleanup.minRetryIntervalSeconds",
+          "numberRange": {
+            "min": 2
+          }
+        },
+        {
+          "observation": "cleanup.observationDurationSeconds",
           "numberRange": {
             "min": 0
           }
+        },
+        {
+          "observation": "cleanup.retryTimestampsRecorded",
+          "present": true
+        },
+        {
+          "observation": "cleanup.quarantined",
+          "equals": true
         },
         {
           "observation": "log.boundedDuringLoop",
@@ -9230,11 +9549,120 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleDuringFault",
+          "observation": "corner.visibleAtSafeUi",
           "equals": true
         },
         {
-          "observation": "beacon.visibleDuringFault",
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "cleanup-uncertain-transfer-readonly-no-mutation",
+      "title": "不确定池转移的自有对象按只读所有权证据处理且不重复变更",
+      "category": "cleanup",
+      "prerequisites": [
+        "测试设施可使一个自有对象处于不确定是否已转移到共享池的挂起状态。",
+        "该对象不得被重复变更；只读的所有权检查仍应继续。",
+        "角落与信标通道保持健康且原生 HUD 可见。"
+      ],
+      "steps": [
+        "确认该对象处于不确定转移的挂起状态；检查 cleanup.uncertainTransferReadOnly=true。",
+        "在有限观察区间内检查该对象；预期不发生重复变更重试；检查 cleanup.transferredObjectMutationRetries=0。",
+        "确认只读所有权检查继续；检查 cleanup.readOnlyOwnershipChecksContinue=true。",
+        "确认不建立重复替换且不改写他方/共享对象；检查 cleanup.duplicateReplacementCreated=false、cleanup.foreignMutationDuringCleanup=false。",
+        "观察不相关通道；预期在原生 HUD 可见的安全时机继续工作；检查 cleanup.unrelatedChannelsContinue=true、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "resource.nativeHealthyAtBaseline",
+          "equals": true
+        },
+        {
+          "observation": "settings.beaconEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.uncertainTransferReadOnly",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.transferredObjectMutationRetries",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "cleanup.readOnlyOwnershipChecksContinue",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.duplicateReplacementCreated",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.foreignMutationDuringCleanup",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.unrelatedChannelsContinue",
+          "equals": true
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
           "equals": true
         }
       ],
@@ -9249,13 +9677,13 @@
       "title": "受控恢复清理后按当前资格恢复且尊重实际显示去重",
       "category": "cleanup",
       "prerequisites": [
-        "此前部分 Open 失败留下未完成的自有清理。",
+        "此前原生窗口/栈已关闭且自有清理未完成。",
         "操作者随后受控恢复清理。",
         "恢复时该槽该日尚未显示且条件合格。"
       ],
       "steps": [
         "受控恢复清理；预期清理完成；检查 cleanup.restorationRecorded 存在、cleanup.recoveredAfterRestoration=true、cleanup.cleanupPending=false。",
-        "按当前资格检查正常弹窗；预期在安全时机显示一次且尊重该槽该日已显示记录；检查 popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、cleanup.actualShowDedupRespected=true。",
+        "在同一载入内按当前资格检查正常弹窗；预期在安全时机显示一次；检查 popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true、cleanup.actualShowDedupRespected=true。",
         "确认未弱化所有权语义；检查 cleanup.duplicateReplacementCreated=false、ui.sharedDialogDestroyed=false、dedup.ownedReplacementCount<=1。"
       ],
       "expect": [
@@ -9302,14 +9730,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -9344,6 +9764,10 @@
           }
         },
         {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
           "observation": "cleanup.actualShowDedupRespected",
           "equals": true
         },
@@ -9371,19 +9795,19 @@
     },
     {
       "id": "budget-genuine-reload-replenishes-category-not-popup-dedup",
-      "title": "真正重新载入后信标、角落与弹窗三类本地预算均重新可用但正常弹窗去重不重置",
+      "title": "真正重新载入后信标、角落与弹窗三类本地预算均重新可用（正常弹窗身份两载均未花费）",
       "category": "budget",
-      "phaseNote": "阶段含义：PriorLoad=上一次载入已消耗三类本地预算、AfterReload=真正重新载入后三类新预算；正常弹窗去重跨载入保留。",
+      "phaseNote": "阶段含义：PriorLoad=上一次载入已消耗三类本地预算、AfterReload=真正重新载入后三类新预算；正常弹窗身份两载均未花费，故可在新载入观察其类别故障消息，不依赖被去重阻断的新 Open。",
       "prerequisites": [
-        "上一次载入已分别使信标、角落与弹窗通道故障并各显示一次对应类别故障消息。",
-        "这些本地故障互不抑制，可同在一次载入中存在。",
-        "同槽同日在先前载入中已有正常弹窗已显示记录；重新载入后三类故障仍然存在。"
+        "上一次载入已分别使信标、角落与弹窗通道故障并各显示一次对应类别故障消息；三类本地故障互不抑制。",
+        "正常弹窗身份在两载均未花费（从未成功打开正常弹窗，故无记录）。",
+        "重新载入同一存档后三类故障仍然存在。"
       ],
       "steps": [
-        "重新载入同一存档；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true。",
+        "确认两载正常弹窗身份均未花费；检查 popup.phase1RecordAbsent=true、popup.phase2RecordAbsent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "重新载入同一存档；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true、save.sameSlotDayAcrossLoads=true。",
         "观察三类本地通道；预期新载入各允许再显示一次对应类别故障消息；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=1、notice.popupDisplayedCount=1、notice.stateReadDisplayedCount=0、notice.totalDisplayedCount=3。",
-        "逐类确认预算重新消耗；检查 notice.beaconBudgetConsumedAfterRefault=true、notice.cornerHudBudgetConsumedAfterRefault=true、notice.popupBudgetConsumedAfterRefault=true。",
-        "观察正常弹窗去重；预期不因重载而重置且正常弹窗不重开；检查 dedup.recordRetainedAcrossReload=true、popup.recordAfterDisplay=true、popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0。"
+        "逐类确认预算重新消耗；检查 notice.beaconBudgetConsumedAfterRefault=true、notice.cornerHudBudgetConsumedAfterRefault=true、notice.popupBudgetConsumedAfterRefault=true。"
       ],
       "expect": [
         {
@@ -9415,6 +9839,22 @@
           "equals": true
         },
         {
+          "observation": "save.sameSlotDayAcrossLoads",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase1RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "popup.phase2RecordAbsent",
+          "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
           "observation": "notice.beaconBudgetConsumedAfterRefault",
           "equals": true
         },
@@ -9425,28 +9865,6 @@
         {
           "observation": "notice.popupBudgetConsumedAfterRefault",
           "equals": true
-        },
-        {
-          "observation": "dedup.recordRetainedAcrossReload",
-          "equals": true
-        },
-        {
-          "observation": "popup.recordAfterDisplay",
-          "equals": true
-        },
-        {
-          "observation": "popup.actualDisplaysAfterRecovery",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
-        },
-        {
-          "observation": "popup.newDisplaysAfterRecovery",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
         },
         {
           "observation": "notice.stateReadDisplayedCount",
@@ -9481,6 +9899,85 @@
           "integerBetween": {
             "min": 3,
             "max": 3
+          }
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "dedup-successful-normal-display-survives-genuine-reload",
+      "title": "已成功显示的正常弹窗记录跨真正同槽同日重载仍保留并阻止重开",
+      "category": "budget",
+      "phaseNote": "阶段含义：PriorLoad=上一次载入成功显示一次并写入记录、AfterReload=真正同槽同日重载后新载入累计从 0 起；记录被保留（recordBeforeDisplay=true）故不重开，新载入新增显示为 0。",
+      "prerequisites": [
+        "上一次载入已成功显示过一次正常弹窗并写入该槽该日的进程内记录。",
+        "重新载入同一槽同一实际游戏日（未真正删除存档）。"
+      ],
+      "steps": [
+        "重新载入同一槽同日；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true。",
+        "读取新载入的累计正常弹窗显示次数；预期新载入自零累计；检查 popup.actualDisplaysBeforeRecovery=0。",
+        "观察正常弹窗；预期因记录保留而不再重开；检查 dedup.recordRetainedAcrossReload=true、popup.recordBeforeDisplay=true、popup.eligibleOnRecovery=false、popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "load.transition",
+          "equals": "reload"
+        },
+        {
+          "observation": "save.sameIdentityAcrossReload",
+          "equals": true
+        },
+        {
+          "observation": "save.sameDayAcrossReload",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "dedup.recordRetainedAcrossReload",
+          "equals": true
+        },
+        {
+          "observation": "popup.recordBeforeDisplay",
+          "equals": true
+        },
+        {
+          "observation": "popup.eligibleOnRecovery",
+          "equals": false
+        },
+        {
+          "observation": "popup.actualDisplaysAfterRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
           }
         }
       ],
@@ -9600,7 +10097,7 @@
       "steps": [
         "载入该存档；预期信标开关关闭属主动缺省而非故障；检查 settings.beaconEnabled=false、settings.beaconOffDeliberate=true。",
         "观察信标；预期不显示信标；检查 beacon.visibleDuringFault=false、beacon.targetAvailable=true。",
-        "观察角落与正常弹窗；预期健康且可继续；检查 corner.visibleAtBaseline=true、popup.available=true。",
+        "观察角落与正常弹窗；预期健康且可继续；检查 corner.visibleAtSafeUi=true、popup.available=true。",
         "观察故障消息计数；预期不产生信标类别故障消息；检查 notice.beaconDisplayedCount=0、notice.totalDisplayedCount=0。"
       ],
       "expect": [
@@ -9659,7 +10156,7 @@
           "equals": true
         },
         {
-          "observation": "corner.visibleAtBaseline",
+          "observation": "corner.visibleAtSafeUi",
           "equals": true
         },
         {
@@ -9833,7 +10330,7 @@
       "steps": [
         "载入该存档；预期弹窗开关关闭属主动缺省而非故障；检查 settings.popupEnabled=false、settings.popupOffDeliberate=true。",
         "注入受控角落故障；预期角落类别故障消息仍显示一次且角落呈现被抑制；检查 corner.visibleDuringFault=false、notice.cornerHudDisplayedCount=1。",
-        "确认关闭不抑制角落故障消息且信标健康；检查 beacon.visibleDuringFault=true、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。"
+        "确认关闭不抑制角落故障消息且信标健康；检查 beacon.visibleAtSafeUi=true、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。"
       ],
       "expect": [
         {
@@ -9887,7 +10384,7 @@
           "equals": false
         },
         {
-          "observation": "beacon.visibleDuringFault",
+          "observation": "beacon.visibleAtSafeUi",
           "equals": true
         },
         {
@@ -10145,14 +10642,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -10246,14 +10735,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -10353,14 +10834,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -10450,14 +10923,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -10553,14 +11018,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -10650,14 +11107,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -10917,14 +11366,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -11022,14 +11463,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -11133,14 +11566,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -11234,14 +11659,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -11341,14 +11758,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -11442,14 +11851,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -11549,14 +11950,6 @@
           "equals": true
         },
         {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
-          "equals": true
-        },
-        {
           "observation": "settings.beaconEnabled",
           "equals": true
         },
@@ -11641,14 +12034,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
@@ -11744,14 +12129,6 @@
         },
         {
           "observation": "resource.nativeHealthyAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "beacon.visibleAtBaseline",
-          "equals": true
-        },
-        {
-          "observation": "corner.visibleAtBaseline",
           "equals": true
         },
         {
