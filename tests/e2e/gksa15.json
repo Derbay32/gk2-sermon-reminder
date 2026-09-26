@@ -199,6 +199,8 @@
     "beacon.suppressedByCornerFault": "bool: 信标是否因角落文字故障被抑制",
     "beacon.suppressedByPopupFault": "bool: 信标是否因弹窗故障被抑制",
     "popup.available": "bool: 正常弹窗通道在正常阶段是否可用",
+    "popup.availableBeforeFirstFailure": "bool: 首次打开资源故障期间正常弹窗通道是否不可用",
+    "popup.availableAfterResourceRestore": "bool: 受控恢复打开资源后正常弹窗通道是否恢复可用",
     "popup.nativeDialogAvailable": "bool: 原生对话框组件是否可用",
     "popup.textResolved": "bool: 必需本地化弹窗文案是否可解析",
     "popup.openFailed": "bool: 原生打开调用是否失败",
@@ -224,6 +226,7 @@
     "popup.chanceConsumed": "bool: 正常弹窗当前是否已记录已显示",
     "popup.pausedWhileShown": "bool: 正常弹窗显示时是否使用原生暂停",
     "popup.actualDisplaysBeforeRecovery": "int: 自当前载入起累计的实际正常弹窗显示次数，在故障/占用阶段观察（累计口径）",
+    "popup.actualDisplaysPhase1": "int: 第一次载入内在退出主菜单前的累计正常弹窗实际显示次数（累计口径）",
     "popup.actualDisplaysAfterRecovery": "int: 自当前载入起累计的实际正常弹窗显示次数，在恢复并清空安全门后观察（累计口径）",
     "popup.actualDisplaysAfterFurtherTicks": "int: 自当前载入起累计的实际正常弹窗显示次数，跨后续多个帧观察（累计口径）",
     "popup.actualDisplaysAfterGateCleared": "int: 自当前载入起累计的实际正常弹窗显示次数，在清空安全门后立即观察（累计口径）",
@@ -285,6 +288,8 @@
     "notice.staleNoticeAfterRecovery": "bool: 恢复后是否补发过期故障消息",
     "notice.queuedNoticeCarriedToNextLoad": "bool: 排队消息是否被带入下一次载入",
     "notice.queuePending": "bool: 是否存在待显示故障消息",
+    "notice.queuePendingDuringUnsafe": "bool: 界面不安全时是否存在待显示故障消息",
+    "notice.queuePendingAfterRepair": "bool: 清理修复后是否存在待显示故障消息",
     "notice.queueCount": "int: 待显示故障消息数量",
     "notice.displayAttemptCount": "int: 故障消息实际显示尝试次数（通知口径）",
     "notice.duplicateNoticeCount": "int: 重复显示的同类故障消息次数",
@@ -392,6 +397,15 @@
     "popup.actualDisplaysAfterCleanupFault": "int: 自当前载入起累计的正常弹窗实际显示次数，在清理故障后观察（累计口径）",
     "popup.reopenAfterCleanupRepair": "bool: 受控修复清理后是否错误重开同槽同日正常弹窗",
     "popup.windowCloseCompletedBeforeCleanupFault": "bool: 注入清理故障前原生窗口关闭与模态栈移除是否已完成且界面安全",
+    "popup.partialOpenFailureArranged": "bool: 是否已在清空安全门前安排受控的部分原生 Open 失败（建立自有清理事务但不花费去重）",
+    "popup.partialOpenFailureRecorded": "string: 操作者记录的受控部分原生 Open 失败方法，供 GKSA-16 复现",
+    "popup.ownedCleanupTransactionPresent": "bool: 部分 Open 失败后是否存在自有清理事务",
+    "popup.cleanupFailureObservedOnExistingTransaction": "bool: 在界面不安全的既有自有清理事务上是否观察到实际清理失败",
+    "popup.cleanupRepaired": "bool: 受控修复后自有弹窗关闭/清理事务是否完成",
+    "popup.cleanupRepairRecorded": "string: 操作者记录的受控清理修复方法，供 GKSA-16 复现",
+    "popup.externalGateHeldDuringRepair": "bool: 修复自有清理期间是否保持独立的外部普通 UI 门",
+    "popup.categoryFaultRemainingAfterRepair": "bool: 受控修复后是否仍残留该类别故障（应为 false）",
+    "popup.dayCrossedBeforeGateClear": "bool: 是否在清空外部 UI 门之前明确跨入非布道日",
     "settings.popupEnabledBeforeRecovery": "bool: 同一活动载入内恢复前的弹窗开关快照值",
     "settings.popupEnabledAfterRecovery": "bool: 同一活动载入内恢复后的弹窗开关快照值",
     "settings.snapshotUnchangedBeforeAfter": "bool: 同一活动载入内恢复前后快照值是否未变",
@@ -409,6 +423,8 @@
     "save.tutorialCompletedPhase2": "bool: 第二次载入时教学门槛是否 Completed",
     "save.isSermonDayPhase2": "bool: 第二次载入时原生日是否为布道日",
     "state.readablePhase2": "bool: 第二次载入时必要状态是否可读",
+    "state.sermonReadyValuePhase1": "finite number: 第一次载入时原生 sermon_ready 值（有限且 >=1 表示当日机会未消费）",
+    "state.sermonReadyValuePhase2": "finite number: 第二次载入时原生 sermon_ready 值（有限且 >=1 表示当日机会未消费）",
     "resource.nativeHealthyPhase2": "bool: 第二次载入时原生资源是否独立确认健康",
     "ui.safeControllablePhase2": "bool: 第二次载入安全/可操作比较阶段是否安全可操作",
     "settings.phase1GateHeldToAvoidSpend": "bool: 第一次 ON 阶段是否保持普通 UI 门以避免花费去重记录",
@@ -4727,7 +4743,7 @@
       "id": "budget-popup-display-once-continuous-refault-no-replenish",
       "title": "弹窗类别首次故障显示一次，随后自有弹窗成功显示并在其关闭清理事务同次载入复发仍不补充预算",
       "category": "budget",
-      "phaseNote": "阶段含义：DuringFault=首次弹窗故障消息显示一次、AfterGateCleared=清空门后正常弹窗成功显示一次、AfterRefault=自有弹窗原生关闭/清理事务中受控清理故障（同一清理故障类别复发）；累计与区间口径以 vocabulary 为准。",
+      "phaseNote": "阶段含义：BeforeFault=门保持且资源已失败、AfterFailedOpen=清空门后观察失败 Open 与一次安全故障消息、BeforeRefault=持续失败多检查点、AfterGateCleared=恢复资源后正常弹窗显示一次、AfterRefault=自有弹窗原生关闭/清理事务中受控清理故障、AfterRepair=受控修复完成；累计与区间口径以 vocabulary 为准，故障消息绝不在安全门前断言。",
       "prerequisites": [
         "存档满足资格且正常弹窗通道健康，其他通道健康。",
         "首个正常弹窗机会前先保持普通安全门。",
@@ -4736,9 +4752,12 @@
         "操作者记录实际注入、恢复与清理故障方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在清空安全门前注入首次弹窗故障；预期弹窗类别故障消息显示一次且预算消耗；检查 notice.popupDisplayedCount=1、notice.popupBudgetConsumed=true。",
-        "清空安全门并恢复正常弹窗通道；预期合格正常弹窗成功显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "保持安全门并安排首次弹窗打开资源故障（制造未花费去重记录的失败尝试）；预期门仍未清空且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.availableBeforeFirstFailure=false、popup.actualDisplaysBeforeRecovery=0。",
+        "在资源仍失败时清空安全门；预期观察到实际失败的 Open 并在安全时机显示一次弹窗类别故障消息；检查 ui.safetyGateClear=true、popup.openFailed=true、notice.popupDisplayedCount=1、notice.popupBudgetConsumed=true。",
+        "在多个检查点保持资源失败；预期不重复弹窗类别故障消息；检查 notice.popupDisplayedCountBeforeRefault=1、notice.duplicateNoticeCount=0。",
+        "受控恢复弹窗资源；预期合格正常弹窗成功显示一次并写入记录；检查 popup.availableAfterResourceRestore=true、popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
         "在自有弹窗原生关闭/清理事务中注入受控同类清理故障；预期窗口关闭与模态栈移除先完成且界面安全，随后清理故障被观察到；检查 popup.windowCloseCompletedBeforeCleanupFault=true、popup.cleanupFaultObserved=true、popup.ownCloseCleanupFaultInjected 存在。",
+        "受控修复该清理事务并观察完成；预期清理完成且界面安全；检查 popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、popup.categoryFaultRemainingAfterRepair=false。",
         "观察同次载入复发后的类别计数与正常弹窗；预期不补充预算、记录仍已花费且不重开；检查 notice.popupDisplayedCountAfterRefault=1、notice.popupBudgetConsumedAfterRefault=true、popup.recordRetainedAfterCleanupFault=true、popup.actualDisplaysAfterCleanupFault=1、popup.newDisplaysAfterCleanupFault=0、popup.reopenAfterCleanupRepair=false。"
       ],
       "expect": [
@@ -4812,11 +4831,37 @@
           }
         },
         {
+          "observation": "popup.availableBeforeFirstFailure",
+          "equals": false
+        },
+        {
           "observation": "ui.safetyGateClear",
           "equals": true
         },
         {
+          "observation": "popup.openFailed",
+          "equals": true
+        },
+        {
           "observation": "notice.popupBudgetConsumed",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCountBeforeRefault",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.duplicateNoticeCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.availableAfterResourceRestore",
           "equals": true
         },
         {
@@ -4841,6 +4886,18 @@
         {
           "observation": "popup.ownCloseCleanupFaultInjected",
           "present": true
+        },
+        {
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.categoryFaultRemainingAfterRepair",
+          "equals": false
         },
         {
           "observation": "popup.recordRetainedAfterCleanupFault",
@@ -5287,18 +5344,22 @@
     },
     {
       "id": "queue-popup-unsafe-ui-no-display-recover-clear-ui",
-      "title": "弹窗故障在占用界面排队、组件先恢复、界面清空后不补发过期消息",
+      "title": "部分 Open 失败的自有清理在占用界面下被观察到，修复后清空界面并按资格显示一次",
       "category": "queue",
-      "phaseNote": "阶段含义：DuringQueue=占用界面下已排队未显示、AfterRecovery=组件恢复后取消未显示队列、AfterSafetyClear=界面清空后不补发过期消息。",
+      "phaseNote": "阶段含义：PartialOpen=合格未显示时部分 Open 失败建立自有清理事务（不花费去重）、DuringUnsafe=清理失败在既有事务上被观察且队列待显示零通知、DuringRepair=保持外部门并修复清理、AfterGateClear=修复后才清空门按资格显示一次；不在安全门前断言立即通知。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
-        "受控使目标通道故障，同时界面处于不安全占用状态。",
-        "操作者记录实际注入、组件恢复与界面清空方法，供 GKSA-16 复现。"
+        "测试设施可在合格且未显示的载入中安排受控的部分原生 Open 失败（建立自有清理事务，但不花费正常弹窗去重）。",
+        "测试设施可使该自有清理持续失败，并在修复期间保持一个独立的外部普通 UI 门。",
+        "清理在既有事务上早于新的 Open 门评估，无需在占用界面下跨门进行资源发现。",
+        "操作者记录部分 Open 失败注入、清理失败与修复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在占用界面下注入通道故障；预期故障被排队且不实际显示；检查 queue.popupPending=true、queue.countBefore=1、notice.displayAttemptCount=0 且 notice.popupDisplayedCount=0。",
-        "单独一步使目标通道组件受控恢复；预期自动恢复；检查 recovery.autoRecovered=true、queue.staleAfterRecovery=false。",
-        "单独一步清空界面到安全时机；预期不补发过期消息；检查 notice.queuePending=false、notice.queueCount=0、queue.countAfter=0、notice.staleNoticeAfterRecovery=false、notice.successMessageShown=false、notice.popupBudgetConsumed=false。"
+        "在合格且未显示的载入中安排受控部分原生 Open 失败；预期建立自有清理事务且不花费去重；检查 popup.partialOpenFailureArranged=true、popup.ownedCleanupTransactionPresent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "保持自有清理失败且界面不安全；预期在既有事务上观察到实际清理失败、故障排队且零实际通知；检查 popup.cleanupFailureObservedOnExistingTransaction=true、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、notice.popupDisplayedCount=0、popup.displayedWhileOccupied=false。",
+        "保持独立外部 UI 门并受控修复自有清理；预期清理完成且无残留类别故障、未显示队列被取消；检查 popup.externalGateHeldDuringRepair=true、popup.cleanupRepaired=true、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、notice.queueCount=0、notice.popupBudgetConsumed=false、popup.actualDisplaysBeforeRecovery=0。",
+        "只有清理修复后才清空外部 UI 门；预期合格正常弹窗按当前资格显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "确认无过期消息与成功消息；检查 notice.staleNoticeAfterRecovery=false、notice.successMessageShown=false。"
       ],
       "expect": [
         {
@@ -5340,18 +5401,41 @@
           }
         },
         {
-          "observation": "ui.safetyGateActive",
+          "observation": "popup.partialOpenFailureArranged",
           "equals": true
         },
         {
-          "observation": "queue.popupPending",
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.ownedCleanupTransactionPresent",
           "equals": true
         },
         {
-          "observation": "queue.countBefore",
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
           "integerBetween": {
-            "min": 1,
-            "max": 1
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction",
+          "equals": true
+        },
+        {
+          "observation": "notice.queuePendingDuringUnsafe",
+          "equals": true
+        },
+        {
+          "observation": "notice.displayAttemptCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
           }
         },
         {
@@ -5362,22 +5446,27 @@
           }
         },
         {
-          "observation": "notice.displayAttemptCount",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
-        },
-        {
-          "observation": "recovery.autoRecovered",
-          "equals": true
-        },
-        {
-          "observation": "queue.staleAfterRecovery",
+          "observation": "popup.displayedWhileOccupied",
           "equals": false
         },
         {
-          "observation": "notice.queuePending",
+          "observation": "popup.externalGateHeldDuringRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.categoryFaultRemainingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingAfterRepair",
           "equals": false
         },
         {
@@ -5388,11 +5477,30 @@
           }
         },
         {
-          "observation": "queue.countAfter",
+          "observation": "notice.popupBudgetConsumed",
+          "equals": false
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
           "integerBetween": {
-            "min": 0,
-            "max": 0
+            "min": 1,
+            "max": 1
           }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
         },
         {
           "observation": "notice.staleNoticeAfterRecovery",
@@ -5400,10 +5508,6 @@
         },
         {
           "observation": "notice.successMessageShown",
-          "equals": false
-        },
-        {
-          "observation": "notice.popupBudgetConsumed",
           "equals": false
         }
       ],
@@ -5554,22 +5658,24 @@
     },
     {
       "id": "queue-popup-restore-notifier-and-gates-before-same-load-refault-displays-once",
-      "title": "弹窗故障在占用界面排队，恢复后正常弹窗显示一次，随后其自有关闭清理事务同次载入复发不补充预算",
+      "title": "部分 Open 故障在占用界面排队，修复清理后正常弹窗显示一次，随后其自有关闭清理事务同次载入复发不补充预算",
       "category": "queue",
-      "phaseNote": "阶段含义：DuringQueue=占用界面下已排队未显示、AfterRecovery=故障先恢复并取消队列且预算未消耗、AfterGateCleared=清空门后正常弹窗成功显示一次、AfterRefault=其自有原生关闭/清理事务中受控清理故障（同一清理故障类别复发，不重新 Open）；累计与区间口径以 vocabulary 为准。",
+      "phaseNote": "阶段含义：PartialOpen=部分 Open 失败建立自有清理事务、DuringUnsafe=既有事务清理失败被观察且队列待显示零通知、DuringRepair=保持外部门并修复清理、AfterGateClear=修复后才清空门且正常弹窗显示一次、AfterRefault=其自有原生关闭/清理事务中受控清理故障、AfterRepair=显式修复清理完成且不重开；不在安全门前断言立即通知，不重新 Open。",
       "prerequisites": [
         "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
-        "受控使正常弹窗通道故障并在不安全界面排队；随后故障先恢复。",
-        "恢复后先恢复消息组件与安全门，允许合格正常弹窗显示一次，再在其自有原生关闭/清理事务中受控注入同类清理故障。",
-        "操作者记录实际注入、恢复与清理故障方法，供 GKSA-16 复现。"
+        "测试设施可在合格未显示载入中安排受控部分原生 Open 失败（建立自有清理事务，不花费去重）。",
+        "测试设施可在不安全界面使该自有清理持续失败，并在修复期间保持独立外部普通 UI 门。",
+        "恢复后允许合格正常弹窗成功显示一次，再在其自有原生关闭/清理事务中受控注入同类清理故障。",
+        "操作者记录部分 Open 失败、清理失败与修复、自有关闭清理故障方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在不安全界面注入弹窗通道故障；预期排队且未显示；检查 notice.queuePending=true、queue.countBefore=1、notice.displayAttemptCount=0。",
-        "单独一步使弹窗故障先恢复并取消队列；预期自动恢复且预算未消耗；检查 recovery.autoRecovered=true、queue.staleAfterRecovery=false、queue.countAfter=0、notice.popupDisplayedCountBeforeRefault=0、notice.popupBudgetConsumedBeforeRefault=false。",
-        "单独一步恢复消息组件；预期可用；检查 notice.notifierAvailable=true。",
-        "单独一步清空安全门；预期安全门已清空；检查 ui.safetyGateClear=true。",
+        "在合格且未显示载入中安排部分 Open 失败；预期建立自有清理事务且不花费去重；检查 popup.partialOpenFailureArranged=true、popup.ownedCleanupTransactionPresent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "保持清理失败且界面不安全；预期在既有事务上观察到清理失败、故障排队、零实际通知且占用期间未显示正常弹窗；检查 popup.cleanupFailureObservedOnExistingTransaction=true、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、notice.popupDisplayedCountBeforeRefault=0、popup.displayedWhileOccupied=false。",
+        "保持独立外部 UI 门并受控修复自有清理；预期清理完成、无残留类别故障、未显示队列被取消且预算未消耗；检查 popup.externalGateHeldDuringRepair=true、popup.cleanupRepaired=true、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、queue.countAfter=0、notice.popupBudgetConsumedBeforeRefault=false。",
+        "单独一步恢复消息组件并清空外部 UI 门；预期可用且安全；检查 notice.notifierAvailable=true、ui.safetyGateClear=true。",
         "允许合格正常弹窗成功显示一次；预期显示并写入记录；检查 popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
         "在自有弹窗原生关闭/清理事务中注入受控同类清理故障；预期窗口关闭与模态栈移除先完成且界面安全，随后清理故障被观察到；检查 popup.windowCloseCompletedBeforeCleanupFault=true、popup.cleanupFaultObserved=true、popup.ownCloseCleanupFaultInjected 存在。",
+        "受控修复该清理事务并观察完成；预期清理完成且界面安全；检查 popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、popup.categoryFaultRemainingAfterRepair=false。",
         "在同次载入的清理故障后观察类别计数与正常弹窗；预期未使用的类别预算可显示一次、记录仍已花费且不重开；检查 queue.refaultAfterRecovery=true、notice.popupDisplayedCount=1、notice.popupBudgetConsumedAfterRefault=true、popup.recordRetainedAfterCleanupFault=true、popup.actualDisplaysAfterCleanupFault=1、popup.newDisplaysAfterCleanupFault=0、popup.reopenAfterCleanupRepair=false。",
         "确认无跨载入残留；预期无残留；检查 notice.queuedNoticeCarriedToNextLoad=false。"
       ],
@@ -5613,15 +5719,35 @@
           }
         },
         {
-          "observation": "notice.queuePending",
+          "observation": "popup.partialOpenFailureArranged",
           "equals": true
         },
         {
-          "observation": "queue.countBefore",
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.ownedCleanupTransactionPresent",
+          "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
           "integerBetween": {
-            "min": 1,
-            "max": 1
+            "min": 0,
+            "max": 0
           }
+        },
+        {
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction",
+          "equals": true
+        },
+        {
+          "observation": "notice.queuePendingDuringUnsafe",
+          "equals": true
         },
         {
           "observation": "notice.displayAttemptCount",
@@ -5638,15 +5764,27 @@
           }
         },
         {
-          "observation": "notice.popupBudgetConsumedBeforeRefault",
+          "observation": "popup.displayedWhileOccupied",
           "equals": false
         },
         {
-          "observation": "recovery.autoRecovered",
+          "observation": "popup.externalGateHeldDuringRepair",
           "equals": true
         },
         {
-          "observation": "queue.staleAfterRecovery",
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.categoryFaultRemainingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingAfterRepair",
           "equals": false
         },
         {
@@ -5655,6 +5793,10 @@
             "min": 0,
             "max": 0
           }
+        },
+        {
+          "observation": "notice.popupBudgetConsumedBeforeRefault",
+          "equals": false
         },
         {
           "observation": "notice.notifierAvailable",
@@ -7536,7 +7678,7 @@
         "测试设施可受控使恢复时的资格条件不成立。"
       ],
       "steps": [
-        "恢复共享状态但此时布道机会已消费；预期判定为已布道；检查 state.sermonReadyValue<1 且 >=0。",
+        "恢复共享状态但此时布道机会已消费；预期判定为已布道；检查 state.sermonReadyValue<1。",
         "检查弹窗资格；预期不符合；检查 popup.eligibleOnRecovery=false、popup.recordAfterDisplay=false。",
         "观察恢复后新增显示；预期零新增且不写记录；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、popup.chanceConsumed=false。"
       ],
@@ -8091,18 +8233,20 @@
     },
     {
       "id": "recovery-while-menu-occupied-deferred-then-eligible",
-      "title": "占用界面期间故障恢复保持延后并在安全清空后按新鲜资格补发",
+      "title": "部分 Open 清理故障在占用界面下被观察到，修复并清空界面后按新鲜资格补发一次",
       "category": "defer",
-      "phaseNote": "阶段含义：DuringDeferral=占用界面下故障通知排队未显示、AfterFaultRecovery=故障先恢复并取消队列、AfterGateCleared=清空安全门后正常弹窗按新鲜资格显示一次；故障通知计数与正常弹窗实际显示计数分开。",
+      "phaseNote": "阶段含义：PartialOpen=部分 Open 失败建立自有清理事务、DuringUnsafe=既有事务清理失败在占用界面下被观察且零通知、DuringRepair=保持外部门并修复清理、AfterGateClear=修复后清空门按新鲜资格显示一次；故障通知不在安全门前断言，不跨门进行资源发现。",
       "prerequisites": [
-        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
-        "受控使正常弹窗通道故障，且此时界面处于菜单占用状态。",
-        "故障通知在占用界面期间排队，其底层故障在界面仍占用时先恢复。"
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，且尚未显示正常弹窗。",
+        "测试设施可在合格未显示载入中安排受控部分原生 Open 失败（建立自有清理事务，不花费去重）。",
+        "测试设施可在不安全界面使该自有清理持续失败，并在修复期间保持独立外部普通 UI 门。",
+        "操作者记录部分 Open 失败、清理失败与修复方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在占用界面下注入弹窗通道故障；预期故障通知排队且不实际显示；检查 ui.busyGateActive=true、ui.safetyGateClearDuringDeferral=false、notice.queuePending=true、popup.displayedWhileOccupied=false、popup.actualDisplaysBeforeRecovery=0。",
-        "单独一步在界面仍占用时恢复底层故障；预期排队通知被取消且不补发；检查 queue.staleAfterRecovery=false、notice.staleNoticeAfterRecovery=false。",
-        "单独一步清空界面到安全时机并重查新鲜资格；预期故障通知不显示但正常弹窗按当前资格一次；检查 ui.safetyGateClear=true、notice.popupDisplayedCount=0、popup.eligibilityRechecked=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1。"
+        "在合格且未显示载入中安排部分 Open 失败；预期建立自有清理事务且不花费去重；检查 popup.partialOpenFailureArranged=true、popup.ownedCleanupTransactionPresent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "保持清理失败且界面不安全（占用界面或部分原生模态暂停）；预期在既有事务上观察到清理失败、故障排队且零实际通知；检查 popup.cleanupFailureObservedOnExistingTransaction=true、ui.busyGateActive=true、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、notice.popupDisplayedCount=0、popup.displayedWhileOccupied=false。",
+        "保持独立外部 UI 门并受控修复自有清理；预期清理完成、无残留类别故障、未显示队列被取消且预算未消耗；检查 popup.externalGateHeldDuringRepair=true、popup.cleanupRepaired=true、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、notice.popupBudgetConsumedBeforeRefault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "只有清理修复后才清空外部 UI 门；预期合格正常弹窗按当前资格显示一次并重查资格；检查 ui.safetyGateClear=true、popup.eligibilityRechecked=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
       ],
       "expect": [
         {
@@ -8144,15 +8288,23 @@
           }
         },
         {
-          "observation": "resource.nativeHealthyAtBaseline",
+          "observation": "popup.partialOpenFailureArranged",
           "equals": true
         },
         {
-          "observation": "settings.beaconEnabled",
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.ownedCleanupTransactionPresent",
           "equals": true
         },
         {
-          "observation": "settings.popupEnabled",
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction",
           "equals": true
         },
         {
@@ -8160,15 +8312,49 @@
           "equals": true
         },
         {
-          "observation": "ui.safetyGateClearDuringDeferral",
-          "equals": false
-        },
-        {
-          "observation": "notice.queuePending",
+          "observation": "notice.queuePendingDuringUnsafe",
           "equals": true
         },
         {
+          "observation": "notice.displayAttemptCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
           "observation": "popup.displayedWhileOccupied",
+          "equals": false
+        },
+        {
+          "observation": "popup.externalGateHeldDuringRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.categoryFaultRemainingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "notice.popupBudgetConsumedBeforeRefault",
           "equals": false
         },
         {
@@ -8179,23 +8365,8 @@
           }
         },
         {
-          "observation": "queue.staleAfterRecovery",
-          "equals": false
-        },
-        {
-          "observation": "notice.staleNoticeAfterRecovery",
-          "equals": false
-        },
-        {
           "observation": "ui.safetyGateClear",
           "equals": true
-        },
-        {
-          "observation": "notice.popupDisplayedCount",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
         },
         {
           "observation": "popup.eligibilityRechecked",
@@ -8214,6 +8385,10 @@
             "min": 1,
             "max": 1
           }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
         }
       ],
       "evidence": {
@@ -8224,17 +8399,20 @@
     },
     {
       "id": "recovery-during-deferral-crosses-day-discards-old-day",
-      "title": "延后期间跨日时丢弃旧日工作并只使用当前状态",
+      "title": "部分 Open 清理故障在延后期间跨日后丢弃旧日并只使用当前状态",
       "category": "defer",
+      "phaseNote": "阶段含义：PartialOpen=部分 Open 失败建立自有清理事务、DuringUnsafe=跨日且保持外部门、DuringRepair=修复清理、AfterGateClear=修复后清空门按当前非布道日零输出；只在当前状态上判定，不重放旧日。",
       "prerequisites": [
-        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
-        "受控使正常弹窗通道故障，其故障通知在占用界面期间排队。",
-        "延后等待期间游戏跨日离开布道日；恢复时只允许按当前状态判定。"
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，且尚未显示正常弹窗。",
+        "测试设施可在合格未显示载入中安排受控部分原生 Open 失败（建立自有清理事务，不花费去重）。",
+        "清理失败期间保持独立外部普通 UI 门，并在清空门前明确跨入非布道日。",
+        "操作者记录部分 Open 失败、清理失败与修复及跨日方法，供 GKSA-16 复现。"
       ],
       "steps": [
-        "在占用界面期间排队并跨日；预期旧日工作被丢弃；检查 save.isSermonDay=false、save.dateChangedDuringDeferral=true。",
-        "观察旧日弹窗与排队通知；预期零新增且不补发；检查 notice.popupDisplayedCount=0、popup.actualDisplaysAfterRecovery=0、notice.staleNoticeAfterRecovery=false。",
-        "确认使用当前状态；预期按当前非布道日判定；检查 popup.eligibleOnRecovery=false、popup.displayedWhileOccupied=false。"
+        "在合格且未显示载入中安排部分 Open 失败；预期建立自有清理事务且不花费去重；检查 popup.partialOpenFailureArranged=true、popup.ownedCleanupTransactionPresent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "清理失败期间跨日离开布道日且保持外部门；预期在既有事务上观察到实际清理失败、故障排队且零实际通知，旧日工作被丢弃；检查 popup.cleanupFailureObservedOnExistingTransaction=true、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、popup.displayedWhileOccupied=false、save.isSermonDay=false、save.dateChangedDuringDeferral=true、popup.dayCrossedBeforeGateClear=true、popup.externalGateHeldDuringRepair=true。",
+        "受控修复自有清理；预期清理完成且无残留类别故障、未显示队列被取消；检查 popup.cleanupRepaired=true、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、popup.actualDisplaysBeforeRecovery=0。",
+        "修复后才清空外部 UI 门；预期按当前非布道日判定且零正常弹窗输出；检查 ui.safetyGateClear=true、popup.eligibleOnRecovery=false、popup.actualDisplaysAfterGateCleared=0、popup.newDisplaysAfterGateCleared=0、notice.staleNoticeAfterRecovery=false、notice.popupDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -8262,18 +8440,31 @@
           "equals": true
         },
         {
-          "observation": "notice.staleNoticeAfterRecovery",
-          "equals": false
+          "observation": "popup.partialOpenFailureArranged",
+          "equals": true
         },
         {
-          "observation": "notice.popupDisplayedCount",
-          "integerBetween": {
-            "min": 0,
-            "max": 0
-          }
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
         },
         {
-          "observation": "popup.actualDisplaysAfterRecovery",
+          "observation": "popup.ownedCleanupTransactionPresent",
+          "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction",
+          "equals": true
+        },
+        {
+          "observation": "notice.queuePendingDuringUnsafe",
+          "equals": true
+        },
+        {
+          "observation": "notice.displayAttemptCount",
           "integerBetween": {
             "min": 0,
             "max": 0
@@ -8284,8 +8475,68 @@
           "equals": false
         },
         {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.dayCrossedBeforeGateClear",
+          "equals": true
+        },
+        {
+          "observation": "popup.externalGateHeldDuringRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.categoryFaultRemainingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "notice.queuePendingAfterRepair",
+          "equals": false
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
           "observation": "popup.eligibleOnRecovery",
           "equals": false
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.staleNoticeAfterRecovery",
+          "equals": false
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         }
       ],
       "evidence": {
@@ -8991,7 +9242,7 @@
       "id": "settings-snapshot-on-to-off-next-load-prevents-popup",
       "title": "弹窗开关 ON 到 OFF 的跨真实载入快照改变下一次载入的弹窗资格",
       "category": "settings",
-      "phaseNote": "阶段含义：Phase1=第一次载入快照 ON，门保持以避免花费去重记录；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 OFF，OFF 为唯一抑制条件。不使用实时菜单值，不虚构游戏内设置页。",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 ON，普通安全门全程保持以避免花费去重记录（故 ui.safeControllablePhase1=false）；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 OFF 且安全可操作，OFF 为唯一抑制条件。native ready 以 state.sermonReadyValuePhase1/2 按阶段独立记录。不使用实时菜单值，不虚构游戏内设置页。",
       "prerequisites": [
         "第一次载入（Phase1）该槽该日尚未显示、弹窗开关为 ON、两个门槛与原生布道日成立、资源健康。",
         "Phase1 期间保持普通 UI 门以避免花费该槽该日去重记录，然后退出。",
@@ -8999,12 +9250,14 @@
         "随后再次载入同一槽同一实际游戏日（Phase2）。"
       ],
       "steps": [
-        "Phase1：载入后读取快照并确认合格未显示且门先保持；检查 settings.popupEnabledPhase1=true、settings.snapshotOnLoadPhase1=true、popup.readyEligibleUnshownAtLoad=true、settings.phase1GateHeldToAvoidSpend=true、popup.phase1RecordAbsent=true。",
+        "Phase1：先独立记录本载入的原生就绪与合格前置；预期两个门槛、原生布道日、可读状态与自有资源均已记录，且该槽该日尚未显示；检查 save.churchUnlockedPhase1=true、save.tutorialCompletedPhase1=true、save.isSermonDayPhase1=true、state.readablePhase1=true、state.sermonReadyValuePhase1>=1、resource.nativeHealthyPhase1=true。",
+        "Phase1：保持普通安全门以避免花费该槽该日去重记录；预期门保持且尚未显示；检查 settings.snapshotOnLoadPhase1=true、settings.popupEnabledPhase1=true、settings.phase1GateHeldToAvoidSpend=true、popup.actualDisplaysPhase1=0、popup.phase1RecordAbsent=true、ui.safeControllablePhase1=false。",
         "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
         "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
         "单独一步修改弹窗开关为 OFF；预期改为 OFF；检查 settings.settingChangedStepDone=true。",
         "单独一步再次载入同一槽同日；预期下一次载入捕获到已改变的 OFF 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=false、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
-        "Phase2：使除 OFF 外一切条件合格且安全；预期 OFF 是唯一抑制条件、正常弹窗不显示且不产生弹窗故障消息；检查 settings.popupOffDeliberate=true、ui.safetyGateClear=true、ui.playerControllable=true、popup.phase2RecordAbsent=true、popup.actualDisplaysAfterGateCleared=0、notice.popupDisplayedCount=0。"
+        "Phase2：独立记录本载入的原生就绪与合格前置；检查 save.churchUnlockedPhase2=true、save.tutorialCompletedPhase2=true、save.isSermonDayPhase2=true、state.readablePhase2=true、state.sermonReadyValuePhase2>=1、resource.nativeHealthyPhase2=true。",
+        "Phase2：使除 OFF 外一切条件合格且安全；预期 OFF 是唯一抑制条件、正常弹窗不显示且不产生弹窗故障消息；检查 settings.popupOffDeliberate=true、ui.safeControllablePhase2=true、ui.safetyGateClear=true、ui.playerControllable=true、popup.phase2RecordAbsent=true、popup.actualDisplaysAfterGateCleared=0、notice.popupDisplayedCount=0。"
       ],
       "expect": [
         {
@@ -9060,12 +9313,18 @@
           "equals": true
         },
         {
+          "observation": "state.sermonReadyValuePhase1",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
           "observation": "resource.nativeHealthyPhase1",
           "equals": true
         },
         {
           "observation": "ui.safeControllablePhase1",
-          "equals": true
+          "equals": false
         },
         {
           "observation": "popup.readyEligibleUnshownAtLoad",
@@ -9074,6 +9333,13 @@
         {
           "observation": "settings.phase1GateHeldToAvoidSpend",
           "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysPhase1",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "popup.phase1RecordAbsent",
@@ -9118,6 +9384,12 @@
         {
           "observation": "state.readablePhase2",
           "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValuePhase2",
+          "numberRange": {
+            "min": 1
+          }
         },
         {
           "observation": "resource.nativeHealthyPhase2",
@@ -9168,19 +9440,20 @@
       "id": "settings-snapshot-off-to-on-next-load-allows-popup",
       "title": "弹窗开关 OFF 到 ON 的跨真实载入快照在下一载入允许一次弹窗",
       "category": "settings",
-      "phaseNote": "阶段含义：Phase1=第一次载入快照 OFF（不花费该槽该日记录）；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 ON，正常弹窗显示一次。同一未花费槽同日可复用。",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 OFF（不花费该槽该日记录，累计显示次数 popup.actualDisplaysPhase1 为第一次载入退出主菜单前的累计值 0）；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 ON，正常弹窗显示一次。native ready 以 state.sermonReadyValuePhase1/2 按阶段独立记录。同一未花费槽同日可复用。",
       "prerequisites": [
         "第一次载入（Phase1）弹窗开关为 OFF，两个门槛与原生布道日成立、资源健康。",
         "返回主菜单并在 Mods 设置页把弹窗开关改为 ON。",
         "随后再次载入同一未花费的槽与同一实际游戏日（Phase2），OFF 载入不会花费该去重记录。"
       ],
       "steps": [
-        "Phase1：载入后读取快照并确认 OFF；检查 settings.popupEnabledPhase1=false、settings.snapshotOnLoadPhase1=true、popup.phase1RecordAbsent=true。",
+        "Phase1：先独立记录本载入的原生就绪与合格前置；预期两个门槛、原生布道日、可读状态与资源均已记录，且 OFF 且尚未显示；检查 settings.popupEnabledPhase1=false、settings.snapshotOnLoadPhase1=true、save.churchUnlockedPhase1=true、save.tutorialCompletedPhase1=true、save.isSermonDayPhase1=true、state.readablePhase1=true、state.sermonReadyValuePhase1>=1、resource.nativeHealthyPhase1=true、popup.actualDisplaysPhase1=0、popup.phase1RecordAbsent=true。",
         "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
         "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
         "单独一步修改弹窗开关为 ON；预期改为 ON；检查 settings.settingChangedStepDone=true。",
         "单独一步再次载入同一未花费槽同日；预期下一次载入捕获到已改变的 ON 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=true、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
-        "Phase2：使条件合格且在安全时机观察；预期正常弹窗恰好显示一次并写入记录；检查 popup.phase2RecordAbsent=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
+        "Phase2：独立记录本载入的原生就绪与合格前置；检查 save.churchUnlockedPhase2=true、save.tutorialCompletedPhase2=true、save.isSermonDayPhase2=true、state.readablePhase2=true、state.sermonReadyValuePhase2>=1、resource.nativeHealthyPhase2=true。",
+        "Phase2：使条件合格且在安全时机观察；预期正常弹窗恰好显示一次并写入记录；检查 popup.phase2RecordAbsent=true、ui.safeControllablePhase2=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
       ],
       "expect": [
         {
@@ -9236,12 +9509,25 @@
           "equals": true
         },
         {
+          "observation": "state.sermonReadyValuePhase1",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
           "observation": "resource.nativeHealthyPhase1",
           "equals": true
         },
         {
           "observation": "ui.safeControllablePhase1",
           "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysPhase1",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
         },
         {
           "observation": "popup.phase1RecordAbsent",
@@ -9290,6 +9576,12 @@
         {
           "observation": "state.readablePhase2",
           "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValuePhase2",
+          "numberRange": {
+            "min": 1
+          }
         },
         {
           "observation": "resource.nativeHealthyPhase2",
