@@ -886,6 +886,114 @@ _MANIFEST_NEGATIVES: list[CaseSpec] = [
 ]
 
 
+def _alpha_finaltext_setup(
+    fixture: ps.Fixture,
+    key: str,
+    translations: ps.JsonObject,
+    *,
+    with_identity: bool = True,
+) -> ps.CaseSetup:
+    """The otherwise valid base manifest plus one extra alpha ``finalText`` key.
+
+    The added key is referenced by no scenario: the manifest grammar under test
+    is the per-key en/zh-CN placeholder contract, not scenario evaluation.
+    Accepting cases return full identity/fingerprint/scope facts; rejecting
+    cases return none, matching the other manifest negatives (a structure
+    rejection carries null identity by design).
+    """
+    write_base(fixture)
+    profiles = ps.as_object(fixture.load_json("profiles.json"), "profiles.json")
+    alpha = ps.object_field(profiles, ALPHA, "profiles")
+    final_text = ps.object_field(alpha, "finalText", f"profiles.{ALPHA}")
+    final_text[key] = translations
+    fixture.write_json("profiles.json", profiles)
+    if not with_identity:
+        return ps.CaseSetup()
+    return ps.CaseSetup(
+        expected_fingerprint=fixture.fingerprint(),
+        expected_manifest_id=SYNTHETIC_MANIFEST_ID,
+        expected_scenario_ids=sorted(BASE_SCENARIO_IDS),
+        expected_files=sorted(REFERENCED_FILES),
+    )
+
+
+# --------------------------------------------------------------------------
+# finalText placeholder-parity grammar cases
+# --------------------------------------------------------------------------
+#
+# The retained grammar only requires en/zh-CN placeholder parity when the en
+# sentence declares at least one placeholder. Failure paths enumerated before
+# these assertions were written:
+#   en-literal / zh-placeholder   en {} vs zh {days}
+#                                 -> ACCEPT exit 0: en declares no placeholder,
+#                                    so parity is not required and a zh-only
+#                                    placeholder is allowed. The current
+#                                    e2e_manifest.validate_final_text rejects
+#                                    this by checking whenever en is non-empty,
+#                                    so this case is the intended RED positive.
+#   en-placeholder / zh-match     en {days} vs zh {days}
+#                                 -> ACCEPT exit 0 (positive control: equal
+#                                    placeholder sets are still allowed)
+#   en-placeholder / zh-literal   en {days} vs zh {}
+#                                 -> REJECT exit 2 (negative control: parity is
+#                                    still enforced whenever en declares a
+#                                    placeholder)
+_FINAL_TEXT_CASES: list[CaseSpec] = [
+    case(
+        case_id="manifest-finaltext-en-literal-zh-placeholder-accepted",
+        group="manifest-final-text",
+        description=(
+            "finalText en literal with a zh-CN placeholder is accepted: "
+            "placeholder parity is required only when en declares placeholders"
+        ),
+        mode="manifest",
+        expect_exit=ps.EXIT_OK,
+        expect_kind=MANIFEST_KIND_REPORT,
+        expect_assertion="manifest-structure-only",
+        check_fingerprint=True,
+        check_scope=True,
+        mutate=lambda fx: _alpha_finaltext_setup(
+            fx,
+            "gksr.synthetic.literal-extra",
+            {"en": "Ready", "zh-CN": "就绪 {days}"},
+        ),
+    ),
+    case(
+        case_id="manifest-finaltext-placeholders-match-accepted",
+        group="manifest-final-text",
+        description="finalText en and zh-CN placeholders that match are accepted (positive control)",
+        mode="manifest",
+        expect_exit=ps.EXIT_OK,
+        expect_kind=MANIFEST_KIND_REPORT,
+        expect_assertion="manifest-structure-only",
+        check_fingerprint=True,
+        check_scope=True,
+        mutate=lambda fx: _alpha_finaltext_setup(
+            fx,
+            "gksr.synthetic.literal-extra",
+            {"en": "Ready {days}", "zh-CN": "就绪 {days}"},
+        ),
+    ),
+    case(
+        case_id="manifest-finaltext-en-placeholder-zh-literal-rejected",
+        group="manifest-final-text",
+        description=(
+            "finalText en placeholder without a matching zh-CN placeholder is rejected "
+            "(negative control: parity is still enforced when en declares placeholders)"
+        ),
+        mode="manifest",
+        expect_exit=ps.EXIT_INPUT,
+        expect_kind=MANIFEST_KIND_REPORT,
+        mutate=lambda fx: _alpha_finaltext_setup(
+            fx,
+            "gksr.synthetic.literal-extra",
+            {"en": "Ready {days}", "zh-CN": "就绪"},
+            with_identity=False,
+        ),
+    ),
+]
+
+
 # --------------------------------------------------------------------------
 # capture cases
 # --------------------------------------------------------------------------
@@ -1759,7 +1867,7 @@ _CLI_CASES: list[CaseSpec] = [
 ]
 
 
-ALL_CASES: list[CaseSpec] = _MANIFEST_NEGATIVES + _CAPTURE_CASES + _NUMERIC_CASES + _CLI_CASES
+ALL_CASES: list[CaseSpec] = _MANIFEST_NEGATIVES + _FINAL_TEXT_CASES + _CAPTURE_CASES + _NUMERIC_CASES + _CLI_CASES
 
 
 def positive_cases() -> list[CaseSpec]:
