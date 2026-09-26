@@ -90,7 +90,7 @@ namespace GK2.SermonReminder.Popup
         // Exact catalog keys; the sentences live only in the localization catalog.
         private const string TitleKey = "gksr.popup.sermon.title";
         private const string BodyKey = "gksr.popup.sermon.body";
-        private const string ConfirmKey = "gksr.popup.sermon.confirm";
+        private const string AffirmativeLabelKey = "gksr.popup.sermon.confirm";
 
         // Bounded unscaled retry after a failed native transaction.
         private const float RetryDelaySeconds = 2f;
@@ -395,7 +395,7 @@ namespace GK2.SermonReminder.Popup
             // are never replaced with invented copy.
             string title = SermonReminderLocalization.Get(TitleKey);
             string body = SermonReminderLocalization.Get(BodyKey);
-            string confirm = SermonReminderLocalization.Get(ConfirmKey);
+            string confirm = SermonReminderLocalization.Get(AffirmativeLabelKey);
             if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(body) || string.IsNullOrEmpty(confirm))
             {
                 ArmPendingRetry();
@@ -449,14 +449,14 @@ namespace GK2.SermonReminder.Popup
                 Prefab = prefab
             };
             tx.NativeClosed = closed => OnNativeClosed(tx, closed);
-            tx.Confirm = () => OnConfirm(tx);
+            tx.AffirmativeAction = () => OnAffirmativeAction(tx);
 
             UIDialogWindowData data;
             try
             {
-                var button = new UIDialogWindowData.ButtonData(tx.Confirm, confirm, null, true, GameKey.Select);
+                var button = new UIDialogWindowData.ButtonData(tx.AffirmativeAction, confirm, null, true, GameKey.Select);
                 data = new UIDialogWindowData(title, body, button);
-                data.CloseButtonAction = tx.Confirm;
+                data.CloseButtonAction = tx.AffirmativeAction;
             }
             catch (Exception ex)
             {
@@ -597,8 +597,8 @@ namespace GK2.SermonReminder.Popup
             return true;
         }
 
-        /// <summary>Confirm/close action bound to its exact transaction.</summary>
-        private void OnConfirm(OwnedTransaction tx)
+        /// <summary>Affirmative/close action bound to its exact transaction.</summary>
+        private void OnAffirmativeAction(OwnedTransaction tx)
         {
             try
             {
@@ -801,7 +801,7 @@ namespace GK2.SermonReminder.Popup
 
             if (!ReferenceEquals(current, tx.Data))
             {
-                // Confirmed takeover: never touch foreign content/buttons/window.
+                // Verified takeover: never touch foreign content/buttons/window.
                 tx.Relinquished = true;
                 return tx.CallbacksCleared;
             }
@@ -836,7 +836,7 @@ namespace GK2.SermonReminder.Popup
             }
             if (!ReferenceEquals(beforeClose, tx.Data))
             {
-                // Confirmed nonnull foreign content: permitted takeover end.
+                // Verified nonnull foreign content: permitted takeover end.
                 tx.Relinquished = true;
                 return tx.CallbacksCleared;
             }
@@ -1557,7 +1557,7 @@ namespace GK2.SermonReminder.Popup
             internal UIDialogWindow Window;
             internal UIDialogWindowData Data;
             internal Action<UIDialogWindowData> NativeClosed;
-            internal Action Confirm;
+            internal Action AffirmativeAction;
 
             internal Pool Pool;
             internal List<UIDialogWindowButton> ActiveList;
