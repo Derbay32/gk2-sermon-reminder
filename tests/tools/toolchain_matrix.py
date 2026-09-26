@@ -30,8 +30,10 @@ Configuration and files:
   t11  .gitignore does not ignore .venv and the tool caches      -> FAIL
   t12  .venv missing, or present without an explicit uv marker in
        pyvenv.cfg (uv management is never inferred)              -> FAIL
-  t13  .venv interpreter is not 3.13.11 or does not point at the
-       preserved pyenv install when one is present               -> FAIL
+  t13  .venv interpreter runtime is not exactly 3.13.11, its
+       actual base prefix is blank/nonexistent/not a directory,
+       it disagrees with an existing local pyenv install, or it
+       disagrees with setup-python's exposed pythonLocation      -> FAIL
   t14  ci.yml does not set up 3.13.11, pin uv 0.12.19 and use
        --locked                                                  -> FAIL
   t15  ci.yml embeds a large Python matrix or a ticket loop in a
@@ -65,6 +67,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -474,68 +477,71 @@ def _check_venv_present(repo: Path) -> CheckResult:
     )
 
 
+def _python_location_value() -> str | None:
+    """The nonempty prepared-interpreter root exported by actions/setup-python.
+
+    setup-python exports ``pythonLocation`` from its install directory. The
+    lookup is case-insensitive because ``os.environ`` upper-cases keys on
+    Windows; no other environment variable is consulted.
+    """
+    for key, value in os.environ.items():
+        if key.lower() == "pythonlocation" and value:
+            return value
+    return None
+
+
 def _check_venv_interpreter(repo: Path) -> CheckResult:
+    description = ".venv interpreter is a valid 3.13.11 interpreter"
     venv_python = repo / ".venv" / "bin" / "python"
     if not venv_python.is_file():
-        return CheckResult(
-            "t13", ".venv interpreter is the preserved pyenv 3.13.11", FAILED, ".venv/bin/python missing"
-        )
+        return CheckResult("t13", description, FAILED, ".venv/bin/python missing")
     script = (
         "import json,sys;print(json.dumps({'version': list(sys.version_info[:3]), 'base_prefix': sys.base_prefix}))"
     )
     result = _run([str(venv_python), "-c", script], repo)
     if result is None or result.returncode != 0:
-        return CheckResult(
-            "t13",
-            ".venv interpreter is the preserved pyenv 3.13.11",
-            FAILED,
-            "could not run .venv/bin/python",
-        )
+        return CheckResult("t13", description, FAILED, "could not run .venv/bin/python")
     try:
         payload: object = json.loads(result.stdout)
     except json.JSONDecodeError:
-        return CheckResult(
-            "t13", ".venv interpreter is the preserved pyenv 3.13.11", FAILED, "unparseable interpreter probe"
-        )
+        return CheckResult("t13", description, FAILED, "unparseable interpreter probe")
     version = payload.get("version") if isinstance(payload, dict) else None
     base_prefix = payload.get("base_prefix") if isinstance(payload, dict) else None
     expected = [3, 13, 11]
     if version != expected:
-        return CheckResult(
-            "t13",
-            ".venv interpreter is the preserved pyenv 3.13.11",
-            FAILED,
-            f"interpreter version={version!r}",
-        )
+        return CheckResult("t13", description, FAILED, f"interpreter version={version!r}")
+
     local_pyenv = Path.home() / ".pyenv" / "versions" / EXPECTED_PYTHON_VERSION
     if local_pyenv.is_dir():
         resolved_base = Path(str(base_prefix)).resolve() if base_prefix else None
         if resolved_base != local_pyenv.resolve():
-            return CheckResult(
-                "t13",
-                ".venv interpreter is the preserved pyenv 3.13.11",
-                FAILED,
-                f"base_prefix={base_prefix!r} != {str(local_pyenv)}",
-            )
+            return CheckResult("t13", description, FAILED, f"base_prefix={base_prefix!r} != {str(local_pyenv)}")
+        return CheckResult("t13", description, PASSED, f"python {version} base_prefix={base_prefix}")
+
+    # Non-pyenv environment: validate the actual interpreter's base prefix.
+    # setup-python installs under toolcache/<version>/<architecture>, so a final
+    # component such as "x64" is expected and is never read as the version.
+    if not isinstance(base_prefix, str) or not base_prefix.strip():
+        return CheckResult("t13", description, FAILED, f"base_prefix missing or blank: {base_prefix!r}")
+    base_path = Path(base_prefix)
+    if not base_path.is_dir():
+        return CheckResult("t13", description, FAILED, f"base_prefix is not an existing directory: {base_prefix!r}")
+    python_location = _python_location_value()
+    if python_location is not None and base_path.resolve() != Path(python_location).resolve():
         return CheckResult(
             "t13",
-            ".venv interpreter is the preserved pyenv 3.13.11",
-            PASSED,
-            f"python {version} base_prefix={base_prefix}",
-        )
-    if base_prefix and Path(str(base_prefix)).name != EXPECTED_PYTHON_VERSION:
-        return CheckResult(
-            "t13",
-            ".venv interpreter is the preserved pyenv 3.13.11",
+            description,
             FAILED,
-            f"base_prefix={base_prefix!r}",
+            f"base_prefix={base_prefix!r} != pythonLocation={python_location!r}",
         )
-    return CheckResult(
-        "t13",
-        ".venv interpreter is the preserved pyenv 3.13.11",
-        PASSED,
-        f"python {version} base_prefix={base_prefix} (no local pyenv to compare)",
-    )
+    if python_location is None:
+        return CheckResult(
+            "t13",
+            description,
+            PASSED,
+            f"python {version} base_prefix={base_prefix} (no local pyenv or pythonLocation to compare)",
+        )
+    return CheckResult("t13", description, PASSED, f"python {version} base_prefix matches pythonLocation={base_prefix}")
 
 
 def _check_ci(repo: Path) -> list[CheckResult]:
