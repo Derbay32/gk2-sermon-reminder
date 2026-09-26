@@ -563,7 +563,92 @@
     "beacon.healthyAtBaseline": "bool: 注入前独立确认的信标健康状态",
     "beacon.visibleDuringHeldFault": "bool: 角落查找访问异常持续持有期间信标是否仍安全可见",
     "notice.notifierAvailableAtBaseline": "bool: 注入前独立确认的消息组件可用状态",
-    "notice.notifierAvailableDuringHeldFault": "bool: 角落查找访问异常持续持有期间消息组件是否仍安全可用"
+    "notice.notifierAvailableDuringHeldFault": "bool: 角落查找访问异常持续持有期间消息组件是否仍安全可用",
+    "button.priorReferenceRecorded": "bool: 是否已记录先前他方弹窗按钮的精确引用身份（引用追踪产物）",
+    "button.priorListenerPresent": "bool: 先前他方弹窗按钮在自有尝试前是否仍绑定原生监听/回调",
+    "button.priorActiveListMembership": "bool: 先前他方弹窗按钮在自有尝试前是否仍在原始原生 activeButtons 列表中",
+    "button.priorPoolMembership": "bool: 先前他方弹窗按钮在自有尝试前是否处于原生共享按钮池的空闲/可分配成员关系；原生关闭只把按钮留在 activeButtons 而不放入空闲池，因此应为 false（不得把池实现归属与空闲池成员混为一谈）",
+    "button.priorStateFrozenBeforeRepair": "bool: 是否在受控修复之前冻结记录阶段专用按钮引用与状态证据",
+    "button.priorTextUnchangedBeforeRepair": "bool: 修复前自有清理前后先前按钮文本是否未变",
+    "button.priorListenerUnchangedBeforeRepair": "bool: 修复前自有清理前后先前按钮监听/回调是否未变",
+    "button.priorActiveListMembershipUnchangedBeforeRepair": "bool: 修复前自有清理前后先前按钮原生 activeButtons 列表成员关系是否未变",
+    "button.priorParentUnchangedBeforeRepair": "bool: 修复前自有清理前后先前按钮原生父对象是否未变",
+    "button.priorPoolMembershipUnchangedBeforeRepair": "bool: 修复前自有清理前后先前按钮的原生共享池空闲成员关系是否未变（原本不在空闲池，清理也不得把它放入或移出空闲池）",
+    "button.priorReturnedByCleanupBeforeRepair": "bool: 修复前自有清理是否把先前他方按钮返回池",
+    "button.priorForeignControlUnaffectedBeforeRepair": "bool: 修复前先前他方按钮的原生监听/控制绑定是否仍存在且未被改写；在冻结失败阶段不点击不可见控件、不重新打开他方对话框（否则会改变所有权并破坏复现）",
+    "button.priorButtonReusedByNativeOpenAfterRepair": "bool: 受控修复后原生 Open 是否正常返回/复用先前旧按钮",
+    "button.priorReferenceBaselineExclusionAppliedBeforeRepair": "bool: 修复前模组是否因该按钮曾是他方旧引用而把它排除在自有清理之外",
+    "button.ownOpenAttempted": "bool: 本次自有弹窗是否实际进入原生 Open 尝试",
+    "button.ownAcquisitionsBeforeRepair": "int: 本次自有原生 Open 在修复前实际从池获取的自有按钮数量（严格整数）",
+    "button.ownAcquisitionsAfterRepair": "int: 本次自有原生 Open 在受控修复后实际从池获取的自有按钮数量（严格整数）",
+    "button.nativeAcquisitionObservedBeforeRepair": "bool: 注入失败之前，是否观测到本次原生 Open 的实际按钮获取事件（原生 Open 设置阶段观察）",
+    "button.nativeReleaseThenAcquisitionRecorded": "bool: 是否按顺序记录到原生先释放旧按钮再从池获取",
+    "button.ownAcquiredFromPoolBeforeRepair": "bool: 注入失败之前，本次自有按钮是否由本次原生 Open 从原生共享池实际获取（原生 Open 设置阶段观察）",
+    "button.ownSameReferenceAsPriorPoolEntryBeforeRepair": "bool: 注入失败之前，本次自有获取的按钮是否与先前池中同一精确引用（原生重用；原生 Open 设置阶段观察）",
+    "button.ownReferenceRecordedBeforeRepair": "bool: 是否记录修复前本次自有原生 Open 获取按钮的精确引用身份（引用追踪产物）",
+    "button.ownReferenceStableAfterRepair": "bool: 受控修复后所保留的初始失败事务是否保持同一精确引用身份（不要求后续成功尝试复用同一对象）",
+    "button.ownSetParentInvokedBeforeRepair": "bool: 注入失败之前，原生 Open 设置阶段本次自有按钮是否已调用原生 SetParent；不包含清理合法 Pool.ReleaseObject 的 SetParent/隐藏操作",
+    "button.ownDrawInvokedBeforeRepair": "bool: 注入失败之前，原生 Open 设置阶段本次自有按钮是否已调用原生 Draw/渲染；不包含清理合法 Pool.ReleaseObject 的隐藏/释放操作",
+    "button.ownCurrentListRegistrationPresentBeforeRepair": "bool: 注入失败之前，原生 Open 设置阶段本次自有按钮是否已登记进当前原生 activeButtons 列表；不包含清理合法 Pool.ReleaseObject 的移除操作",
+    "button.ownRecordedAsOwnedBeforeRepair": "bool: 模组是否在获取后立即把该按钮记录为本事务自有",
+    "button.ownReturnCountAfterRepair": "int: 受控修复后对冻结的初始失败事务自有引用执行的模组清理返回/释放次数（严格整数；不含原生旧按钮释放与后续事务）",
+    "button.ownDuplicateMutationCountAfterRepair": "int: 在已确认或不确定转移之后，对冻结的初始失败事务对象再次变更或再次返回的次数（严格整数；不含仍处于 Owned 状态时的合法必需重试）",
+    "button.ownAcquiredDistinctNewBeforeRepair": "bool: 注入失败之前，本次自有按钮是否为不同于他方兄弟的新获取对象（原生 Open 设置阶段观察）",
+    "button.ownDiscoverableUnderContentBeforeRepair": "bool: 注入失败之前，原生 Open 设置阶段本次自有按钮是否可在原生 buttonsContent 子节点中发现；不包含清理合法 Pool.ReleaseObject 的隐藏操作",
+    "button.ownUnattachedReferenceHandled": "bool: 未附着且未登记的自有引用是否仍被按精确获取清理/返回",
+    "button.foreignSiblingReferenceRecorded": "bool: 是否记录共享内容下他方兄弟按钮的精确引用身份",
+    "button.foreignSiblingUnderSharedContent": "bool: 该他方兄弟按钮是否位于共享原生 buttonsContent 下",
+    "button.foreignSiblingActiveListMembership": "bool: 该他方兄弟按钮是否在原始原生 activeButtons 列表中",
+    "button.foreignSiblingListenerPresent": "bool: 该他方兄弟按钮是否绑定原生监听/回调",
+    "button.foreignSiblingText": "string: 该他方兄弟按钮的文本",
+    "button.foreignSiblingParent": "string: 该他方兄弟按钮的原生父对象标识",
+    "button.foreignSiblingClaimed": "bool: 模组是否声称拥有该他方兄弟按钮",
+    "button.foreignSiblingUntouched": "bool: 模组是否未改动该他方兄弟按钮（文本、监听、父对象、池关系）",
+    "button.foreignSiblingReturned": "bool: 模组是否把该他方兄弟按钮返回池",
+    "popup.earlyFailureInjectedBeforeOldButtonReturn": "bool: 是否在原生旧按钮返回开始之前持有本次自有 Open 的文本/布局早失败",
+    "popup.earlyFailureInjectionPoint": "string: 本次受控早失败在原生 Open 中的精确阶段（文本/布局阶段，早于原生旧按钮返回开始）",
+    "popup.earlyFailureInjectionRecorded": "bool: 是否记录该早失败的实际注入方法",
+    "popup.earlyFailureRepairedSameLoad": "bool: 是否在同次载入资格仍在时受控修复该早失败",
+    "popup.earlyFailureRepairRecorded": "bool: 是否记录该早失败的实际恢复方法",
+    "popup.openFailedBeforeRepair": "bool: 修复前本次自有原生打开是否失败",
+    "popup.availableBeforeRepair": "bool: 修复前正常弹窗通道是否可用",
+    "popup.chanceConsumedBeforeRepair": "bool: 修复前正常弹窗机会是否已被消耗",
+    "popup.acquisitionFailurePoint": "string: 本次受控获取后失败的精确阶段（获取成功之后、SetParent/Draw/列表登记之前）",
+    "popup.acquisitionFailureRecorded": "bool: 是否记录该获取后失败的实际注入方法",
+    "cleanup.ownButtonCleanupFailureHeldBeforeRepair": "bool: 自有清理是否在自有按钮隐藏或列表访问处持续失败并被隔离重试",
+    "observer.installAttempted": "bool: 是否尝试安装本次 Open 作用域的所有权观测能力",
+    "observer.installed": "bool: 该作用域所有权观测能力是否安装成功；无可用观测能力即视为 false，不要求底层补丁框架不存在空操作注册",
+    "observer.unsupported": "bool: 该作用域所有权观测能力是否不受支持或安装失败",
+    "observer.methodVersionRecorded": "bool: 是否记录实际观测方法/框架版本证据",
+    "observer.failureRecorded": "bool: 是否记录实际安装失败原因证据",
+    "observer.ownDataPreclaimCount": "int: 观测不可用时模组自身安装 window.data 的抢占次数（严格整数）",
+    "observer.ownOpenCount": "int: 观测不可用时模组自身调用原生 Open 的次数（严格整数）",
+    "observer.ownAcquisitionCount": "int: 观测不可用时模组自身获取按钮的次数（严格整数）",
+    "observer.failClosedBeforeClaim": "bool: 观测不可用时是否在抢占 window.data 之前失败关闭",
+    "observer.failClosedBeforeOpen": "bool: 观测不可用时是否在调用原生 Open 之前失败关闭",
+    "observer.ownPopupFaultCategory": "string: 观测不可用时自有弹窗故障归属的既有类别（应为 popup）",
+    "observer.capabilityFailureIsolated": "bool: 观测能力失败是否仅影响自有弹窗且不产生第五类故障或全局副作用",
+    "observer.nativeForeignDialogStillWorks": "bool: 观测不可用时原生他方对话框是否仍能正常打开与关闭",
+    "ui.poolReset": "bool: 是否重置/重建原生共享按钮池",
+    "popup.acquisitionFailureRepairedBeforeCleanupRepair": "bool: 是否在仍持有必需清理失败的同时先解除/修复获取后 Open 失败注入（时间先后前提）",
+    "popup.acquisitionFailureRepairOrderRecorded": "string: 操作者记录的先解除获取后 Open 失败、后修复必需清理的顺序证据，供 GKSA-16 复现",
+    "cleanup.heldPendingAfterOpenRepair": "bool: 解除获取后 Open 失败注入后、清理修复前必需自有清理是否仍处于持有未完成状态",
+    "cleanup.completedAfterRepair": "bool: 受控修复必需清理后既有自有清理事务是否已完成（后续合格尝试之前）",
+    "popup.failedTransactionBoundaryRecorded": "string: 操作者记录的第一个失败事务之后的显示尝试边界/闸门（有界重试间隔或操作者闸门时间戳；未发明事件或令牌 API），供 GKSA-16 复现",
+    "popup.futureAttemptsGatedAfterFailedTransaction": "bool: 第一个失败事务之后、清理完成前是否闸住后续显示尝试",
+    "popup.gateBlocksNoticeSurface": "bool: 该闸门是否阻断正常消息表面（应为 false）",
+    "popup.gateReleasedAfterFirstTransactionCleanup": "bool: 第一个失败事务清理完成后是否释放闸门以允许一次正常显示",
+    "popup.acquisitionFailureRepairedWhileEligibilityRetained": "bool: 是否在资格保留时显式修复获取后 Open 失败（区别于仅通用清理）",
+    "popup.acquisitionFailureRepairRecorded": "string: 操作者记录的受控获取后 Open 失败修复方法，供 GKSA-16 复现",
+    "button.ownFirstTransactionReferenceFrozen": "bool: 是否在后续原生获取/复用之前冻结第一个失败事务的确切返回引用与返回次数",
+    "button.ownFirstTransactionReturnCount": "int: 第一个失败事务的自有引用在其清理完成后立即冻结的模组清理返回/释放次数（严格整数；不含原生旧按钮释放与后续事务）",
+    "button.ownFirstTransactionCleanupCompletedBeforeGateRelease": "bool: 第一个失败事务的自有引用清理是否在释放闸门之前完成",
+    "button.ownLaterReuseNotCountedAsDuplicate": "bool: 同一对象后续合法复用是否未被计为重复变更",
+    "button.laterAttemptOwnsAndCleansItself": "bool: 闸门释放后的后续实际尝试是否各自获取并由自身清理（其计数不并入第一个失败事务）",
+    "notice.popupDisplayedCountWhileHeld": "int: 故障/清理仍持有且原生消息表面安全可用、修复之前所观察的本载入正常弹窗类别故障消息实际显示次数（应为 1）",
+    "notice.surfaceAvailableWhileHeld": "bool: 故障/清理仍持有时原生消息表面是否安全可用（证明该计数非因表面不可用而为零）",
+    "notice.notifierAvailableWhileHeld": "bool: 故障/清理仍持有时原生消息组件是否可用（证明该计数非因通知组件不可用而为零）",
+    "notice.popupBudgetConsumedWhileHeld": "bool: 故障/清理仍持有时正常弹窗类别提示机会是否已消耗"
   },
   "validation": {
     "supportedCaptureVersions": [
@@ -14208,6 +14293,1273 @@
           "integerBetween": {
             "min": 1,
             "max": 1
+          }
+        },
+        {
+          "observation": "notice.recoveryToastShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "button-provenance-early-failure-preserves-prior-buttons",
+      "title": "自有原生 Open 文本/布局早失败时清理不改动先前他方按钮且修复后可复用并显示一次",
+      "category": "popup-fault",
+      "phaseNote": "阶段含义：PriorForeignClosed=先前他方对话框以原生关闭结束，原生关闭不强制清空其按钮；旧按钮仍留在原始原生 activeButtons 中，且不在原生共享按钮池的空闲成员中（属于池实现归属并不等于当前是空闲可分配成员，二者不得混为一谈）。OwnEarlyFailure=本次自有原生 Open 在文本/布局阶段失败并持有于原生旧按钮返回开始之前，带 BeforeRepair 后缀的按钮与弹窗证据全部在此之前冻结；FaultNotice=故障仍持有且原生消息表面安全可用、任何修复之前，正常弹窗类别故障通知恰显示一次；Repaired=同次载入资格仍在时受控修复后，原生 Open 正常返回/复用旧按钮并让正常布道弹窗实际显示一次，带 AfterRepair 后缀的证据描述该阶段。成功修复后不要求旧按钮永久不变。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "角落文字、信标与消息组件健康；正常弹窗开关开启且该槽该日尚未显示。",
+        "先打开一个原生他方对话框并以原生关闭结束（不强制清空）；其按钮文本与监听可辨识，仍留在原始原生 activeButtons 中，且原生关闭不把它放回原生共享按钮池的空闲成员，故按可读成员关系它当前不在空闲池中。",
+        "测试设施可在本次自有原生 Open 的文本/布局阶段、早于原生旧按钮返回开始之前持有受控失败，且原生消息表面安全可用。",
+        "操作者记录实际注入与恢复方法并产出按钮引用追踪产物，供 GKSA-16 复现；本清单不发明任何原生注入 API。",
+        "本场景为待执行验收要求；未执行时保持 UNEXECUTED，不得以未执行的观察填充。"
+      ],
+      "steps": [
+        "先打开原生他方对话框并以原生关闭结束；预期原生关闭不强制清空其按钮：旧按钮仍留在原始原生 activeButtons 中，但原生关闭不把它放回原生共享池空闲成员，故它当前不在空闲池中；检查 button.priorReferenceRecorded=true、button.priorListenerPresent=true、button.priorActiveListMembership=true、button.priorPoolMembership=false、button.priorStateFrozenBeforeRepair=true。",
+        "确认安全门清空、自有弹窗合格且机会未消费、其他通道健康；检查 ui.safetyGateClear=true、settings.popupEnabled=true、save.isSermonDay=true、state.sermonReadyValue>=1、popup.readyEligibleUnshownAtLoad=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
+        "在本次自有原生 Open 的文本/布局阶段、早于原生旧按钮返回开始之前持有受控失败；预期自有尝试确实进入原生 Open 且本次获取数为零；检查 button.ownOpenAttempted=true、button.ownAcquisitionsBeforeRepair=0、button.nativeAcquisitionObservedBeforeRepair=false、popup.earlyFailureInjectedBeforeOldButtonReturn=true、popup.earlyFailureInjectionPoint 存在、popup.earlyFailureInjectionRecorded=true。",
+        "检查模组清理未改动先前他方按钮；预期清理前后文本、监听、activeButtons 列表成员、父对象与空闲池成员关系均未变且未被返回；在冻结失败阶段不点击不可见控件、不重新打开他方对话框（否则会改变所有权并破坏复现），仅确认原生监听/控制绑定仍存在且未被改写；检查 button.priorTextUnchangedBeforeRepair=true、button.priorListenerUnchangedBeforeRepair=true、button.priorActiveListMembershipUnchangedBeforeRepair=true、button.priorParentUnchangedBeforeRepair=true、button.priorPoolMembershipUnchangedBeforeRepair=true、button.priorReturnedByCleanupBeforeRepair=false、button.priorForeignControlUnaffectedBeforeRepair=true、popup.foreignButtonsMutated=false、cleanup.foreignMutationDuringCleanup=false。",
+        "观察自有部分界面与正常弹窗显示/去重；预期自有呈现被抑制、未实际显示且机会未消耗；检查 popup.openFailedBeforeRepair=true、popup.availableBeforeRepair=false、popup.ownedResidue=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0、popup.chanceConsumedBeforeRepair=false、dedup.recordWrittenOnFailedShow=false。",
+        "在早失败仍持有且原生消息表面安全可用时、任何修复之前观察正常弹窗类别故障通知；预期该类别故障通知恰显示一次且无额外类别；检查 notice.surfaceAvailableWhileHeld=true、notice.notifierAvailableWhileHeld=true、notice.popupDisplayedCountWhileHeld=1、notice.popupBudgetConsumedWhileHeld=true、notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0。",
+        "在同次载入资格仍在时受控修复早失败；预期修复后原生 Open 正常返回/复用旧按钮并让正常布道弹窗实际显示一次且写入去重；检查 popup.earlyFailureRepairedSameLoad=true、popup.earlyFailureRepairRecorded=true、popup.availableAfterResourceRestore=true、button.priorButtonReusedByNativeOpenAfterRepair=true、button.ownAcquisitionsAfterRepair>=1、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "观察类别计数与健康通道；预期弹窗类别故障通知累计仍为一次且无重复或恢复成功提示，正常布道弹窗在闸门释放后另行恰好实际显示一次；检查 notice.popupDisplayedCount=1、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "resource.nativeHealthyAtBaseline",
+          "equals": true
+        },
+        {
+          "observation": "settings.beaconEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "button.priorReferenceRecorded",
+          "equals": true
+        },
+        {
+          "observation": "button.priorListenerPresent",
+          "equals": true
+        },
+        {
+          "observation": "button.priorActiveListMembership",
+          "equals": true
+        },
+        {
+          "observation": "button.priorPoolMembership",
+          "equals": false
+        },
+        {
+          "observation": "button.priorStateFrozenBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.readyEligibleUnshownAtLoad",
+          "equals": true
+        },
+        {
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "button.ownOpenAttempted",
+          "equals": true
+        },
+        {
+          "observation": "button.ownAcquisitionsBeforeRepair",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "button.nativeAcquisitionObservedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "popup.earlyFailureInjectedBeforeOldButtonReturn",
+          "equals": true
+        },
+        {
+          "observation": "popup.earlyFailureInjectionPoint",
+          "present": true
+        },
+        {
+          "observation": "popup.earlyFailureInjectionRecorded",
+          "equals": true
+        },
+        {
+          "observation": "popup.openFailedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.availableBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "popup.ownedResidue",
+          "equals": false
+        },
+        {
+          "observation": "popup.displayedDuringFault",
+          "equals": false
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.chanceConsumedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "dedup.recordWrittenOnFailedShow",
+          "equals": false
+        },
+        {
+          "observation": "button.priorTextUnchangedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorListenerUnchangedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorActiveListMembershipUnchangedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorParentUnchangedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorPoolMembershipUnchangedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorReturnedByCleanupBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.priorForeignControlUnaffectedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.foreignButtonsMutated",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.foreignMutationDuringCleanup",
+          "equals": false
+        },
+        {
+          "observation": "notice.surfaceAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.notifierAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCountWhileHeld",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.popupBudgetConsumedWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "popup.earlyFailureRepairedSameLoad",
+          "equals": true
+        },
+        {
+          "observation": "popup.earlyFailureRepairRecorded",
+          "equals": true
+        },
+        {
+          "observation": "popup.availableAfterResourceRestore",
+          "equals": true
+        },
+        {
+          "observation": "button.priorButtonReusedByNativeOpenAfterRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownAcquisitionsAfterRepair",
+          "integerGreaterThan": 0
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.duplicateNoticeCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.recoveryToastShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "button-provenance-reused-reference-post-acquire-cleanup",
+      "title": "原生复用同一引用为自有按钮后获取后失败：按精确获取记录清理并在隔离重试修复后显示一次",
+      "category": "cleanup",
+      "phaseNote": "阶段含义：PriorClosure=先前他方对话框以原生关闭结束，旧按钮仍留在原始原生 activeButtons 中且不在原生共享池空闲成员；RecycledAcquisition=本次自有原生 Open 先释放该旧按钮（此时才回到空闲池）再获取同一精确引用；HeldAcquisitionFailure=获取成功后、SetParent/Draw/列表登记之前持有失败，故尚无 Draw 且尚无当前列表登记；HeldCleanup=必需自有清理在自有按钮隐藏或列表访问处持续失败，未完成事务被隔离并跨有界重试保留且不建立替换；OpenRepairedWhileCleanupHeld=在仍持有必需清理失败时先解除获取后 Open 失败注入并记录顺序，随后在清理仍持有且原生消息表面安全可用时观察到正常弹窗类别故障通知一次；CleanupRepaired=受控修复必需清理后剩余自有清理完成、同一引用身份保留且同次载入同一未消费机会显示一次。带 BeforeRepair 后缀的证据描述修复前阶段。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "角落文字、信标与消息组件健康；正常弹窗开关开启且该槽该日尚未显示。",
+        "先前他方对话框已以原生关闭结束，其旧按钮仍留在原始原生 activeButtons 中且不在原生共享池空闲成员中；下一次自有原生 Open 会先释放该旧按钮再获取同一精确引用。",
+        "测试设施可在获取成功之后、SetParent/Draw/列表登记之前持有失败，并可在随后必需清理的自有按钮隐藏或列表访问处持续失败；测试设施可在仍持有必需清理失败时单独解除/修复 Open 获取后失败注入并记录顺序。",
+        "操作者记录实际注入与恢复方法并产出按钮引用追踪产物，供 GKSA-16 复现。",
+        "本场景为待执行验收要求；未执行时保持 UNEXECUTED，不得以未执行的观察填充。"
+      ],
+      "steps": [
+        "按顺序记录三个阶段：阶段A 先前他方对话框以原生关闭结束，旧按钮仍留在原始原生 activeButtons 中且不在原生共享池空闲成员中；阶段B 本次自有原生 Open 先释放该旧按钮（此时才回到空闲池）；阶段C 同一次原生 Open 随即从空闲池获取同一精确引用；检查 button.priorActiveListMembership=true、button.priorPoolMembership=false、button.nativeReleaseThenAcquisitionRecorded=true、button.nativeAcquisitionObservedBeforeRepair=true、button.ownAcquiredFromPoolBeforeRepair=true、button.ownSameReferenceAsPriorPoolEntryBeforeRepair=true、button.ownReferenceRecordedBeforeRepair=true。",
+        "确认获取成功但尚未附着；预期原生 Open 设置阶段尚未 SetParent、尚未 Draw、尚未登记进当前列表（不包含清理合法 Pool.ReleaseObject 的 SetParent/隐藏操作）；检查 button.ownSetParentInvokedBeforeRepair=false、button.ownDrawInvokedBeforeRepair=false、button.ownCurrentListRegistrationPresentBeforeRepair=false、popup.acquisitionFailurePoint 存在、popup.acquisitionFailureRecorded=true。",
+        "模组在获取后立即把该按钮记录为本事务自有，且不因它曾是他方旧引用而排除；检查 button.ownRecordedAsOwnedBeforeRepair=true、button.priorReferenceBaselineExclusionAppliedBeforeRepair=false。",
+        "在必需清理于自有按钮隐藏或列表访问处持续失败时持有；预期未完成事务被隔离并跨至少两次有界重试、相邻重试最小间隔至少 2 秒、无替换、其他通道继续健康；检查 popup.cleanupFailureObservedOnExistingTransaction=true、popup.cleanupFailureInjectionRecorded 存在、cleanup.ownButtonCleanupFailureHeldBeforeRepair=true、cleanup.quarantined=true、cleanup.retryCount>=2、cleanup.minRetryIntervalSeconds>=2、cleanup.observationDurationSeconds 为有限数值、cleanup.retryTimestampsRecorded 存在、cleanup.duplicateReplacementCreated=false、cleanup.newOwnedReplacementAttempts=0、cleanup.foreignMutationDuringCleanup=false、cleanup.unrelatedChannelsContinue=true、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
+        "在仍持有必需清理失败的同时先解除/修复获取后 Open 失败注入，并记录该顺序；预期 Open 获取后失败注入已解除、必需清理仍持有未完成、未创建替换；检查 popup.acquisitionFailureRepairedBeforeCleanupRepair=true、popup.acquisitionFailureRepairOrderRecorded 存在、cleanup.heldPendingAfterOpenRepair=true、cleanup.duplicateReplacementCreated=false、cleanup.newOwnedReplacementAttempts=0。",
+        "在清理仍持有且原生消息表面安全可用时、任何清理修复之前观察正常弹窗类别故障通知；预期该类别故障通知恰显示一次且无额外类别；检查 notice.surfaceAvailableWhileHeld=true、notice.notifierAvailableWhileHeld=true、notice.popupDisplayedCountWhileHeld=1、notice.popupBudgetConsumedWhileHeld=true、notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0。",
+        "在修复之前观察正常弹窗显示与去重；预期未实际显示且机会未消耗；检查 popup.actualDisplaysBeforeRecovery=0、popup.chanceConsumedBeforeRepair=false、dedup.recordWrittenOnFailedShow=false。",
+        "受控修复必需清理；预期剩余自有清理完成且在同一资格允许后续尝试之前完成、冻结的初始失败事务引用身份保留、该事务恰被返回一次且无重复变更；检查 popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、cleanup.recoveredAfterRestoration=true、cleanup.completedAfterRepair=true、button.ownReferenceStableAfterRepair=true、button.ownReturnCountAfterRepair=1、button.ownDuplicateMutationCountAfterRepair=0、dedup.ownedReplacementCount<=1。",
+        "在清理完成之后才允许同次载入按当前资格进行后续尝试；预期恰好显示一次并写入去重，后续尝试各自获取并由自身清理；检查 button.ownAcquisitionsAfterRepair>=1、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "观察类别计数与健康通道；预期弹窗类别故障通知累计仍为一次且无重复或恢复成功提示，正常布道弹窗另行恰好实际显示一次；检查 notice.popupDisplayedCount=1、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "resource.nativeHealthyAtBaseline",
+          "equals": true
+        },
+        {
+          "observation": "settings.beaconEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "button.priorActiveListMembership",
+          "equals": true
+        },
+        {
+          "observation": "button.priorPoolMembership",
+          "equals": false
+        },
+        {
+          "observation": "button.nativeReleaseThenAcquisitionRecorded",
+          "equals": true
+        },
+        {
+          "observation": "button.nativeAcquisitionObservedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownAcquiredFromPoolBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownSameReferenceAsPriorPoolEntryBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownReferenceRecordedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownSetParentInvokedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.ownDrawInvokedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.ownCurrentListRegistrationPresentBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "popup.acquisitionFailurePoint",
+          "present": true
+        },
+        {
+          "observation": "popup.acquisitionFailureRecorded",
+          "equals": true
+        },
+        {
+          "observation": "button.ownRecordedAsOwnedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.priorReferenceBaselineExclusionAppliedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupFailureInjectionRecorded",
+          "present": true
+        },
+        {
+          "observation": "cleanup.ownButtonCleanupFailureHeldBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.retryCount",
+          "integerGreaterThan": 1
+        },
+        {
+          "observation": "cleanup.minRetryIntervalSeconds",
+          "numberRange": {
+            "min": 2
+          }
+        },
+        {
+          "observation": "cleanup.observationDurationSeconds",
+          "numberRange": {
+            "min": 0
+          }
+        },
+        {
+          "observation": "cleanup.retryTimestampsRecorded",
+          "present": true
+        },
+        {
+          "observation": "cleanup.quarantined",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.duplicateReplacementCreated",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.foreignMutationDuringCleanup",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.unrelatedChannelsContinue",
+          "equals": true
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "popup.acquisitionFailureRepairedBeforeCleanupRepair",
+          "equals": true
+        },
+        {
+          "observation": "popup.acquisitionFailureRepairOrderRecorded",
+          "present": true
+        },
+        {
+          "observation": "cleanup.heldPendingAfterOpenRepair",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.newOwnedReplacementAttempts",
+          "equals": 0
+        },
+        {
+          "observation": "notice.surfaceAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.notifierAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCountWhileHeld",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.popupBudgetConsumedWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "popup.chanceConsumedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "dedup.recordWrittenOnFailedShow",
+          "equals": false
+        },
+        {
+          "observation": "popup.cleanupRepaired",
+          "equals": true
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "cleanup.recoveredAfterRestoration",
+          "equals": true
+        },
+        {
+          "observation": "cleanup.completedAfterRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownReferenceStableAfterRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownReturnCountAfterRepair",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "button.ownDuplicateMutationCountAfterRepair",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "dedup.ownedReplacementCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "observation": "button.ownAcquisitionsAfterRepair",
+          "integerGreaterThan": 0
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.duplicateNoticeCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.recoveryToastShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "button-provenance-new-acquisition-unrelated-child",
+      "title": "自有 Open 获取新的独立按钮后失败：未附着未登记仍按精确获取清理一次且不触碰共享内容下的他方兄弟",
+      "category": "popup-fault",
+      "phaseNote": "阶段含义：ForeignSibling=共享 buttonsContent 下已存在一个未被本次 Open 获取的他方兄弟按钮，且不在原始原生 activeButtons 中；OwnNewAcquisition=本次自有原生 Open 获取一个不同于他方兄弟的新按钮，但可能在共享内容下不可发现；HeldAcquisitionFailure=获取返回后、SetParent/Draw/列表登记之前持有失败；Gated=在第一个失败事务之后以有界重试间隔或操作者闸门记录显示尝试边界并闸住后续显示尝试（不阻断消息表面、不发明事件或令牌 API），随后在获取后失败仍持有且原生消息表面安全可用时观察到正常弹窗类别故障通知一次；Repaired=显式修复获取后 Open 失败并保留资格后，第一个失败事务的未附着自有引用仍被恰好清理/返回一次且其确切引用与返回次数在后续获取/复用之前冻结，随后释放闸门允许同次载入成功显示一次。带 BeforeRepair 后缀的证据描述修复前阶段。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "角落文字、信标与消息组件健康；正常弹窗开关开启且该槽该日尚未显示。",
+        "共享 buttonsContent 下先存在一个未被本次 Open 获取的他方兄弟按钮，且它不在原始原生 activeButtons 中，其文本、监听、父对象与池关系可辨识。",
+        "测试设施可使下一次自有原生 Open 获取一个不同于他方兄弟的新按钮，并在获取返回之后、SetParent/Draw/列表登记之前持有失败；测试设施可在第一个失败事务之后记录显示尝试边界并闸住后续显示尝试，闸门使用有界重试间隔或操作者闸门时间戳且不阻断正常消息表面，不发明事件或令牌 API。",
+        "操作者记录实际注入与恢复方法并产出按钮引用追踪产物，供 GKSA-16 复现。",
+        "本场景为待执行验收要求；未执行时保持 UNEXECUTED，不得以未执行的观察填充。"
+      ],
+      "steps": [
+        "先建立共享内容下的他方兄弟按钮并记录其状态；预期它位于共享内容下、不在原始原生 activeButtons 中且未被任何自有事务获取；检查 button.foreignSiblingReferenceRecorded=true、button.foreignSiblingUnderSharedContent=true、button.foreignSiblingActiveListMembership=false、button.foreignSiblingListenerPresent=true、button.foreignSiblingText 存在、button.foreignSiblingParent 存在、button.foreignSiblingClaimed=false。",
+        "触发自有原生 Open；预期它从池获取一个不同于他方兄弟的新按钮；检查 button.nativeAcquisitionObservedBeforeRepair=true、button.ownAcquiredFromPoolBeforeRepair=true、button.ownAcquiredDistinctNewBeforeRepair=true、button.ownReferenceRecordedBeforeRepair=true、button.foreignSiblingClaimed=false。",
+        "在获取返回之后、SetParent/Draw/列表登记之前持有失败；预期自有按钮未附着、未 Draw、未登记且可能无法在共享内容下被发现；检查 button.ownSetParentInvokedBeforeRepair=false、button.ownDrawInvokedBeforeRepair=false、button.ownCurrentListRegistrationPresentBeforeRepair=false、button.ownDiscoverableUnderContentBeforeRepair=false、popup.acquisitionFailurePoint 存在、popup.acquisitionFailureRecorded=true。",
+        "观察他方兄弟与共享对象；预期他方兄弟未被声称、未改动、未返回，共享对话框与池未销毁/重置；检查 button.foreignSiblingClaimed=false、button.foreignSiblingUntouched=true、button.foreignSiblingReturned=false、popup.foreignButtonsMutated=false、ui.sharedDialogDestroyed=false、ui.poolReset=false、cleanup.duplicateReplacementCreated=false。",
+        "在第一个失败事务之后记录未来的显示尝试边界/闸门，并闸住后续显示尝试（不发明事件或令牌 API）；预期使用有界重试间隔或操作者闸门并记录时间戳，闸门不阻断正常消息表面；检查 popup.failedTransactionBoundaryRecorded 存在、popup.futureAttemptsGatedAfterFailedTransaction=true、popup.gateBlocksNoticeSurface=false。",
+        "在获取后失败仍持有、闸门生效且原生消息表面安全可用时、任何修复之前观察正常弹窗类别故障通知；预期该类别故障通知恰显示一次且无额外类别；检查 notice.surfaceAvailableWhileHeld=true、notice.notifierAvailableWhileHeld=true、notice.popupDisplayedCountWhileHeld=1、notice.popupBudgetConsumedWhileHeld=true、notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0。",
+        "在修复之前观察正常弹窗显示与去重；预期未实际显示且机会未消耗；检查 popup.actualDisplaysBeforeRecovery=0、dedup.recordWrittenOnFailedShow=false。",
+        "显式修复获取后 Open 失败（非仅通用清理）并保留资格；预期未附着的自有引用仍被恰好清理/返回一次，其确切返回引用与返回次数在后续原生获取/复用之前被冻结，且无重复变更；检查 popup.acquisitionFailureRepairedWhileEligibilityRetained=true、popup.acquisitionFailureRepairRecorded 存在、button.ownUnattachedReferenceHandled=true、button.ownFirstTransactionReferenceFrozen=true、button.ownFirstTransactionReturnCount=1、button.ownFirstTransactionCleanupCompletedBeforeGateRelease=true、button.ownReturnCountAfterRepair=1、button.ownDuplicateMutationCountAfterRepair=0。",
+        "在第一个失败事务清理完成之后才释放闸门，允许同次载入按当前资格成功显示一次；预期恰好显示一次并写入去重，后续合法获取/复用自己的对象不被计为重复变更；检查 popup.gateReleasedAfterFirstTransactionCleanup=true、button.ownAcquisitionsAfterRepair>=1、button.ownLaterReuseNotCountedAsDuplicate=true、button.laterAttemptOwnsAndCleansItself=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "观察类别计数与健康通道；预期弹窗类别故障通知累计仍为一次且无重复或恢复成功提示，正常布道弹窗另行恰好实际显示一次；检查 notice.popupDisplayedCount=1、notice.totalDisplayedCount=1、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "resource.nativeHealthyAtBaseline",
+          "equals": true
+        },
+        {
+          "observation": "settings.beaconEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "button.foreignSiblingReferenceRecorded",
+          "equals": true
+        },
+        {
+          "observation": "button.foreignSiblingUnderSharedContent",
+          "equals": true
+        },
+        {
+          "observation": "button.foreignSiblingActiveListMembership",
+          "equals": false
+        },
+        {
+          "observation": "button.foreignSiblingListenerPresent",
+          "equals": true
+        },
+        {
+          "observation": "button.foreignSiblingText",
+          "present": true
+        },
+        {
+          "observation": "button.foreignSiblingParent",
+          "present": true
+        },
+        {
+          "observation": "button.foreignSiblingClaimed",
+          "equals": false
+        },
+        {
+          "observation": "button.foreignSiblingUntouched",
+          "equals": true
+        },
+        {
+          "observation": "button.foreignSiblingReturned",
+          "equals": false
+        },
+        {
+          "observation": "button.nativeAcquisitionObservedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownAcquiredFromPoolBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownAcquiredDistinctNewBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownReferenceRecordedBeforeRepair",
+          "equals": true
+        },
+        {
+          "observation": "button.ownSetParentInvokedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.ownDrawInvokedBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.ownCurrentListRegistrationPresentBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "button.ownDiscoverableUnderContentBeforeRepair",
+          "equals": false
+        },
+        {
+          "observation": "popup.acquisitionFailurePoint",
+          "present": true
+        },
+        {
+          "observation": "popup.acquisitionFailureRecorded",
+          "equals": true
+        },
+        {
+          "observation": "popup.foreignButtonsMutated",
+          "equals": false
+        },
+        {
+          "observation": "ui.sharedDialogDestroyed",
+          "equals": false
+        },
+        {
+          "observation": "ui.poolReset",
+          "equals": false
+        },
+        {
+          "observation": "cleanup.duplicateReplacementCreated",
+          "equals": false
+        },
+        {
+          "observation": "popup.failedTransactionBoundaryRecorded",
+          "present": true
+        },
+        {
+          "observation": "popup.futureAttemptsGatedAfterFailedTransaction",
+          "equals": true
+        },
+        {
+          "observation": "popup.gateBlocksNoticeSurface",
+          "equals": false
+        },
+        {
+          "observation": "notice.surfaceAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.notifierAvailableWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCountWhileHeld",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.popupBudgetConsumedWhileHeld",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysBeforeRecovery",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "dedup.recordWrittenOnFailedShow",
+          "equals": false
+        },
+        {
+          "observation": "popup.acquisitionFailureRepairedWhileEligibilityRetained",
+          "equals": true
+        },
+        {
+          "observation": "popup.acquisitionFailureRepairRecorded",
+          "present": true
+        },
+        {
+          "observation": "button.ownUnattachedReferenceHandled",
+          "equals": true
+        },
+        {
+          "observation": "button.ownFirstTransactionReferenceFrozen",
+          "equals": true
+        },
+        {
+          "observation": "button.ownFirstTransactionReturnCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "button.ownFirstTransactionCleanupCompletedBeforeGateRelease",
+          "equals": true
+        },
+        {
+          "observation": "button.ownDuplicateMutationCountAfterRepair",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "button.ownReturnCountAfterRepair",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "button.ownAcquisitionsAfterRepair",
+          "integerGreaterThan": 0
+        },
+        {
+          "observation": "popup.gateReleasedAfterFirstTransactionCleanup",
+          "equals": true
+        },
+        {
+          "observation": "button.ownLaterReuseNotCountedAsDuplicate",
+          "equals": true
+        },
+        {
+          "observation": "button.laterAttemptOwnsAndCleansItself",
+          "equals": true
+        },
+        {
+          "observation": "popup.actualDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.newDisplaysAfterGateCleared",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "popup.recordAfterDisplay",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.duplicateNoticeCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.recoveryToastShown",
+          "equals": false
+        }
+      ],
+      "evidence": {
+        "screenshot": true,
+        "log": true,
+        "measurement": true
+      }
+    },
+    {
+      "id": "button-provenance-observer-unavailable-fail-closed",
+      "title": "所有权观测能力不可用：自有弹窗在抢占与打开前失败关闭且仅归入既有弹窗类别一次",
+      "category": "popup-fault",
+      "phaseNote": "阶段含义：ObserverUnavailable=受控使本次 Open 作用域的所有权观测能力安装不受支持或失败；这里的 installed=false 表示该作用域没有可用观测能力，不要求 Harmony 等补丁框架不存在空操作注册。FailClosed=自有弹窗在抢占 window.data 与调用原生 Open 之前失败关闭，自身抢占/打开/获取均为零；Isolated=仅归入既有弹窗类别一次、无第五类，且原生他方对话框与健康通道不受影响。本场景只验证能力失败隔离，不承诺对已变更原生二进制的进程内恢复，也不要求其在无重启情况下恢复。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "角落文字、信标与消息组件健康；正常弹窗开关开启、该槽该日尚未显示且安全门清空。",
+        "原生他方对话框仍可正常打开与关闭，作为能力失败隔离的对照。",
+        "测试设施可受控使本次 Open 作用域的所有权观测能力安装不受支持或失败，并记录实际方法/版本与失败证据；不发明任何注入 API。",
+        "本场景为待执行验收要求；未执行时保持 UNEXECUTED，不得以未执行的观察填充。"
+      ],
+      "steps": [
+        "受控使作用域所有权观测能力安装不受支持或失败；预期记录实际观测方法/版本与失败证据；检查 observer.installAttempted=true、observer.installed=false、observer.unsupported=true、observer.methodVersionRecorded=true、observer.failureRecorded=true。",
+        "在自有弹窗合格且安全门清空时观察自身抢占/打开/获取；预期三者在打开前均为零；检查 ui.safetyGateClear=true、settings.popupEnabled=true、state.gatesSatisfied=true、observer.ownDataPreclaimCount=0、observer.ownOpenCount=0、observer.ownAcquisitionCount=0、observer.failClosedBeforeClaim=true、observer.failClosedBeforeOpen=true。",
+        "观察自有弹窗故障归属；预期仅归入既有弹窗类别一次且无第五类；检查 observer.ownPopupFaultCategory 等于 popup、notice.popupDisplayedCount=1、notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=1、observer.capabilityFailureIsolated=true。",
+        "确认未消耗自有去重且无全局副作用；检查 popup.chanceConsumed=false、dedup.recordWrittenOnFailedShow=false、ui.sharedDialogDestroyed=false、ui.poolReset=false、ui.globalUnpauseInvoked=false、pause.unpauseAllInvoked=false。",
+        "确认原生他方对话框与健康通道不受影响；检查 observer.nativeForeignDialogStillWorks=true、ui.otherNativeModalUnaffected=true、corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true、state.readable=true。",
+        "确认能力失败被隔离且诊断有界；检查 observer.capabilityFailureIsolated=true、log.faultStageIdentified=true、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false。"
+      ],
+      "expect": [
+        {
+          "observation": "save.sermonWeekday",
+          "equalsEnvironment": "game.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "mode": "sermon-day",
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "observation": "save.dayOfWeek",
+          "integerBetween": {
+            "min": 1,
+            "max": 6
+          }
+        },
+        {
+          "observation": "save.churchUnlocked",
+          "equals": true
+        },
+        {
+          "observation": "save.tutorialCompleted",
+          "equals": true
+        },
+        {
+          "observation": "save.isSermonDay",
+          "equals": true
+        },
+        {
+          "observation": "state.gatesSatisfied",
+          "equals": true
+        },
+        {
+          "observation": "state.readable",
+          "equals": true
+        },
+        {
+          "observation": "state.sermonReadyValue",
+          "numberRange": {
+            "min": 1
+          }
+        },
+        {
+          "observation": "resource.nativeHealthyAtBaseline",
+          "equals": true
+        },
+        {
+          "observation": "settings.beaconEnabled",
+          "equals": true
+        },
+        {
+          "observation": "settings.popupEnabled",
+          "equals": true
+        },
+        {
+          "observation": "observer.installAttempted",
+          "equals": true
+        },
+        {
+          "observation": "observer.installed",
+          "equals": false
+        },
+        {
+          "observation": "observer.unsupported",
+          "equals": true
+        },
+        {
+          "observation": "observer.methodVersionRecorded",
+          "equals": true
+        },
+        {
+          "observation": "observer.failureRecorded",
+          "equals": true
+        },
+        {
+          "observation": "observer.ownPopupFaultCategory",
+          "equals": "popup"
+        },
+        {
+          "observation": "observer.ownDataPreclaimCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "observer.ownOpenCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "observer.ownAcquisitionCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "observer.failClosedBeforeClaim",
+          "equals": true
+        },
+        {
+          "observation": "observer.failClosedBeforeOpen",
+          "equals": true
+        },
+        {
+          "observation": "observer.capabilityFailureIsolated",
+          "equals": true
+        },
+        {
+          "observation": "observer.nativeForeignDialogStillWorks",
+          "equals": true
+        },
+        {
+          "observation": "ui.safetyGateClear",
+          "equals": true
+        },
+        {
+          "observation": "ui.sharedDialogDestroyed",
+          "equals": false
+        },
+        {
+          "observation": "ui.poolReset",
+          "equals": false
+        },
+        {
+          "observation": "ui.globalUnpauseInvoked",
+          "equals": false
+        },
+        {
+          "observation": "pause.unpauseAllInvoked",
+          "equals": false
+        },
+        {
+          "observation": "ui.otherNativeModalUnaffected",
+          "equals": true
+        },
+        {
+          "observation": "popup.chanceConsumed",
+          "equals": false
+        },
+        {
+          "observation": "dedup.recordWrittenOnFailedShow",
+          "equals": false
+        },
+        {
+          "observation": "corner.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "beacon.visibleAtSafeUi",
+          "equals": true
+        },
+        {
+          "observation": "log.faultStageIdentified",
+          "equals": true
+        },
+        {
+          "observation": "notice.popupDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.stateReadDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.cornerHudDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.beaconDisplayedCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
+          }
+        },
+        {
+          "observation": "notice.totalDisplayedCount",
+          "integerBetween": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "observation": "notice.duplicateNoticeCount",
+          "integerBetween": {
+            "min": 0,
+            "max": 0
           }
         },
         {
