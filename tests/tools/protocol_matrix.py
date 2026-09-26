@@ -312,6 +312,14 @@ class CaseSpec:
     expect_assertion: str | None = None
     check_fingerprint: bool = False
     check_scope: bool = False
+    # Explicit null identity: an explicit missing input must never inherit the
+    # identity of an unrelated sibling index, so manifestId/manifestSha256/scope
+    # are asserted null rather than merely left unchecked.
+    expect_null_metadata: bool = False
+    # A rejection must carry this token in its scenario failure / error text.
+    expect_failure_contains: str | None = None
+    # An uncaught interpreter traceback is a crash, never a controlled rejection.
+    forbid_traceback: bool = False
 
 
 def case(
@@ -329,6 +337,9 @@ def case(
     expect_assertion: str | None = None,
     check_fingerprint: bool = False,
     check_scope: bool = False,
+    expect_null_metadata: bool = False,
+    expect_failure_contains: str | None = None,
+    forbid_traceback: bool = False,
 ) -> CaseSpec:
     return CaseSpec(
         case_id=case_id,
@@ -344,6 +355,9 @@ def case(
         expect_assertion=expect_assertion,
         check_fingerprint=check_fingerprint,
         check_scope=check_scope,
+        expect_null_metadata=expect_null_metadata,
+        expect_failure_contains=expect_failure_contains,
+        forbid_traceback=forbid_traceback,
     )
 
 
@@ -511,6 +525,21 @@ def _mutate_symlink_profiles(fixture: ps.Fixture) -> ps.CaseSetup:
     target = fixture.write_json("profiles-real.json", base_profiles())
     fixture.path("profiles.json").unlink()
     fixture.symlink("profiles.json", target.name)
+    return ps.CaseSetup()
+
+
+def _mutate_symlink_index(fixture: ps.Fixture) -> ps.CaseSetup:
+    """The explicitly requested index file itself is a symlink.
+
+    The link target is a complete, valid v2 index in the same directory, so the
+    rejection must come from the requested index path being a symlink and not
+    from the target being malformed. Unrelated OS ancestor aliases are out of
+    scope: only the explicit index path and referenced paths are policy-checked.
+    """
+    setup_base(fixture)
+    target = fixture.write_json("manifest-real.json", base_index())
+    fixture.path("manifest.json").unlink()
+    fixture.symlink("manifest.json", target.name)
     return ps.CaseSetup()
 
 
@@ -819,6 +848,15 @@ _MANIFEST_NEGATIVES: list[CaseSpec] = [
         mutate=_mutate_symlink_profiles,
     ),
     case(
+        case_id="manifest-symlink-index",
+        group="manifest-path-safety",
+        description="symlinked requested index file is rejected even when its target is valid",
+        mode="manifest",
+        expect_exit=ps.EXIT_INPUT,
+        expect_kind=MANIFEST_KIND_REPORT,
+        mutate=_mutate_symlink_index,
+    ),
+    case(
         case_id="manifest-scenario-missing-id",
         group="manifest-structure",
         description="scenario without an id is rejected",
@@ -1000,6 +1038,64 @@ def datecheck_setup(fixture: ps.Fixture, *, countdown: int = 1) -> ps.CaseSetup:
         expected_fingerprint=fixture.fingerprint(),
         expected_manifest_id=SYNTHETIC_MANIFEST_ID,
         expected_scenario_ids=["alpha-countdown"],
+        expected_files=["profiles.json", "scenarios/base.json"],
+    )
+
+
+NUMERIC_SCENARIO_ID = "alpha-numeric"
+
+
+def numeric_setup(
+    fixture: ps.Fixture,
+    *,
+    condition: ps.JsonObject,
+    observations: ps.JsonObject,
+) -> ps.CaseSetup:
+    """A valid single-scenario synthetic capture for one numeric expectation.
+
+    The fixture mirrors the real ``hud/sermon-icon.json`` shape: a measurement
+    scenario whose screenshot is verified and whose execution record carries a
+    numeric measurement, so the guard under test is the observed-value check and
+    never a missing-evidence rejection. The measurement values mirror the
+    observed numbers so the same fixture exercises both a huge integer and a
+    plain ratio control.
+    """
+    fixture.write_json("manifest.json", base_index())
+    fixture.write_json("profiles.json", {"alpha": alpha_profile()})
+    scenario: ps.JsonObject = {
+        "id": NUMERIC_SCENARIO_ID,
+        "profileId": ALPHA,
+        "requirements": ["GKSA-23"],
+        "title": "synthetic numeric guard",
+        "category": "synthetic",
+        "prerequisites": ["Synthetic fixture only; no game."],
+        "steps": ["Read the synthetic fixture."],
+        "expect": [condition],
+        "evidence": {"screenshot": True, "log": False, "measurement": True},
+    }
+    fixture.write_json(
+        SCENARIO_FILE,
+        {"kind": ps.SCENARIOS_KIND, "schemaVersion": 2, "scenarios": [scenario]},
+    )
+    results: list[ps.JsonObject] = [
+        {
+            "scenarioId": NUMERIC_SCENARIO_ID,
+            "status": "passed",
+            "evidence": {"screenshot": "shots/alpha.png"},
+            "measurement": {"values": observations},
+        }
+    ]
+    write_capture(
+        fixture,
+        purpose="tool-fixture",
+        env=build_env(fixture),
+        observations={NUMERIC_SCENARIO_ID: observations},
+        results=results,
+    )
+    return ps.CaseSetup(
+        expected_fingerprint=fixture.fingerprint(),
+        expected_manifest_id=SYNTHETIC_MANIFEST_ID,
+        expected_scenario_ids=[NUMERIC_SCENARIO_ID],
         expected_files=["profiles.json", "scenarios/base.json"],
     )
 
@@ -1462,6 +1558,126 @@ _CAPTURE_CASES: list[CaseSpec] = [
 
 
 # --------------------------------------------------------------------------
+# numeric guard regressions (old verify._finite_number semantics)
+# --------------------------------------------------------------------------
+#
+# Failure paths enumerated before these assertions were written:
+#   ratio-huge-numerator    measuredRatio numerator 10**400, denominator 1
+#                           -> controlled exit 1 with a written report naming a
+#                              non-finite measurement; never an uncaught
+#                              OverflowError traceback (current behaviour: crash)
+#   ratio-huge-denominator  measuredRatio denominator 10**400
+#                           -> controlled exit 1 naming a non-finite measurement
+#                              (current behaviour: rejected only incidentally by a
+#                              ratio-mismatch message, not by the finite guard)
+#   number-range-huge       numberRange min 0 with observed 10**400
+#                           -> controlled exit 1 naming a non-finite number
+#                              (current behaviour: accepted, exit 0)
+#   ratio-valid-20-18       measuredRatio 20/18 still passes (positive control)
+#   integer-equality-huge   strict equals 10**400 still passes (positive control
+#                           proving plain JSON integers are not globally banned)
+_NUMERIC_CASES: list[CaseSpec] = [
+    case(
+        case_id="capture-ratio-huge-numerator",
+        group="capture-numeric-guard",
+        description=(
+            "measuredRatio numerator 10**400 with denominator 1 fails closed with "
+            "a written report, not an uncaught overflow traceback"
+        ),
+        mode="capture",
+        expect_exit=ps.EXIT_FAIL,
+        allow_synthetic=True,
+        expect_kind=VALIDATION_KIND_REPORT,
+        expect_failure_contains="finite",
+        forbid_traceback=True,
+        mutate=lambda fx: numeric_setup(
+            fx,
+            condition={
+                "observation": "m.width",
+                "measuredRatio": {"numerator": "m.width", "denominator": "m.height"},
+            },
+            observations={"m.width": 10**400, "m.height": 1},
+        ),
+    ),
+    case(
+        case_id="capture-ratio-huge-denominator",
+        group="capture-numeric-guard",
+        description=(
+            "measuredRatio denominator 10**400 is rejected as a non-finite "
+            "measurement rather than incidentally by a ratio mismatch"
+        ),
+        mode="capture",
+        expect_exit=ps.EXIT_FAIL,
+        allow_synthetic=True,
+        expect_kind=VALIDATION_KIND_REPORT,
+        expect_failure_contains="finite",
+        forbid_traceback=True,
+        mutate=lambda fx: numeric_setup(
+            fx,
+            condition={
+                "observation": "m.width",
+                "measuredRatio": {"numerator": "m.width", "denominator": "m.height"},
+            },
+            observations={"m.width": 1, "m.height": 10**400},
+        ),
+    ),
+    case(
+        case_id="capture-number-range-huge",
+        group="capture-numeric-guard",
+        description="numberRange min 0 rejects an observed 10**400 as non-finite",
+        mode="capture",
+        expect_exit=ps.EXIT_FAIL,
+        allow_synthetic=True,
+        expect_kind=VALIDATION_KIND_REPORT,
+        expect_failure_contains="finite",
+        forbid_traceback=True,
+        mutate=lambda fx: numeric_setup(
+            fx,
+            condition={"observation": "v.numeric", "numberRange": {"min": 0}},
+            observations={"v.numeric": 10**400},
+        ),
+    ),
+    case(
+        case_id="capture-ratio-valid-20-18",
+        group="capture-numeric-guard",
+        description="the retained 20:18 measuredRatio control still passes",
+        mode="capture",
+        expect_exit=ps.EXIT_OK,
+        allow_synthetic=True,
+        expect_kind=VALIDATION_KIND_REPORT,
+        expect_assertion="synthetic-cli-only",
+        check_fingerprint=True,
+        check_scope=True,
+        mutate=lambda fx: numeric_setup(
+            fx,
+            condition={
+                "observation": "m.width",
+                "measuredRatio": {"numerator": "m.width", "denominator": "m.height"},
+            },
+            observations={"m.width": 20, "m.height": 18},
+        ),
+    ),
+    case(
+        case_id="capture-integer-equality-huge",
+        group="capture-numeric-guard",
+        description="a strict integer equals 10**400 still passes (integers are not globally banned)",
+        mode="capture",
+        expect_exit=ps.EXIT_OK,
+        allow_synthetic=True,
+        expect_kind=VALIDATION_KIND_REPORT,
+        expect_assertion="synthetic-cli-only",
+        check_fingerprint=True,
+        check_scope=True,
+        mutate=lambda fx: numeric_setup(
+            fx,
+            condition={"observation": "v.numeric", "equals": 10**400},
+            observations={"v.numeric": 10**400},
+        ),
+    ),
+]
+
+
+# --------------------------------------------------------------------------
 # CLI-wiring cases
 # --------------------------------------------------------------------------
 
@@ -1472,6 +1688,21 @@ def cli_both_modes(fixture: ps.Fixture) -> ps.CaseSetup:
 
 def cli_plain(fixture: ps.Fixture) -> ps.CaseSetup:
     return setup_base(fixture)
+
+
+def cli_missing_manifest(fixture: ps.Fixture) -> ps.CaseSetup:
+    """An explicitly requested, missing index beside a valid sibling index.
+
+    The sibling ``manifest.json`` is a complete valid v2 index, but it is not the
+    requested input and must never lend its identity to the report. No expected
+    identity is returned here: the corrected case asserts explicit null metadata
+    instead of the sibling's manifestId.
+    """
+    setup_base(fixture)
+    sibling = ps.as_object(fixture.load_json("manifest.json"), "manifest.json")
+    if sibling.get("manifestId") != SYNTHETIC_MANIFEST_ID:
+        raise ps.JsonLoadError("missing-manifest fixture sibling index is not the valid synthetic index")
+    return ps.CaseSetup()
 
 
 _CLI_CASES: list[CaseSpec] = [
@@ -1514,16 +1745,21 @@ _CLI_CASES: list[CaseSpec] = [
     case(
         case_id="cli-missing-manifest",
         group="cli-wiring",
-        description="missing manifest input is rejected fail-closed",
+        description=(
+            "explicitly missing manifest input is rejected fail-closed with null "
+            "identity even beside a valid unrelated sibling index"
+        ),
         mode="missing-manifest",
         expect_exit=ps.EXIT_INPUT,
         expect_report=True,
-        mutate=cli_plain,
+        expect_kind=MANIFEST_KIND_REPORT,
+        expect_null_metadata=True,
+        mutate=cli_missing_manifest,
     ),
 ]
 
 
-ALL_CASES: list[CaseSpec] = _MANIFEST_NEGATIVES + _CAPTURE_CASES + _CLI_CASES
+ALL_CASES: list[CaseSpec] = _MANIFEST_NEGATIVES + _CAPTURE_CASES + _NUMERIC_CASES + _CLI_CASES
 
 
 def positive_cases() -> list[CaseSpec]:
@@ -1615,6 +1851,14 @@ def evaluate(spec: CaseSpec, setup: ps.CaseSetup, run: ps.CliRun) -> ps.CaseResu
                 problems.append("report is missing the e2eVerdict key")
             elif report_object["e2eVerdict"] is not None:
                 problems.append("e2eVerdict must be null in tool reports")
+            if spec.expect_null_metadata:
+                for key in ("manifestId", "manifestSha256", "scope"):
+                    if key not in report_object:
+                        problems.append(f"explicit missing input must report {key}=null; the key is omitted")
+                        continue
+                    value = report_object[key]
+                    if value is not None:
+                        problems.append(f"explicit missing input must report {key}=null; got {value!r}")
             if run.exit == ps.EXIT_OK:
                 if report_object.get("ok") is not True:
                     problems.append("expected ok=true on success")
@@ -1624,8 +1868,10 @@ def evaluate(spec: CaseSpec, setup: ps.CaseSetup, run: ps.CliRun) -> ps.CaseResu
                 problems.append(f"kind {report_object.get('kind')!r} != {spec.expect_kind!r}")
             if spec.expect_assertion is not None and (report_object.get("assertion") != spec.expect_assertion):
                 problems.append(f"assertion {report_object.get('assertion')!r} != {spec.expect_assertion!r}")
-            if setup.expected_manifest_id is not None and (
-                report_object.get("manifestId") != setup.expected_manifest_id
+            if (
+                not spec.expect_null_metadata
+                and setup.expected_manifest_id is not None
+                and (report_object.get("manifestId") != setup.expected_manifest_id)
             ):
                 problems.append(
                     f"report manifestId {report_object.get('manifestId')!r} != {setup.expected_manifest_id!r}"
@@ -1637,8 +1883,14 @@ def evaluate(spec: CaseSpec, setup: ps.CaseSetup, run: ps.CliRun) -> ps.CaseResu
                     )
             if spec.check_scope:
                 problems.extend(_scope_problems(report_object, setup))
+            if spec.expect_failure_contains is not None and not any(
+                spec.expect_failure_contains in text for text in _failure_texts(report_object)
+            ):
+                problems.append(f"rejection reason does not mention {spec.expect_failure_contains!r}")
             if run.exit != ps.EXIT_OK and not _has_rejection_reason(run, report_object):
                 problems.append("rejection carries no diagnostic reason in stderr or report")
+    if spec.forbid_traceback and "Traceback" in run.stderr:
+        problems.append("CLI stderr contains an uncaught interpreter traceback")
 
     passed = not problems
     evidence: ps.JsonObject = {
@@ -1661,6 +1913,27 @@ def evaluate(spec: CaseSpec, setup: ps.CaseSetup, run: ps.CliRun) -> ps.CaseResu
         problems=problems,
         evidence=evidence,
     )
+
+
+def _failure_texts(report: ps.JsonObject) -> list[str]:
+    """Every human-readable rejection reason a capture report carries."""
+    texts: list[str] = []
+    scenarios = report.get("scenarios")
+    if isinstance(scenarios, list):
+        for entry in scenarios:
+            if not isinstance(entry, dict):
+                continue
+            failures = entry.get("failures")
+            if isinstance(failures, list):
+                texts.extend(str(item) for item in failures)
+    error = report.get("error")
+    if isinstance(error, dict):
+        message = error.get("message")
+        if isinstance(message, str):
+            texts.append(message)
+    elif isinstance(error, str):
+        texts.append(error)
+    return texts
 
 
 def _has_rejection_reason(run: ps.CliRun, report: ps.JsonObject) -> bool:

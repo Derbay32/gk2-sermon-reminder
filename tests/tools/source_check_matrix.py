@@ -134,6 +134,18 @@ silently accepts an unread v2 index instead of enforcing it):
                       edit is still checked                   -> REJECT
   v2-path-escape      profilesFile escapes the repository     -> REJECT
   v2-symlink-escape   scenarioRoot is a symlink out of tree   -> REJECT
+  v2-secondary-finaltext-missing  a secondary context declares no
+                      finalText                              -> REJECT
+  v2-secondary-langmap-missing    a secondary context declares no
+                      languageMapping                        -> REJECT
+  v2-scenario-expect-empty        a scenario declares an empty
+                      expect array                           -> REJECT
+  v2-scenario-evidence-nonobject  a scenario declares a non-object
+                      evidence field                         -> REJECT
+  v2-datecheck-mode-unsupported   a scenario declares an unsupported
+                      dateCheck mode                         -> REJECT
+  v2-symlink-index    the requested index file itself is a
+                      symlink to a valid index               -> REJECT
 
 Every v2 case records how the tool actually behaved, so the RED artifact always
 distinguishes "v2 not enforced" (accepted a fixture it must reject, or refused
@@ -1100,6 +1112,26 @@ def _unknown_profile_ref(scenario_docs: dict[str, dict[str, object]]) -> None:
         scenarios[0] = first
 
 
+def _mutate_secondary_scenario(
+    scenario_docs: dict[str, dict[str, object]],
+    mutator: Callable[[dict[str, object]], None],
+) -> None:
+    """Apply one targeted mutation to the secondary context's only scenario.
+
+    The fixture starts from the otherwise-valid synthetic tree, so a rejection
+    proves the mutated field is enforced rather than the fixture being broken.
+    """
+    doc = _as_object_dict(scenario_docs[V2_PROFILE_IDS[1]])
+    entries = doc.get("scenarios")
+    if not isinstance(entries, list) or not entries:
+        raise V2SeedError("secondary scenario document has no scenarios")
+    first = _as_object_dict(entries[0])
+    mutator(first)
+    entries[0] = first
+    doc["scenarios"] = entries
+    scenario_docs[V2_PROFILE_IDS[1]] = doc
+
+
 def _write_outside_profiles(fixture: Path, profiles: dict[str, object]) -> None:
     # Deliberately valid contexts written outside the fixture root, so a guard
     # that follows the escaping path is rejected for the escape itself rather
@@ -1120,6 +1152,21 @@ def _replace_scenarios_with_symlink(fixture: Path) -> None:
     }
     (outside / "symlinked.json").write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     scenario_dir.symlink_to(outside)
+
+
+def _replace_index_with_symlink(fixture: Path) -> None:
+    """The explicitly requested index path is itself a symlink.
+
+    The link target is a complete valid v2 index in the same directory, so the
+    rejection must come from the requested index file being a symlink and not
+    from a malformed target. Only the explicit index path and referenced paths
+    are policy-checked; unrelated OS ancestor aliases are out of scope.
+    """
+    index_path = fixture / V2_INDEX_REL
+    target = index_path.with_name("manifest-real.json")
+    target.write_text(index_path.read_text(encoding="utf-8"), encoding="utf-8")
+    index_path.unlink()
+    index_path.symlink_to(target.name)
 
 
 def _build_v2_fixture(fixture: Path, repo: Path, seed: V2Seed, variant: str) -> None:
@@ -1153,6 +1200,23 @@ def _build_v2_fixture(fixture: Path, repo: Path, seed: V2Seed, variant: str) -> 
         index = _v2_index(profiles_file="../../../outside-profiles.json")
         _write_outside_profiles(fixture, profiles)
         write_profiles = False
+    elif variant == "v2-secondary-finaltext-missing":
+        secondary = _as_object_dict(profiles.get(V2_PROFILE_IDS[1]))
+        secondary.pop("finalText", None)
+        profiles[V2_PROFILE_IDS[1]] = secondary
+    elif variant == "v2-secondary-langmap-missing":
+        secondary = _as_object_dict(profiles.get(V2_PROFILE_IDS[1]))
+        secondary.pop("languageMapping", None)
+        profiles[V2_PROFILE_IDS[1]] = secondary
+    elif variant == "v2-scenario-expect-empty":
+        _mutate_secondary_scenario(scenario_docs, lambda s: s.__setitem__("expect", []))
+    elif variant == "v2-scenario-evidence-nonobject":
+        _mutate_secondary_scenario(scenario_docs, lambda s: s.__setitem__("evidence", "not-an-object"))
+    elif variant == "v2-datecheck-mode-unsupported":
+        _mutate_secondary_scenario(
+            scenario_docs,
+            lambda s: s.__setitem__("expect", [{"dateCheck": {"mode": "unsupported-mode"}}]),
+        )
 
     _write_json(fixture, V2_INDEX_REL, index)
     if write_profiles:
@@ -1179,6 +1243,8 @@ def _build_v2_fixture(fixture: Path, repo: Path, seed: V2Seed, variant: str) -> 
             scenarios_file.write_text(json.dumps(doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     elif variant == "v2-symlink-escape":
         _replace_scenarios_with_symlink(fixture)
+    elif variant == "v2-symlink-index":
+        _replace_index_with_symlink(fixture)
 
 
 def _build_v2_cases() -> list[V2Case]:
@@ -1235,6 +1301,42 @@ def _build_v2_cases() -> list[V2Case]:
             "scenarioRoot symlinks outside the repository",
             EXPECT_VIOLATION,
             "v2-symlink-escape",
+        ),
+        V2Case(
+            "v2-secondary-finaltext-missing",
+            "a secondary context declares no finalText",
+            EXPECT_VIOLATION,
+            "v2-secondary-finaltext-missing",
+        ),
+        V2Case(
+            "v2-secondary-langmap-missing",
+            "a secondary context declares no languageMapping",
+            EXPECT_VIOLATION,
+            "v2-secondary-langmap-missing",
+        ),
+        V2Case(
+            "v2-scenario-expect-empty",
+            "a scenario declares an empty expect array",
+            EXPECT_VIOLATION,
+            "v2-scenario-expect-empty",
+        ),
+        V2Case(
+            "v2-scenario-evidence-nonobject",
+            "a scenario declares a non-object evidence field",
+            EXPECT_VIOLATION,
+            "v2-scenario-evidence-nonobject",
+        ),
+        V2Case(
+            "v2-datecheck-mode-unsupported",
+            "a scenario declares an unsupported dateCheck mode",
+            EXPECT_VIOLATION,
+            "v2-datecheck-mode-unsupported",
+        ),
+        V2Case(
+            "v2-symlink-index",
+            "the requested index file itself is a symlink to a valid index",
+            EXPECT_VIOLATION,
+            "v2-symlink-index",
         ),
     ]
 
