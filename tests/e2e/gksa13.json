@@ -1,0 +1,3837 @@
+{
+  "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
+  "finalText": {
+    "gksr.popup.sermon.body": {
+      "en": "Today is Sermon Day! Don’t forget to head to the church and hold a sermon!\n\nYou’re seeing this pop-up because you manually enabled the Ultimate Reminder. If you find it unnecessary, you can disable it in the settings.",
+      "zh-CN": "今天是布道日！记得去教堂布道！\n\n你会看到这个弹窗是因为你手动启用了究极提醒。如果你觉得这个弹窗很多余，可以到设置里关闭它。"
+    },
+    "gksr.popup.sermon.confirm": {
+      "en": "Confirm",
+      "zh-CN": "确认"
+    },
+    "gksr.popup.sermon.title": {
+      "en": "Sermon Day",
+      "zh-CN": "布道日"
+    },
+    "gksr.settings.beacon.description": {
+      "en": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default.",
+      "zh-CN": "在布道日来临、且当日未布道时，设置一个永远追踪到教堂的信标点，默认值为开启。"
+    },
+    "gksr.settings.beacon.label": {
+      "en": "Enable church beacon",
+      "zh-CN": "开启教堂信标提醒"
+    },
+    "gksr.settings.group.title": {
+      "en": "GK2 Sermon Reminder",
+      "zh-CN": "GK2布道提醒"
+    },
+    "gksr.settings.popup.description": {
+      "en": "Force a pop-up to appear when Sermon Day arrives as an ultimate reminder. Disabled by default.",
+      "zh-CN": "在布道日来临时强行开启一个弹窗的究极提醒。默认值为关闭。"
+    },
+    "gksr.settings.popup.label": {
+      "en": "Ultimate Reminder",
+      "zh-CN": "究极提醒"
+    }
+  },
+  "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
+  "kind": "gksa13-e2e-manifest",
+  "languageMapping": {
+    "catalogLabelToRawGameLanguageId": {
+      "en": "en",
+      "zh-CN": "zh_cn"
+    },
+    "knownRawGameLanguageIds": [
+      "zh_cn",
+      "en"
+    ],
+    "note": "观察字段 language.active 记录游戏原始语言标识（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+  },
+  "manifestVersion": 1,
+  "notes": [
+    "本清单记录待执行的验收要求，不代表任何场景已经执行或通过；所有场景状态均为 UNEXECUTED。",
+    "本票交付默认关闭的全局布道弹窗、Mods 页面开关、待显示生命周期与进程内去重；不依赖信标票，与信标票共用同一模组设置页面且只注册一个页面。",
+    "正常布道弹窗仅在当前加载存档同时满足以下条件时触发：存档就绪、任务 19_base_ceremony_church 与 19_base_ceremony_sermon 均为 Completed、处于布道日且原生 playerData.GetRes(\"sermon_ready\") >= 1、且本存档的弹窗开关为开启。",
+    "物品数量不参与提醒判定；缺少布道物品不得抑制或触发正常弹窗。",
+    "弹窗使用带独立标题的原生提示框，仅提供一个本地化确认按钮，接受确认按钮、Esc 键与手柄返回键作为同等的确认关闭操作。",
+    "弹窗显示时使用原生暂停行为，等待玩家确认，不自动关闭；不得强制重置 timeScale、不得调用全局解除暂停、不得造成移动或输入泄漏、不得留下卡住的暂停，也不得抢占其他系统要求的暂停。",
+    "在菜单、对话、过场或其他占用界面期间延后显示；仅在安全门真正清空且资格仍满足后显示；等待期间不得在占用界面上抢先显示。",
+    "在等待或待显示期间一旦开始布道、离开布道日、切换到其他存档、退出存档或失去资格，即取消待显示弹窗，且取消不消耗提示机会、不写入去重记录。",
+    "同一保存槽同一具体游戏日绝不累计多个待显示弹窗；同一载入与同一帧内不得重复显示。",
+    "去重身份仅由实际载入保存槽的 (slotName, isDemoSave, slot-generation) 在载入时只读捕获并被整次载入冻结；absoluteDay 不冻结，而是在每次触发评估时按当前游戏日期重新读取，因此同一次载入内进入下一布道周期按新日期判定。去重记录键为 (冻结的槽身份, 触发评估时的当前具体游戏日)。不得使用显示名（原生 SaveSlotData 没有用户可编辑的显示名字段）、时间戳、平台或最新保存槽猜测，也不得使用排序后的第一个槽位代替当前槽位。",
+    "去重记录仅在该槽该具体游戏日实际显示弹窗后写入，不得在调度、尝试或资源失败阶段写入。",
+    "同进程内重新读档、返回主菜单往返、普通覆盖保存与关闭后重新开启弹窗均不得清空进程内去重记录。",
+    "不同真实槽位彼此独立，即使槽名或绝对日重叠；手动保存槽与自动保存槽分别去重。",
+    "两个“真实保存槽”必须通过不同的 slotName 或 isDemoSave 成对不同；同一 slotName 仅槽代不同不构成两个并存的真实槽位，因此本清单不要求任意的槽代不等。同槽名跨类型（isDemoSave）的成对场景只有在具备明确受支持的真实建立方式时才成立，本清单不为其猜测导入路径，故不作断言。",
+    "删除成功后重建同名槽位推进槽代并开启新的去重生命周期；删除失败不推进槽代且保留原记录。",
+    "游戏进程重启清空进程内去重记录，且不写入任何持久化去重标记。",
+    "本票仅覆盖正常弹窗路径；故障恢复后的补发联动留待后续组合故障票。GKSA-15 的失败通知集成在本票中既不要求也不禁止，本清单不为其编写断言。",
+    "弹窗正文两段短文案的中文原文含 Huly 富文本加粗标记；本清单接受实际渲染出的纯文本作为文本观察，不要求任何生产遥测 API。观察字段由真实操作者或测试设施在真实运行中记录，不存在伪造证据。",
+    "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e 为准；本清单不新增或改写任何玩家可见文案。语言跟随游戏当前语言，缺少当前语言译文时使用英语兜底。",
+    "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e 为准：gksr.popup.sermon.title（zh-CN 布道日 / en Sermon Day）、gksr.popup.sermon.body（zh-CN 今天是布道日！记得去教堂布道！ + 第二段，en 对应两段）、gksr.popup.sermon.confirm（zh-CN 确认 / en Confirm）、以及设置页 gksr.settings.group.title、gksr.settings.popup.label/description、gksr.settings.beacon.label/description。弹窗正文两段按文档以空行分隔；文档第二段中的加粗标记仅作为排版标记，观察字段记录渲染后的纯文本（不含 Markdown/HTML 标记），该纯文本语义由主验收确认。",
+    "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
+    "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
+    "布局与视觉结论必须附带已校验的截图，并附带实测数值或明确的 operatorObservation；仅日志不能作为布局证据。",
+    "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）的 sermon-day 模式；save.sermonWeekday 必须等于环境字段 game.sermonWeekday（单一运行时定义 T = ConstDef.Get(\"day_wrath\").IntValue），绝不写死 T。",
+    "权威成品证据由 tests/e2e/verify.py 校验；校验器不生成证据，也不模拟游戏行为。",
+    "删除重建场景须使用可恢复测试环境中的存档副本执行。",
+    "信标可见性按阶段分别观察，不与持久化开关值混用：beacon.shownOnLoadWhileEnabled 在开关为开启的载入、beacon.shownOnLoadAfterDisable 在切为关闭后的载入、beacon.shownOnLoadAfterReenable 在切回开启后的载入分别记录；settings.beaconEnabled* 只记录主菜单持久化值，不代表任何已载入存档的活动快照。",
+    "弹窗由开启切为关闭的证明必须在同一进程内针对一个从未提示过、且尚无去重记录的合格槽与具体游戏日执行；否则去重本身就会抑制弹窗，无法区分是设置生效还是去重生效。故该场景要求 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true，并以 popup.shownAfterDisable 观察真实不显示。",
+    "原生 SaveSlotData 没有槽代字段。save.slotGeneration / save.slotGenerationBefore / save.slotGenerationAfter 与 dedup.capturedSlotGeneration 都表示本模组按不可变原生槽键在进程内存中维护的槽代计数，在初始载入捕获身份时读取，早于后续可变存档字段变化。",
+    "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁或替换游戏管理并缓存的共享原生对话框实例，也不得关闭或改动其他系统已接管的内容与其他系统已打开的对话框。本模组仍可经游戏原生关闭流程关闭退出/清理时仍归本模组所有的弹窗内容。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。"
+  ],
+  "observationVocabulary": {
+    "beacon.shownOnLoadAfterDisable": "bool: 本次载入时信标开关已为关闭的前提下原生信标是否显示（预期 false）",
+    "beacon.shownOnLoadAfterReenable": "bool: 本次载入时信标开关已切回开启的前提下原生信标是否恢复显示",
+    "beacon.shownOnLoadWhileEnabled": "bool: 本次载入时信标开关为开启的前提下原生教堂信标是否显示",
+    "dedup.capturedIsDemoSave": "bool: 载入时捕获并冻结的存档类型 isDemoSave（身份字段之一）",
+    "dedup.capturedSlotGeneration": "int: 载入时捕获并冻结的本模组进程内槽代（身份字段之一；不是原生 SaveSlotData 字段）",
+    "dedup.capturedSlotName": "string: 载入时捕获并冻结的保存槽名（身份字段之一）",
+    "dedup.dayReadFreshPerTriggerEvaluation": "bool: 具体游戏日是否在每次触发评估时按当前值重新读取而非冻结",
+    "dedup.dedupInheritedFromDeletedSlot": "bool: 重建槽是否继承删除前记录（必须为 false）",
+    "dedup.identitySourceIsActualLoadedSlot": "bool: 去重身份是否来自实际载入的保存槽",
+    "dedup.manualAndAutoTrackedSeparately": "bool: 手动与自动保存槽是否分别追踪",
+    "dedup.recordAbsentForThisSlotDayBeforeLoad": "bool: 载入前该槽该日是否尚无去重记录",
+    "dedup.recordRetainedAcrossReload": "bool: 重读后是否保留去重记录",
+    "dedup.recordRetainedAcrossToggle": "bool: 开关往返后是否保留去重记录",
+    "dedup.recordRetainedAfterMainMenu": "bool: 主菜单往返后是否保留去重记录",
+    "dedup.recordRetainedAfterOverwrite": "bool: 普通覆盖保存后是否保留去重记录",
+    "dedup.slotIdentityCapturedAtLoad": "bool: 槽身份是否在载入时只读捕获",
+    "dedup.slotIdentityFrozenForLoad": "bool: 槽身份是否在整次载入内保持不变",
+    "dedup.usedLatestSlotGuess": "bool: 是否使用最新保存槽猜测作为身份（必须为 false）",
+    "dedup.usedPlatform": "bool: 是否使用平台作为身份（必须为 false）",
+    "dedup.usedTimestamp": "bool: 是否使用时间戳作为身份（必须为 false）",
+    "hud.nonSermonCountdownShown": "bool: 当前是否显示非布道日倒计时",
+    "input.gameplayInputLeakedDuringPopup": "bool: 弹窗期间游戏输入是否泄漏（必须为 false）",
+    "input.gameplayInputRestoredAfterClose": "bool: 无其他暂停来源时关闭弹窗后游戏输入是否恢复正常",
+    "input.playerMovedDuringPopup": "bool: 弹窗显示期间玩家是否发生移动（必须为 false）",
+    "item.quantityRelevantToEligibility": "bool: 物品数量是否参与弹窗资格判定（必须为 false）",
+    "item.shortagePresent": "bool: 玩家是否缺少布道所需物品",
+    "language.active": "string: 游戏原始语言标识，例如 zh_cn、en、fr",
+    "language.fallbackUsed": "bool: 当前语言缺少译文时是否使用英语兜底",
+    "layout.measurement": "number: 可选的实测布局数值",
+    "layout.operatorObservation": "string: 操作者对布局或视觉结果的确切观察记录",
+    "pause.modForcedUnpauseOnClose": "bool: 关闭时是否强制解除其他暂停（必须为 false）",
+    "pause.nativeOnWindowClosedChecksModalStack": "bool: 原生 MainGame.OnWindowClosed 是否在解除暂停前检查 LazyWindowsStackController.HasAnyModalWindowOpened",
+    "pause.otherNativeModalRemainsOpenAfterClose": "bool: 关闭本模组弹窗后第二个原生模态是否仍打开",
+    "pause.otherPauseIntroducedAfterPopupShown": "bool: 是否在本模组弹窗显示后才引入第二个原生模态暂停来源",
+    "pause.otherPauseSourceActiveAtEligibility": "bool: 资格成立时是否存在其他暂停来源",
+    "pause.otherPauseSourceUnaffected": "bool: 本模组是否未影响其他暂停来源",
+    "pause.otherPauseStillActiveAfterClose": "bool: 关闭本模组弹窗后第二个原生模态的暂停是否仍生效",
+    "pause.ownershipStolenFromOtherSystem": "bool: 是否抢占其他系统的暂停所有权（必须为 false）",
+    "pause.stuckPauseAfterClose": "bool: 关闭后是否留下卡住的暂停（必须为 false）",
+    "pause.stuckPauseAfterExit": "bool: 退出存档后是否留下卡住的暂停（必须为 false）",
+    "pause.timeScaleChangedByMod": "bool: 是否被模组改写时间缩放（必须为 false）",
+    "pause.unpauseAllInvoked": "bool: 是否调用全局解除暂停（必须为 false）",
+    "pause.usedNativePause": "bool: 是否使用游戏原生暂停行为",
+    "popup.autoCloseTimeoutSeconds": "number: 自动关闭超时秒数（0 表示不存在自动关闭）",
+    "popup.autoClosedWithoutInput": "bool: 是否在无输入时自动关闭（必须为 false）",
+    "popup.autoSlotShown": "bool: 自动保存槽是否被独立提示一次",
+    "popup.autoSlotSuppressedByManualRecord": "bool: 自动槽是否被手动槽记录抑制（必须为 false）",
+    "popup.bodyText": "string: 弹窗正文实际显示文本；两段最终文本之间以空行（两个换行符）分隔，不含 Markdown 加粗标记",
+    "popup.canceledOnDateChange": "bool: 日期变化时是否取消待显示",
+    "popup.canceledOnExit": "bool: 退出存档时是否取消待显示",
+    "popup.canceledOnGateChange": "bool: 门槛状态变化时是否取消待显示",
+    "popup.canceledWhenEligibilityLost": "bool: 失去资格时是否取消待显示",
+    "popup.chanceConsumed": "bool: 本次是否消耗了提示机会",
+    "popup.chanceConsumedByCanceledPending": "bool: 取消的待显示是否消耗了提示机会（必须为 false）",
+    "popup.chanceConsumedOnCreateFailure": "bool: 创建失败时是否消耗提示机会（必须为 false）",
+    "popup.chanceConsumedOnFailedShow": "bool: 显示失败时是否消耗提示机会（必须为 false）",
+    "popup.chanceConsumedOnScheduleOnly": "bool: 调度阶段是否消耗提示机会（必须为 false）",
+    "popup.chanceConsumedOnUnavailable": "bool: 组件不可用时是否消耗提示机会（必须为 false）",
+    "popup.chanceRetainedWhileMissing": "bool: 资源缺失期间是否保留提示机会",
+    "popup.closedByConfirm": "bool: 是否由确认按钮关闭",
+    "popup.closedByEsc": "bool: 是否由 Esc 键关闭",
+    "popup.closedByGamepadBack": "bool: 是否由手柄返回键关闭",
+    "popup.componentAvailable": "bool: 弹窗组件是否可用",
+    "popup.confirmButtonCount": "int: 确认按钮数量（必须为 1）",
+    "popup.confirmChangedSermonState": "bool: 确认是否改变了游戏布道状态（必须为 false）",
+    "popup.confirmCountedAsSermonHeld": "bool: 确认是否被当作已经布道（必须为 false）",
+    "popup.confirmLabel": "string: 确认操作标签实际显示文本",
+    "popup.createSucceeded": "bool: 弹窗创建是否成功",
+    "popup.dedupPersistedToDisk": "bool: 去重记录是否被写入磁盘（必须为 false）",
+    "popup.dedupRecordedAfterActualDisplay": "bool: 弹窗实际显示后是否写入去重记录",
+    "popup.dedupRecordedAfterDisplay": "bool: 弹窗实际显示后是否写入去重记录",
+    "popup.dedupRecordedBeforeActualDisplay": "bool: 实际显示前是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedForCanceledPending": "bool: 取消的待显示是否写入了去重记录（必须为 false）",
+    "popup.dedupRecordedOnAttemptOnly": "bool: 尝试阶段是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedOnCreateFailure": "bool: 创建失败时是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedOnFailedShow": "bool: 显示失败时是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedOnScheduleOnly": "bool: 调度阶段是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedOnUnavailable": "bool: 组件不可用时是否写入去重记录（必须为 false）",
+    "popup.dedupRecordedOnUnreadableState": "bool: 必要状态不可读时是否写入去重记录（必须为 false）",
+    "popup.dedupStateAfterRestartEmpty": "bool: 重启后进程内去重状态是否为空",
+    "popup.dedupStateFreshProcessEmpty": "bool: 全新进程的去重状态是否初始为空",
+    "popup.dedupStillSuppressedAfterFailedDelete": "bool: 删除失败后原去重记录是否仍抑制（必须为 true）",
+    "popup.deferredWhileBusy": "bool: 占用界面期间是否延后显示",
+    "popup.deferredWhileOtherModal": "bool: 其他原生模态活动时是否延后显示",
+    "popup.deferredWhileOtherPause": "bool: 既有暂停期间是否延后显示",
+    "popup.deferredWhilePlayerNotControllable": "bool: 玩家不可操作时是否延后显示",
+    "popup.didNotDestroySharedNativeDialog": "bool: 本模组在退出清理时是否未销毁、未替换游戏管理并缓存的共享原生对话框实例（该实例的后续存续由游戏自身场景与菜单卸载决定，不由本模组强制要求）；允许本模组经原生关闭流程关闭退出/清理时仍归其所有的弹窗内容，但不得关闭或改动其他系统已接管的内容与其他对话框",
+    "popup.displayCountWithinLoad": "int: 本次存档载入期间弹窗实际显示的次数（<=1）",
+    "popup.displayCountWithinSameFrame": "int: 同一帧内弹窗实际显示的次数（<=1）",
+    "popup.displayedAfterExit": "bool: 退出存档后是否仍显示弹窗（必须为 false）",
+    "popup.displayedAfterGateClearedAndEligible": "bool: 安全门清空且资格仍满足后是否显示弹窗",
+    "popup.displayedAfterOtherModalClosed": "bool: 其他原生模态关闭后是否显示本模组弹窗",
+    "popup.displayedAfterRecheck": "bool: 重新检查后是否显示弹窗",
+    "popup.displayedWhileBusy": "bool: 占用界面期间是否抢先显示（必须为 false）",
+    "popup.displayedWhileOtherModalActive": "bool: 其他原生模态活动时是否显示（必须为 false）",
+    "popup.displayedWhileOtherPauseActive": "bool: 既有暂停期间是否显示（必须为 false）",
+    "popup.displayedWhilePlayerNotControllable": "bool: 玩家不可操作时是否显示（必须为 false）",
+    "popup.duplicatePendingAccumulated": "bool: 是否累计了多个待显示弹窗（必须为 false）",
+    "popup.earlierDayRecordAbsentBeforeFirstLoad": "bool: 该较早具体游戏日在首次载入前从未被提示过",
+    "popup.earlierDayReloadSuppressed": "bool: 已被提示过的较早具体游戏日重读时是否被抑制",
+    "popup.eligibilityCheckedOnCrossing": "bool: 跨入布道日时是否检查资格",
+    "popup.eligibilityCheckedOnLoad": "bool: 载入存档时是否检查资格",
+    "popup.eligibilityDependsOnItemCount": "bool: 弹窗资格是否依赖物品数量（必须为 false）",
+    "popup.eligibilityRecheckedAfterGate": "bool: 安全门清空后是否重新检查资格",
+    "popup.eligibilityStillMet": "bool: 安全门清空后资格是否仍满足",
+    "popup.exitedSaveDuringDeferral": "bool: 待显示期间是否退出存档",
+    "popup.extraActionButtonCount": "int: 除确认以外的操作按钮数量（必须为 0）",
+    "popup.firstLoadShown": "bool: 首次载入是否显示一次",
+    "popup.mainMenuRoundtripSuppressed": "bool: 主菜单往返后是否被抑制",
+    "popup.manualSlotShown": "bool: 手动保存槽是否被提示一次",
+    "popup.modActiveContentClearedOnExit": "bool: 退出存档时本模组的活动弹窗内容是否被清理",
+    "popup.modOwnedReferencesReleasedOnExit": "bool: 退出存档时本模组持有的引用是否被释放",
+    "popup.modPendingClearedOnExit": "bool: 退出存档时本模组的待显示弹窗是否被清理",
+    "popup.nativeDialogUsed": "bool: 是否使用游戏原生提示框",
+    "popup.newLoadEvaluatedIndependently": "bool: 新存档是否被独立评估",
+    "popup.oldLoadPendingDiscarded": "bool: 切档时是否丢弃旧存档待显示",
+    "popup.oldPendingShownAfterExit": "bool: 退出后是否显示了旧待显示（必须为 false）",
+    "popup.oldPendingShownAfterSwitch": "bool: 切档后是否显示了旧存档待显示（必须为 false）",
+    "popup.openAfterClose": "bool: 关闭后弹窗是否仍打开（必须为 false）",
+    "popup.otherRemindersUnaffected": "bool: 弹窗故障是否未影响其他正常提醒",
+    "popup.overwriteSuppressed": "bool: 普通覆盖保存后是否被抑制",
+    "popup.pausedWhileShown": "bool: 弹窗显示时游戏是否处于暂停",
+    "popup.pendingCount": "int: 当前待显示弹窗数量（同槽同日必须 <=1）",
+    "popup.pendingCountAfterRepeatedChecks": "int: 重复触发检测后待显示弹窗数量（<=1）",
+    "popup.pendingCountDuringDeferral": "int: 延后期间待显示弹窗数量（<=1）",
+    "popup.pendingDuringDeferral": "bool: 等待期间是否存在待显示弹窗",
+    "popup.pendingOrShownOnExit": "bool: 退出存档时弹窗是否处于待显示或显示状态",
+    "popup.persistedMarkerPresentAfterRestart": "bool: 重启后是否存在持久化去重标记（必须为 false）",
+    "popup.persistedMarkerWritten": "bool: 是否写入任何持久化去重标记（必须为 false）",
+    "popup.priorRecordExistsForOtherDay": "bool: 是否已存在针对其他具体游戏日的记录",
+    "popup.processRestarted": "bool: 本次观察前游戏进程是否已重启",
+    "popup.recovered": "bool: 弹窗资源是否已恢复",
+    "popup.reloadShownAgain": "bool: 重读是否再次显示（必须为 false）",
+    "popup.reloadSuppressed": "bool: 重读是否被抑制",
+    "popup.remindLaterActionPresent": "bool: 是否存在稍后提醒操作（必须为 false）",
+    "popup.resourceMissingInitially": "bool: 弹窗资源初始是否缺失",
+    "popup.retryEligible": "bool: 显示失败后是否仍可重试",
+    "popup.sameSlotAsPriorRecord": "bool: 当前槽是否与既有记录为同一槽位",
+    "popup.sameSlotSameDayAsBeforeRestart": "bool: 重启后载入的是否为重启前的同槽同日",
+    "popup.scheduledButNotDisplayed": "bool: 是否已调度但尚未实际显示",
+    "popup.showFailed": "bool: 弹窗显示调用是否失败",
+    "popup.shown": "bool: 正常布道弹窗在当前观察点是否已实际显示",
+    "popup.shownAfterCancellation": "bool: 取消后是否仍显示（必须为 false）",
+    "popup.shownAfterDateChange": "bool: 日期变化后是否仍显示（必须为 false）",
+    "popup.shownAfterDisable": "bool: 弹窗开关已为关闭时载入从未提示过的合格存档是否显示弹窗（预期 false，关闭设置是唯一抑制原因）",
+    "popup.shownAfterFailedDelete": "bool: 删除失败后是否重复显示（必须为 false）",
+    "popup.shownAfterGateChange": "bool: 门槛变化后是否仍显示（必须为 false）",
+    "popup.shownAfterRecovery": "bool: 资源恢复后是否显示弹窗",
+    "popup.shownAfterReenableSameSlotDay": "bool: 重开开关后是否重复显示同一槽同日（必须为 false）",
+    "popup.shownAfterRestart": "bool: 重启后是否按当前状态重新显示",
+    "popup.shownForRecreatedSlot": "bool: 重建后的同名槽位是否可再次提示一次",
+    "popup.shownNextCycle": "bool: 下一布道周期是否按新日期再次显示",
+    "popup.shownOnceInLoad": "bool: 本次载入是否只显示一次",
+    "popup.shownOnlyAfterGateCleared": "bool: 是否仅在安全门清空后显示弹窗",
+    "popup.shownWhileGateActive": "bool: 安全门活动时是否显示了弹窗（必须为 false）",
+    "popup.shownWhileMissing": "bool: 资源缺失期间是否显示弹窗（必须为 false）",
+    "popup.slotAShown": "bool: 槽 A 是否被提示一次",
+    "popup.slotBIndependentCheck": "bool: 槽 B 是否被独立检查",
+    "popup.slotBShown": "bool: 槽 B 是否被提示一次",
+    "popup.slotBSuppressedBySlotARecord": "bool: 槽 B 是否被槽 A 记录抑制（必须为 false）",
+    "popup.stayedOpenBeforeConfirm": "bool: 确认前弹窗是否一直打开",
+    "popup.stayedUntilConfirmed": "bool: 是否保持显示直到玩家确认",
+    "popup.suppressedByOtherDayRecord": "bool: 是否被其他游戏日的记录抑制（必须为 false）",
+    "popup.suppressedByPriorCycleRecord": "bool: 是否被上一周期记录抑制（必须为 false）",
+    "popup.teleportActionPresent": "bool: 是否存在跳转教堂操作（必须为 false）",
+    "popup.titleNonEmpty": "bool: 独立标题是否非空",
+    "popup.titleText": "string: 弹窗标题实际显示文本",
+    "popup.titled": "bool: 原生提示框是否带独立标题",
+    "popup.withinSameLoadNoReload": "bool: 该观察过程是否全程未重新载入存档",
+    "save.absoluteDay": "int: 绝对游戏日 EnvironmentData.Day，从 1 开始的正整数",
+    "save.absoluteDayAfterOverwrite": "int: 普通覆盖保存后重新载入的绝对游戏日",
+    "save.absoluteDayAfterReload": "int: 重新读档后的绝对游戏日（用于证明同槽同日）",
+    "save.absoluteDayAfterRoundtrip": "int: 主菜单往返后重新载入的绝对游戏日",
+    "save.churchUnlocked": "bool: 任务 19_base_ceremony_church 是否为 Completed",
+    "save.crossedIntoASermonDay": "bool: 是否在可操作画面正常跨日进入布道日",
+    "save.dateChangedDuringDeferral": "bool: 待显示期间游戏日期是否发生变化",
+    "save.dayOfWeek": "int: 星期编号，满足 dayOfWeek == ((absoluteDay - 1) % week) + 1",
+    "save.daysInWeek": "int: EnvironmentData.DAYS_IN_WEEK 常量值（dateCheck 助手按周长度计算差值所必需）",
+    "save.deletionFailed": "bool: 保存槽删除操作是否失败",
+    "save.deletionSucceeded": "bool: 保存槽删除操作是否成功",
+    "save.isDemoSave": "bool: 该保存槽是否为试玩存档（身份字段之一）",
+    "save.isNewGameBeforeFirstSave": "bool: 是否为尚未首次保存的新游戏进度",
+    "save.isSermonDay": "bool: 当前游戏日是否为布道日（delta == 0）",
+    "save.isSermonDayAfter": "bool: 等待期间跨日之后的当前日是否为布道日",
+    "save.loadedSlotChangedDuringDeferral": "bool: 待显示期间是否切换了载入的保存槽",
+    "save.midLoadIntoASermonDay": "bool: 是否在布道日中途载入存档",
+    "save.otherSlotAbsoluteDay": "int: 另一真实保存槽的绝对游戏日",
+    "save.otherSlotIsAuto": "bool: 另一保存槽是否为自动保存槽",
+    "save.otherSlotName": "string: 另一真实保存槽的名称",
+    "save.priorAbsoluteDay": "int: 本进程既有去重记录所针对的绝对游戏日",
+    "save.readyToPlay": "bool: 存档是否已加载完成并进入可操作画面",
+    "save.returnedToMainMenu": "bool: 当前是否已退出存档并回到主菜单（用于把退出与后续主菜单操作拆成独立可观察步骤）",
+    "save.saveTimestampOlderThanSettingChange": "bool: 被读取存档的保存时间是否早于本次设置修改",
+    "save.sermonWeekday": "int: 实际观察到的布道日星期编号，必须等于环境字段 game.sermonWeekday（单一运行时定义，不得改写）",
+    "save.slotGeneration": "int: 本模组按原生保存槽键维护的进程内槽代计数（不是原生 SaveSlotData 字段——原生没有该字段）；在初始载入捕获身份时读取，早于后续可变存档字段变化",
+    "save.slotGenerationAfter": "int: 删除重建或覆盖保存后本模组按原生槽键维护的进程内槽代（不是原生 SaveSlotData 字段）",
+    "save.slotGenerationBefore": "int: 变更前读取的本模组进程内槽代（不是原生 SaveSlotData 字段——原生没有该字段），用于与变更后的值对比",
+    "save.slotIsManual": "bool: 该保存槽是否为手动保存槽",
+    "save.slotName": "string: 实际载入保存槽的名称（身份字段之一）",
+    "save.tutorialCompleted": "bool: 任务 19_base_ceremony_sermon 是否为 Completed",
+    "settings.appliedValueOnLoad": "bool: 载入存档时是否使用了新开关值",
+    "settings.applyButtonUsed": "bool: 是否使用了任何应用按钮（必须为 false）",
+    "settings.autosavedAfterToggle": "bool: 切换后是否在自动保存下写入设置",
+    "settings.beaconDefaultValue": "bool: 首次使用且无已保存设置时信标开关的默认值（为 true）",
+    "settings.beaconDescription": "string: 信标开关说明实际显示文本",
+    "settings.beaconEnabledAfter": "bool: 只在主菜单把信标开关切为关闭后的持久化值（并非活动载入状态）",
+    "settings.beaconEnabledAfterReverseToggle": "bool: 在已关闭基础上把信标开关切回开启后的持久化值",
+    "settings.beaconEnabledBefore": "bool: 主菜单信标开关的持久化值（关闭前的持久化基线，非已载入存档活动快照）",
+    "settings.beaconIndependentOfPopup": "bool: 两个开关是否相互独立",
+    "settings.beaconLabel": "string: 信标开关名称实际显示文本",
+    "settings.beaconPersistedValueEqualsAfter": "bool: 主菜单信标开关切为关闭后，落盘的持久化值是否等于切换后的值（证明自动保存已写入，且与已载入存档活动快照区分）",
+    "settings.beaconSettingUnchangedByPopupToggle": "bool: 切换弹窗开关是否未改变信标开关",
+    "settings.gamepadNavigationWorked": "bool: 手柄能否在设置页面完整导航到开关",
+    "settings.groupTitle": "string: 模组设置页面标题实际显示文本",
+    "settings.hudTextStillShownOnNextLoad": "bool: 关闭信标后下次载入是否仍显示角落文字提醒",
+    "settings.inputDeviceUsed": "string: 本次设置操作使用的输入设备（keyboard-mouse 或 gamepad）",
+    "settings.modsEntryUsed": "bool: 是否通过主菜单 Mods 入口进入本模组设置页面",
+    "settings.pageRegisteredOnce": "bool: 本模组是否只注册一个设置页面",
+    "settings.persistedValueEqualsBeforeRestart": "bool: 重启后的值是否等于重启前的值",
+    "settings.persistedValueEqualsToggled": "bool: 落盘值与切换后的值是否一致",
+    "settings.popupDefaultValue": "bool: 首次使用且无已保存设置时弹窗开关的默认值（必须为 false）",
+    "settings.popupDescription": "string: 弹窗开关说明实际显示文本",
+    "settings.popupDisabledThenReenabled": "bool: 是否在同一进程内先关闭再重新开启弹窗开关",
+    "settings.popupEnabled": "bool: 当前全局弹窗开关值",
+    "settings.popupEnabledAfterPopupToggle": "bool: 只切换弹窗开关后弹窗开关的值",
+    "settings.popupEnabledAfterRestart": "bool: 游戏重启后读取到的弹窗开关值",
+    "settings.popupEnabledAfterToggle": "bool: 本次切换后弹窗开关的值",
+    "settings.popupEnabledBefore": "bool: 本次观察开始时弹窗开关的值",
+    "settings.popupLabel": "string: 弹窗开关名称实际显示文本",
+    "settings.popupSettingUnchangedByBeaconToggle": "bool: 切换信标开关是否未改变弹窗开关",
+    "settings.processExited": "bool: 游戏进程是否已正常退出（退出步骤的可观察结果）",
+    "settings.processRestarted": "bool: 本次应用是否发生游戏进程重启",
+    "settings.restartRequired": "bool: 是否要求重启才能生效（必须为 false）",
+    "settings.rolledBackByOldSave": "bool: 读取旧存档是否回滚了全局设置（必须为 false）",
+    "settings.saveButtonUsed": "bool: 是否使用了任何保存按钮（必须为 false）",
+    "settings.toggleChanged": "bool: 本次操作是否实际改变了开关值",
+    "settings.valueAfterOldSaveLoad": "bool: 读取旧存档后仍生效的弹窗开关值",
+    "settings.valueBeforeLoad": "bool: 载入前尚未生效的开关值",
+    "state.readable": "bool: 必要业务状态是否可可靠读取",
+    "state.sermonReadyValue": "number: 原生 playerData.GetRes(\"sermon_ready\") 的实际数值；>=1 为机会未消费",
+    "state.sermonReadyValueAfterConfirm": "number: 确认关闭弹窗后原生 sermon_ready 的数值",
+    "state.sermonReadyValueBefore": "number: 事件发生前原生 sermon_ready 的数值",
+    "ui.busyGateActive": "bool: 当前是否有菜单、对话、过场或其他占用界面处于活动状态",
+    "ui.busyGateActiveAfterClear": "bool: 安全门清空后是否仍为活动状态",
+    "ui.busyGateActiveAtEligibility": "bool: 资格成立时安全门是否为活动状态",
+    "ui.otherNativeDialogsUnaffected": "bool: 本模组的清理是否未关闭、未改动其他系统已打开的对话框",
+    "ui.otherNativeModalActive": "bool: 是否存在另一个活动的原生模态窗口",
+    "ui.otherNativeModalClosedBeforeDisplay": "bool: 本模组弹窗显示前其他原生模态是否已关闭",
+    "ui.otherNativeModalUnaffected": "bool: 本模组弹窗是否未影响其他原生模态",
+    "ui.playerControllable": "bool: 玩家当前是否可操作",
+    "ui.safetyGateClear": "bool: 安全门是否已真正清空",
+    "ui.safetyGateTransitionCount": "int: 本次观察期间安全门状态转换次数"
+  },
+  "scenarios": [
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "settings.popupDefaultValue"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconDefaultValue"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        }
+      ],
+      "id": "popup-default-off",
+      "prerequisites": [
+        "测试环境尚未写入本模组设置（或已清除为首次使用状态）。",
+        "存档满足教堂与教学门槛且处于布道日机会未消费状态。"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组；预期插件实际加载；检查 plugin.loaded 为 true。",
+        "在主菜单打开 GK2 Mod Framework 的 Mods 入口；预期本模组设置页面可打开；检查 settings.modsEntryUsed 为 true。",
+        "读取本模组的弹窗开关与信标开关；预期弹窗为关闭、信标为开启；检查 settings.popupDefaultValue 与 settings.beaconDefaultValue。",
+        "载入已就绪的布道日存档；预期不出现弹窗；检查 popup.shown 为 false 且 popup.pendingCount 为 0。"
+      ],
+      "title": "首次使用且无已保存设置时正常布道弹窗开关默认为关闭"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.modsEntryUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.pageRegisteredOnce"
+        },
+        {
+          "finalTextKey": "gksr.settings.group.title",
+          "language": "zh-CN",
+          "observation": "settings.groupTitle"
+        },
+        {
+          "finalTextKey": "gksr.settings.popup.label",
+          "language": "zh-CN",
+          "observation": "settings.popupLabel"
+        },
+        {
+          "finalTextKey": "gksr.settings.popup.description",
+          "language": "zh-CN",
+          "observation": "settings.popupDescription"
+        },
+        {
+          "finalTextKey": "gksr.settings.beacon.label",
+          "language": "zh-CN",
+          "observation": "settings.beaconLabel"
+        },
+        {
+          "finalTextKey": "gksr.settings.beacon.description",
+          "language": "zh-CN",
+          "observation": "settings.beaconDescription"
+        },
+        {
+          "equals": false,
+          "observation": "settings.applyButtonUsed"
+        },
+        {
+          "equals": false,
+          "observation": "settings.saveButtonUsed"
+        }
+      ],
+      "id": "settings-page-exposes-toggle",
+      "prerequisites": [
+        "测试环境可从主菜单进入 Mods 入口。"
+      ],
+      "steps": [
+        "在主菜单打开 GK2 Mod Framework 的 Mods 列表；预期只列出本模组一个设置页面；检查 settings.pageRegisteredOnce 为 true。",
+        "打开本模组设置页面并读取标题；预期显示定稿页面名；检查 settings.groupTitle 使用 gksr.settings.group.title 的 zh-CN 文案。",
+        "读取弹窗与信标开关的名称与说明；预期均显示定稿文案；检查 settings.popupLabel/description 与 settings.beaconLabel/description。",
+        "检查页面操作控件；预期没有应用或保存按钮；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。"
+      ],
+      "title": "Mods 的模组设置页面暴露弹窗与信标开关并使用定稿文案"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "keyboard-mouse",
+          "observation": "settings.inputDeviceUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.toggleChanged"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        }
+      ],
+      "id": "settings-toggle-keyboard",
+      "prerequisites": [
+        "测试环境可进入模组设置页面，初始弹窗开关为关闭。"
+      ],
+      "steps": [
+        "用键鼠在设置页面把弹窗开关切为开启；预期开关值变化；检查 settings.toggleChanged 为 true 且 settings.popupEnabledAfterToggle 为 true。",
+        "不离开页面读取持久化结果；预期已自动保存；检查 settings.autosavedAfterToggle 为 true。"
+      ],
+      "title": "键鼠可在 Mods 页修改弹窗开关"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "gamepad",
+          "observation": "settings.inputDeviceUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.gamepadNavigationWorked"
+        },
+        {
+          "equals": true,
+          "observation": "settings.toggleChanged"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        }
+      ],
+      "id": "settings-toggle-gamepad",
+      "prerequisites": [
+        "测试环境可进入模组设置页面，初始弹窗开关为关闭，已连接手柄。"
+      ],
+      "steps": [
+        "仅用手柄在设置页面导航到弹窗开关；预期手柄可完整导航；检查 settings.gamepadNavigationWorked 为 true。",
+        "用手柄把弹窗开关切为开启；预期开关值变化且自动保存；检查 settings.toggleChanged、settings.popupEnabledAfterToggle、settings.autosavedAfterToggle。"
+      ],
+      "title": "手柄可在 Mods 页修改弹窗开关"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        },
+        {
+          "equals": false,
+          "observation": "settings.applyButtonUsed"
+        },
+        {
+          "equals": false,
+          "observation": "settings.saveButtonUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.persistedValueEqualsToggled"
+        }
+      ],
+      "id": "settings-autosave",
+      "prerequisites": [
+        "测试环境可进入模组设置页面。"
+      ],
+      "steps": [
+        "切换弹窗开关且不点击任何应用或保存按钮；预期无需额外按钮即写入；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。",
+        "读取已写入的设置值；预期与切换结果一致；检查 settings.autosavedAfterToggle 与 settings.persistedValueEqualsToggled。"
+      ],
+      "title": "修改弹窗开关后立即自动保存全局设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": false,
+          "observation": "settings.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.appliedValueOnLoad"
+        },
+        {
+          "equals": false,
+          "observation": "settings.restartRequired"
+        },
+        {
+          "equals": false,
+          "observation": "settings.valueBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "settings-applied-on-next-load-no-restart",
+      "prerequisites": [
+        "测试环境未重启游戏进程，弹窗开关已由关闭改为开启。"
+      ],
+      "steps": [
+        "确认游戏进程未重启；预期仍为同一进程；检查 settings.processRestarted 为 false。",
+        "在不重启的条件下载入已就绪的布道日存档；预期使用新开关值并显示弹窗；检查 settings.appliedValueOnLoad 与 popup.shown 为 true。",
+        "观察是否出现重启提示；预期没有重启要求；检查 settings.restartRequired 为 false。"
+      ],
+      "title": "修改开关后未重启即在下一次载入存档时生效"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": false,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": false,
+          "observation": "pause.otherPauseSourceActiveAtEligibility"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterDisable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "settings-popup-disable-next-load",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个满足教堂与教学两个精确门槛、处于布道日且原生 sermon_ready>=1 的存档；载入后存档完整就绪、安全门真正清空且玩家可操作，弹窗与角落文字资源健康可用，界面无菜单、对话或过场占用且无其他暂停来源。本进程对该槽该具体游戏日从未提示过，即尚无去重记录。",
+        "初始弹窗开关为开启。",
+        "上述夹具前提（资源健康、就绪/安全/可操作、无占用界面与其他暂停）由操作者截图或观察独立确认，不得按弹窗是否出现反推。"
+      ],
+      "steps": [
+        "读取该槽该日的载入前去重状态；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在主菜单把弹窗开关切为关闭；预期持久化值为关闭；检查 settings.popupEnabled 为 false。",
+        "载入该从未提示过的合格存档并读取资格、日期与就绪状态；预期除弹窗开关外资格满足且画面就绪、安全、可操作；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue、save.readyToPlay、ui.safetyGateClear、ui.playerControllable 与 settings.popupEnabled。",
+        "确认该次载入界面无菜单、对话或过场占用且无其他暂停来源；预期两项排除条件均成立；检查 ui.busyGateActive 为 false 与 pause.otherPauseSourceActiveAtEligibility 为 false。",
+        "观察弹窗并检查提示机会；预期不显示且未消耗机会；检查 popup.shownAfterDisable 为 false 与 popup.chanceConsumed 为 false。"
+      ],
+      "title": "弹窗开关由开启切为关闭后在下次载入从未提示过的合格存档时不显示弹窗"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.processExited"
+        },
+        {
+          "equals": true,
+          "observation": "settings.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterRestart"
+        },
+        {
+          "equals": true,
+          "observation": "settings.persistedValueEqualsBeforeRestart"
+        },
+        {
+          "equals": true,
+          "observation": "settings.appliedValueOnLoad"
+        }
+      ],
+      "id": "settings-persist-across-process-restart",
+      "prerequisites": [
+        "弹窗开关已设为开启并使设置已落盘。"
+      ],
+      "steps": [
+        "正常退出游戏进程；预期进程结束；检查 settings.processExited 为 true。",
+        "重新启动游戏进程；预期为新进程且已加载已落盘设置；检查 settings.processRestarted 为 true。",
+        "在主菜单读取弹窗开关；预期保留已保存值；检查 settings.popupEnabledAfterRestart 与 settings.persistedValueEqualsBeforeRestart 为 true。",
+        "载入已就绪的布道日存档；预期按已保存值生效；检查 settings.appliedValueOnLoad 为 true。"
+      ],
+      "title": "正常退出并重启游戏后保留已保存的开关设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.saveTimestampOlderThanSettingChange"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "settings.rolledBackByOldSave"
+        },
+        {
+          "equals": true,
+          "observation": "settings.valueAfterOldSaveLoad"
+        }
+      ],
+      "id": "settings-old-save-no-rollback",
+      "prerequisites": [
+        "存在一个保存时间早于本次设置修改的旧存档，当前弹窗开关为开启。"
+      ],
+      "steps": [
+        "载入保存时间早于本次设置修改的旧存档；预期不回滚全局设置；检查 save.saveTimestampOlderThanSettingChange 为 true。",
+        "读取当前弹窗开关；预期仍为开启；检查 settings.popupEnabled 与 settings.valueAfterOldSaveLoad 为 true 且 settings.rolledBackByOldSave 为 false。"
+      ],
+      "title": "读取时间早于设置修改的旧存档不回滚当前全局设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "settings.popupEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterPopupToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconSettingUnchangedByPopupToggle"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabledAfter"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconPersistedValueEqualsAfter"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupSettingUnchangedByBeaconToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconIndependentOfPopup"
+        }
+      ],
+      "id": "settings-beacon-independent",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "初始持久化状态：弹窗开关为关闭，信标开关为开启。"
+      ],
+      "steps": [
+        "在主菜单读取两个持久化开关值；预期弹窗关闭、信标开启；检查 settings.popupEnabledBefore 为 false 与 settings.beaconEnabledBefore 为 true。",
+        "在主菜单只把弹窗开关切为开启；预期弹窗持久化值变化而信标持久化值不变；检查 settings.popupEnabledAfterPopupToggle 为 true 与 settings.beaconSettingUnchangedByPopupToggle 为 true。",
+        "在主菜单只把信标开关切为关闭；预期信标持久化值变化并已落盘、弹窗持久化值不变；检查 settings.beaconEnabledAfter 为 false、settings.beaconPersistedValueEqualsAfter 为 true 与 settings.popupSettingUnchangedByBeaconToggle 为 true。",
+        "比较两个开关；预期互不连动；检查 settings.beaconIndependentOfPopup 为 true。"
+      ],
+      "title": "信标开关与弹窗开关在持久化值上相互独立且互不连动"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadWhileEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.returnedToMainMenu"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabledAfter"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterReload"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.shownOnLoadAfterDisable"
+        },
+        {
+          "equals": true,
+          "observation": "settings.hudTextStillShownOnNextLoad"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterRoundtrip"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledAfterReverseToggle"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadAfterReenable"
+        }
+      ],
+      "id": "settings-beacon-next-load-visibility",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个完整就绪、教堂与教学两个精确门槛任务均 Completed、处于布道日且原生 sermon_ready>=1 的存档；其信仰图标、教堂目标点与原生 widget 资源健康可用，且原生 HUD 实际可见。弹窗开关为关闭以避免弹窗干扰，初始信标开关为开启。",
+        "开启、关闭与重新开启三个阶段载入的是同一存档的同一具体游戏日，绝对日保持不变。",
+        "上述资格、日期与资源健康条件属于夹具前提，必须由操作者截图或观察对每次载入独立确认，不得按本模组信标是否出现反推。"
+      ],
+      "steps": [
+        "在主菜单读取信标开关持久化值；预期为开启；检查 settings.beaconEnabledBefore 为 true。",
+        "载入同一存档（第 1 次，开关为开启）并核对资格、日期与资源健康；预期完整就绪、两个门槛任务 Completed、处于布道日且 sermon_ready>=1，原生 HUD 可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.sermonWeekday 等于 game.sermonWeekday。",
+        "观察第 1 次载入的原生信标；预期信标显示；检查 beacon.shownOnLoadWhileEnabled 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "在主菜单只把信标开关切为关闭；预期持久化值为关闭；检查 settings.beaconEnabledAfter 为 false。",
+        "再次载入同一存档的同一绝对日（第 2 次，开关为关闭）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterReload 等于 save.absoluteDay。",
+        "观察第 2 次载入的原生信标；预期信标不再显示；检查 beacon.shownOnLoadAfterDisable 为 false。",
+        "读取角落文字提醒；预期仍显示；检查 settings.hudTextStillShownOnNextLoad 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "打开本模组设置页面；预期设置页面可打开；检查 settings.modsEntryUsed 为 true。",
+        "把信标开关切回开启；预期持久化值为开启；检查 settings.beaconEnabledAfterReverseToggle 为 true。",
+        "再次载入同一存档的同一绝对日（第 3 次，开关重新开启）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。",
+        "观察第 3 次载入的原生信标；预期信标恢复显示；检查 beacon.shownOnLoadAfterReenable 为 true。"
+      ],
+      "title": "信标开关按已保存值在下次载入存档时生效（关闭后不显示、重新开启后恢复显示）"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "gate-popup-disabled",
+      "prerequisites": [
+        "存档满足教堂、教学与布道日机会未消费条件，弹窗开关为关闭。"
+      ],
+      "steps": [
+        "读取开关与存档日期；预期开关关闭且处于布道日；检查 settings.popupEnabled 为 false 与 save.isSermonDay 为 true。",
+        "进入可操作画面并观察；预期不出现弹窗且无待显示；检查 popup.shown 为 false 与 popup.pendingCount 为 0。",
+        "检查提示机会；预期未被消耗；检查 popup.chanceConsumed 为 false。"
+      ],
+      "title": "弹窗开关关闭时不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "gate-church-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 不是 Completed，弹窗开关为开启。"
+      ],
+      "steps": [
+        "读取教堂门槛；预期未完成；检查 save.churchUnlocked 为 false。",
+        "进入可操作画面并观察；预期不出现弹窗且无待显示；检查 popup.shown 与 popup.chanceConsumed。",
+        "核对 sermonWeekday 与环境一致；预期相符；检查 save.sermonWeekday 等于 game.sermonWeekday。"
+      ],
+      "title": "教堂开启任务未完成时不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "gate-tutorial-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 为 Completed。",
+        "当前存档中任务 19_base_ceremony_sermon 不是 Completed，弹窗开关为开启。"
+      ],
+      "steps": [
+        "读取两个门槛；预期教堂完成、教学未完成；检查 save.churchUnlocked 与 save.tutorialCompleted。",
+        "进入可操作画面并观察；预期不出现弹窗且无待显示；检查 popup.shown、popup.pendingCount 与 popup.chanceConsumed。"
+      ],
+      "title": "首次布道教学未完成时不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "gate-opportunity-consumed",
+      "prerequisites": [
+        "存档满足两个门槛且处于布道日当天，原生 sermon_ready 小于 1，弹窗开关为开启。"
+      ],
+      "steps": [
+        "读取布道日与原生机会值；预期处于布道日且机会已消费；检查 save.isSermonDay 为 true 且 state.sermonReadyValue 小于 1。",
+        "进入可操作画面并观察；预期不出现弹窗；检查 popup.shown 与 popup.chanceConsumed。"
+      ],
+      "title": "布道日当天机会已消费时不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "integerGreaterThan": 0,
+          "observation": "save.absoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        }
+      ],
+      "id": "gate-not-sermon-day",
+      "prerequisites": [
+        "存档满足两个门槛且处于非布道日，弹窗开关为开启。"
+      ],
+      "steps": [
+        "读取两个门槛与日期；预期门槛完成且为非布道日；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay。",
+        "进入可操作画面并观察；预期不出现弹窗且无待显示；检查 popup.shown 与 popup.pendingCount 为 0。"
+      ],
+      "title": "非布道日不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "gate-save-not-ready",
+      "prerequisites": [
+        "存在一个正在载入、尚未进入可操作画面的存档，弹窗开关为开启。"
+      ],
+      "steps": [
+        "在存档载入过程中读取就绪标记；预期尚未就绪；检查 save.readyToPlay 为 false。",
+        "观察弹窗区域；预期不出现弹窗且无待显示；检查 popup.shown、popup.pendingCount 与 popup.chanceConsumed。"
+      ],
+      "title": "存档尚未就绪时不显示弹窗"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnUnreadableState"
+        }
+      ],
+      "id": "gate-state-unreadable",
+      "prerequisites": [
+        "测试设施受控注入必要状态读取故障，存档满足两个门槛，弹窗开关为开启。"
+      ],
+      "steps": [
+        "注入受控读取故障并载入存档；预期必要状态不可读；检查 state.readable 为 false。",
+        "进入可操作画面并观察；预期不出现弹窗且不消耗机会；检查 popup.shown 与 popup.chanceConsumed。",
+        "检查去重记录；预期未写入；检查 popup.dedupRecordedOnUnreadableState 为 false。"
+      ],
+      "title": "必要状态不可读时不显示弹窗且不消耗机会"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "item.shortagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "item.quantityRelevantToEligibility"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibilityDependsOnItemCount"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "item-shortage-irrelevant",
+      "prerequisites": [
+        "存档满足两个门槛且处于布道日机会未消费状态，弹窗开关为开启。",
+        "玩家背包或基地缺少布道所需物品。"
+      ],
+      "steps": [
+        "读取物品状况与日期；预期缺少布道物品且处于布道日；检查 item.shortagePresent 与 save.isSermonDay。",
+        "进入可操作画面并观察；预期弹窗按资格正常显示；检查 popup.shown 为 true。",
+        "检查资格来源；预期不依赖物品数量；检查 item.quantityRelevantToEligibility 与 popup.eligibilityDependsOnItemCount 均为 false。"
+      ],
+      "title": "物品数量不足不影响弹窗资格"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.title",
+          "language": "zh-CN",
+          "observation": "popup.titleText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.body",
+          "language": "zh-CN",
+          "observation": "popup.bodyText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.confirm",
+          "language": "zh-CN",
+          "observation": "popup.confirmLabel"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedUntilConfirmed"
+        }
+      ],
+      "id": "popup-shown-when-enabled",
+      "prerequisites": [
+        "存档满足教堂与教学两个精确门槛。",
+        "当前为布道日且原生 sermon_ready 大于等于 1。",
+        "弹窗开关为开启，游戏语言为简体中文。"
+      ],
+      "steps": [
+        "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "载入已就绪的布道日存档；预期进入可操作画面且资格满足；检查门槛、state.sermonReadyValue 与 settings.popupEnabled。",
+        "读取语言与弹窗内容；预期显示一次简体中文弹窗；检查 popup.shown、popup.displayCountWithinLoad、popup.titleText/bodyText/confirmLabel。",
+        "不进行任何输入并观察；预期弹窗保持；检查 popup.stayedUntilConfirmed 为 true。"
+      ],
+      "title": "满足全部门槛且开关开启时在可操作画面显示一次简体中文弹窗"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.title",
+          "language": "en",
+          "observation": "popup.titleText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.body",
+          "language": "en",
+          "observation": "popup.bodyText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.confirm",
+          "language": "en",
+          "observation": "popup.confirmLabel"
+        }
+      ],
+      "id": "popup-shown-en",
+      "prerequisites": [
+        "存档满足教堂与教学两个精确门槛。",
+        "当前为布道日且原生 sermon_ready 大于等于 1。",
+        "弹窗开关为开启，游戏语言为英语。"
+      ],
+      "steps": [
+        "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "载入已就绪的布道日存档并进入可操作画面；预期弹窗按英文显示一次；检查 language.active 为 en 与 popup.displayCountWithinLoad 为 1。",
+        "读取弹窗文案；预期英文定稿文案；检查 popup.titleText/bodyText/confirmLabel 使用 en 文案。"
+      ],
+      "title": "满足全部门槛且开关开启时显示一次英文弹窗"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "fr",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "language.fallbackUsed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.title",
+          "language": "en",
+          "observation": "popup.titleText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.body",
+          "language": "en",
+          "observation": "popup.bodyText"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.confirm",
+          "language": "en",
+          "observation": "popup.confirmLabel"
+        }
+      ],
+      "id": "popup-fallback-language",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "游戏当前语言为未提供模组译文的其他语言（例如 fr）。"
+      ],
+      "steps": [
+        "读取门槛与语言；预期门槛完成且语言无对应译文；检查 save.churchUnlocked、save.tutorialCompleted 与 language.active 为 fr。",
+        "载入存档并进入可操作画面；预期弹窗按英语兜底显示；检查 language.fallbackUsed 与 popup.shown 为 true。",
+        "读取弹窗文案；预期英语兜底文案；检查 popup.titleText/bodyText/confirmLabel 使用 en 文案。"
+      ],
+      "title": "当前语言无对应译文时弹窗显示英语兜底文案"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.crossedIntoASermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityCheckedOnCrossing"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        }
+      ],
+      "id": "popup-cross-into-sermon-day",
+      "prerequisites": [
+        "存档满足两个门槛且弹窗开关为开启，当前处于布道日前一天。",
+        "跨入布道日前后原生 sermon_ready 均大于等于 1。"
+      ],
+      "steps": [
+        "在布道日前一天进入可操作画面；预期不出现弹窗；检查 popup.shown 为 false。",
+        "正常度过跨日进入布道日；预期跨日并检查资格；检查 save.crossedIntoASermonDay 与 popup.eligibilityCheckedOnCrossing。",
+        "进入可操作画面并观察；预期显示一次弹窗；检查 popup.shown 为 true 且 popup.displayCountWithinLoad 为 1。"
+      ],
+      "title": "正常游玩跨入布道日时检查资格并显示一次弹窗"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.midLoadIntoASermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityCheckedOnLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        }
+      ],
+      "id": "popup-mid-load-sermon-day",
+      "prerequisites": [
+        "存档满足两个门槛且弹窗开关为开启。",
+        "当前为布道日机会未消费状态，本进程尚未提示该保存槽该具体游戏日。"
+      ],
+      "steps": [
+        "确认载入前该槽该日尚无去重记录；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在布道日中途载入该存档；预期载入时检查资格；检查 save.midLoadIntoASermonDay 与 popup.eligibilityCheckedOnLoad。",
+        "进入可操作画面并观察；预期显示一次弹窗；检查 popup.shown 与 popup.displayCountWithinLoad。"
+      ],
+      "title": "中途载入布道日存档且本进程未提示该槽该日时显示一次弹窗"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.identitySourceIsActualLoadedSlot"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityCapturedAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozenForLoad"
+        },
+        {
+          "equalsObservation": "save.slotName",
+          "observation": "dedup.capturedSlotName"
+        },
+        {
+          "equalsObservation": "save.isDemoSave",
+          "observation": "dedup.capturedIsDemoSave"
+        },
+        {
+          "equalsObservation": "save.slotGeneration",
+          "observation": "dedup.capturedSlotGeneration"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.dayReadFreshPerTriggerEvaluation"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedTimestamp"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedPlatform"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        }
+      ],
+      "id": "dedup-identity-actual-loaded-slot",
+      "prerequisites": [
+        "存在一个满足门槛且处于布道日机会未消费状态的存档，弹窗开关为开启。",
+        "本进程对该实际保存槽该具体游戏日尚无去重记录。"
+      ],
+      "steps": [
+        "载入该存档并在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 与 dedup.slotIdentityCapturedAtLoad。",
+        "在初始载入捕获时、后续可变存档字段变化之前对比槽名、试玩标记与内存槽代；预期逐一相等；检查 dedup.capturedSlotName/IsDemoSave/SlotGeneration 分别等于 save.slotName/isDemoSave/slotGeneration。",
+        "检查身份是否整次载入冻结；预期冻结；检查 dedup.slotIdentityFrozenForLoad 为 true。",
+        "检查具体游戏日的读取时机；预期每次触发评估时重新读取；检查 dedup.dayReadFreshPerTriggerEvaluation 为 true。",
+        "检查是否使用被禁止的身份来源；预期均未使用；检查 dedup.usedTimestamp、dedup.usedPlatform、dedup.usedLatestSlotGuess 均为 false。"
+      ],
+      "title": "去重身份仅由实际载入保存槽的槽名、类型与槽代在载入时冻结；具体日每次触发评估时重新读取"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.firstLoadShown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.reloadShownAgain"
+        },
+        {
+          "equals": true,
+          "observation": "popup.reloadSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossReload"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterReload",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-reload-same-slot-same-day",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "steps": [
+        "首次载入该槽该日；预期显示一次；检查 popup.firstLoadShown 为 true。",
+        "在同一进程内重读该槽该日；预期被抑制；检查 popup.reloadShownAgain 为 false 与 popup.reloadSuppressed 为 true。",
+        "核对绝对日一致与记录保留；预期同槽同日且记录仍在；检查 popup.reloadSuppressed 与 dedup.recordRetainedAcrossReload。"
+      ],
+      "title": "同进程重读同槽同日后不重复提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.mainMenuRoundtripSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAfterMainMenu"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterRoundtrip",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-main-menu-roundtrip",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "steps": [
+        "记录退出前的槽与绝对日；预期已记录；检查 save.slotName 与 save.absoluteDay 有值。",
+        "退出该存档到主菜单；预期已回到主菜单且不再显示弹窗；检查 popup.displayedAfterExit 为 false。",
+        "重新载入该槽该日并观察；预期被既有记录抑制；检查 popup.mainMenuRoundtripSuppressed 为 true。",
+        "检查记录保留与绝对日一致；预期保留；检查 dedup.recordRetainedAfterMainMenu 为 true 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。"
+      ],
+      "title": "返回主菜单后保留去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.overwriteSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAfterOverwrite"
+        },
+        {
+          "equalsObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGeneration"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterOverwrite",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-ordinary-overwrite",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "steps": [
+        "记录覆盖保存前槽代；预期已记录；检查 save.slotGenerationBefore 有值。",
+        "对同一保存槽执行普通覆盖保存；预期槽代在覆盖前后一致；检查 save.slotGeneration 等于 save.slotGenerationBefore。",
+        "重新载入该槽该日；预期被抑制且记录保留；检查 popup.overwriteSuppressed 与 dedup.recordRetainedAfterOverwrite。"
+      ],
+      "title": "普通覆盖保存后保留去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.popupDisabledThenReenabled"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossToggle"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterReenableSameSlotDay"
+        }
+      ],
+      "id": "dedup-settings-toggle-retains",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗，当前弹窗开关为开启。"
+      ],
+      "steps": [
+        "关闭再重新开启弹窗开关；预期开关往返完成；检查 settings.popupDisabledThenReenabled 为 true。",
+        "载入已提示过的同槽同一天；预期不重复弹出且记录保留；检查 popup.shownAfterReenableSameSlotDay 为 false 与 dedup.recordRetainedAcrossToggle 为 true。"
+      ],
+      "title": "关闭后重新开启弹窗不清空已有去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.slotIsManual"
+        },
+        {
+          "equals": true,
+          "observation": "save.otherSlotIsAuto"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.manualAndAutoTrackedSeparately"
+        },
+        {
+          "equals": true,
+          "observation": "popup.manualSlotShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.autoSlotShown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.autoSlotSuppressedByManualRecord"
+        }
+      ],
+      "id": "dedup-manual-vs-auto-slots-independent",
+      "prerequisites": [
+        "存在同一进度的手动保存槽与自动保存槽，二者均满足门槛与布道日条件，弹窗开关为开启。"
+      ],
+      "steps": [
+        "载入手动保存槽并观察；预期提示一次；检查 save.slotIsManual 与 popup.manualSlotShown。",
+        "载入自动保存槽并观察；预期独立提示一次；检查 save.otherSlotIsAuto 与 popup.autoSlotShown。",
+        "检查两类槽追踪；预期分别追踪；检查 dedup.manualAndAutoTrackedSeparately 为 true 且 popup.autoSlotSuppressedByManualRecord 为 false。"
+      ],
+      "title": "手动与自动保存槽分别记录提示结果"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "notEqualsObservation": "save.otherSlotName",
+          "observation": "save.slotName"
+        },
+        {
+          "equalsObservation": "save.otherSlotAbsoluteDay",
+          "observation": "save.absoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotAShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotBShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotBIndependentCheck"
+        },
+        {
+          "equals": false,
+          "observation": "popup.slotBSuppressedBySlotARecord"
+        }
+      ],
+      "id": "dedup-distinct-slots-same-day-independent",
+      "prerequisites": [
+        "存在两个不同的真实保存槽，槽名不同但当前绝对日相同。",
+        "两槽均满足门槛与布道日条件，弹窗开关为开启。",
+        "本进程对两槽该具体游戏日均尚无去重记录。"
+      ],
+      "steps": [
+        "载入槽 A 并读取槽名与日期；预期记录 A 的提示；检查 popup.slotAShown 为 true。",
+        "载入槽 B 并读取槽名与日期；预期槽名不同但绝对日相同；检查 save.slotName 不等于 save.otherSlotName 且 save.absoluteDay 等于 save.otherSlotAbsoluteDay。",
+        "观察槽 B 的弹窗；预期独立检查并提示；检查 popup.slotBIndependentCheck 与 popup.slotBShown 为 true 且 popup.slotBSuppressedBySlotARecord 为 false。"
+      ],
+      "title": "槽名不同但具体游戏日相同的两个真实槽位彼此独立去重"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isNewGameBeforeFirstSave"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.identitySourceIsActualLoadedSlot"
+        },
+        {
+          "equalsObservation": "save.slotName",
+          "observation": "dedup.capturedSlotName"
+        },
+        {
+          "equalsObservation": "save.isDemoSave",
+          "observation": "dedup.capturedIsDemoSave"
+        },
+        {
+          "equalsObservation": "save.slotGeneration",
+          "observation": "dedup.capturedSlotGeneration"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "dedup-new-game-before-first-save",
+      "prerequisites": [
+        "存在一个尚未首次保存、但已在内存中分配了真实原生保存槽键的新游戏进度，满足门槛与布道日条件，弹窗开关为开启。",
+        "本进程对该实际槽键该具体游戏日尚无去重记录。"
+      ],
+      "steps": [
+        "在首次保存前进入可操作画面并读取日期与资格；预期为首次保存前且处于布道日；检查 save.isNewGameBeforeFirstSave 为 true、save.isSermonDay 为 true 与 save.sermonWeekday 等于环境字段 game.sermonWeekday。",
+        "读取载入前去重状态；预期该槽该日无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 为 true。",
+        "在初始载入捕获时对比槽名、试玩标记与内存中槽代；预期逐一等于实际载入值且早于后续可变存档字段变化；检查 dedup.capturedSlotName、dedup.capturedIsDemoSave、dedup.capturedSlotGeneration 分别等于 save.slotName、save.isDemoSave、save.slotGeneration。",
+        "观察弹窗并检查身份来源；预期按资格显示且未使用最新槽猜测；检查 popup.shown 为 true 与 dedup.usedLatestSlotGuess 为 false。"
+      ],
+      "title": "新游戏首次保存前使用该进度实际分配的原生槽键与内存槽代作为身份"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.deletionSucceeded"
+        },
+        {
+          "greaterThanObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGenerationAfter"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.dedupInheritedFromDeletedSlot"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownForRecreatedSlot"
+        }
+      ],
+      "id": "dedup-delete-recreate-cleanup-success",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。",
+        "使用可恢复测试环境中的存档副本执行删除重建场景。"
+      ],
+      "steps": [
+        "在可恢复测试环境用存档副本删除该保存槽；预期删除成功；检查 save.deletionSucceeded 为 true。",
+        "重建同名同进度的新槽位；预期槽代推进；检查 save.slotGenerationAfter 大于 save.slotGenerationBefore。",
+        "载入重建槽并观察；预期不继承旧记录且再次提示；检查 dedup.dedupInheritedFromDeletedSlot 为 false 与 popup.shownForRecreatedSlot 为 true。"
+      ],
+      "title": "删除成功后重建同名槽位开启新的去重生命周期并可再提示一次"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.deletionSucceeded"
+        },
+        {
+          "equals": true,
+          "observation": "save.deletionFailed"
+        },
+        {
+          "equalsObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGenerationAfter"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterFailedDelete"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStillSuppressedAfterFailedDelete"
+        }
+      ],
+      "id": "dedup-recreate-failed-delete-no-advance",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。",
+        "测试设施使删除操作失败（如只读或占用）。"
+      ],
+      "steps": [
+        "使删除操作失败并尝试删除；预期删除失败；检查 save.deletionFailed 为 true 与 save.deletionSucceeded 为 false。",
+        "读取槽代；预期未变化；检查 save.slotGenerationAfter 等于 save.slotGenerationBefore。",
+        "载入同槽同一天；预期仍被抑制；检查 popup.shownAfterFailedDelete 为 false 与 popup.dedupStillSuppressedAfterFailedDelete 为 true。"
+      ],
+      "title": "删除失败不推进槽代且保留原去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.withinSameLoadNoReload"
+        },
+        {
+          "greaterThanObservation": "save.priorAbsoluteDay",
+          "observation": "save.absoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.dayReadFreshPerTriggerEvaluation"
+        },
+        {
+          "equals": true,
+          "observation": "popup.sameSlotAsPriorRecord"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByPriorCycleRecord"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownNextCycle"
+        }
+      ],
+      "id": "dedup-next-week-new-date",
+      "prerequisites": [
+        "本进程已在同一保存槽上一布道周期实际显示过一次弹窗。",
+        "当前为同一槽位下一布道周期布道日机会未消费状态，弹窗开关为开启。",
+        "整个推进过程不重新载入存档。"
+      ],
+      "steps": [
+        "读取既有记录日期；预期已提示过上一周期；检查 save.priorAbsoluteDay 有值。",
+        "在同一载入内推进到下一布道周期布道日；预期未重新载入且日期前进；检查 popup.withinSameLoadNoReload 与 save.absoluteDay 大于 save.priorAbsoluteDay。",
+        "观察弹窗；预期按新日期再次提示且不被抑制；检查 popup.suppressedByPriorCycleRecord 为 false 与 popup.shownNextCycle 为 true。"
+      ],
+      "title": "同一载入内进入下一布道周期时按当前具体日期重新检查并再次提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.earlierDayRecordAbsentBeforeFirstLoad"
+        },
+        {
+          "greaterThanObservation": "save.absoluteDay",
+          "observation": "save.priorAbsoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.priorRecordExistsForOtherDay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByOtherDayRecord"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.earlierDayReloadSuppressed"
+        }
+      ],
+      "id": "dedup-backward-day-identity",
+      "prerequisites": [
+        "本进程已在同一保存槽较晚的具体游戏日实际显示过一次弹窗。",
+        "存在该槽位较早具体游戏日、且本进程从未提示过该较早日的存档副本，满足门槛与布道日条件，弹窗开关为开启。"
+      ],
+      "steps": [
+        "确认较早具体游戏日从未被提示；预期无记录；检查 popup.earlierDayRecordAbsentBeforeFirstLoad 为 true。",
+        "载入该较早日的存档副本；预期较早日小于既有记录日期；检查 save.priorAbsoluteDay 大于 save.absoluteDay。",
+        "观察弹窗；预期按该具体日显示且不被其他日记录抑制；检查 popup.shown 为 true 与 popup.suppressedByOtherDayRecord 为 false。",
+        "再次载入该较早日；预期被抑制；检查 popup.earlierDayReloadSuppressed 为 true。"
+      ],
+      "title": "回到同一槽位较早具体游戏日按该具体日期重新判定，重现过的该日再次载入仍被抑制"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStateAfterRestartEmpty"
+        },
+        {
+          "equals": false,
+          "observation": "popup.persistedMarkerPresentAfterRestart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.sameSlotSameDayAsBeforeRestart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownAfterRestart"
+        }
+      ],
+      "id": "dedup-process-restart-resets",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "steps": [
+        "完全退出并重启游戏进程；预期已重启；检查 popup.processRestarted 为 true。",
+        "读取进程内去重状态；预期为空且无持久标记；检查 popup.dedupStateAfterRestartEmpty 与 popup.persistedMarkerPresentAfterRestart 为 false。",
+        "载入重启前同槽同日；预期按当前状态再次显示；检查 popup.sameSlotSameDayAsBeforeRestart 与 popup.shownAfterRestart 为 true。"
+      ],
+      "title": "游戏进程重启后清空进程内去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.dedupPersistedToDisk"
+        },
+        {
+          "equals": false,
+          "observation": "popup.persistedMarkerWritten"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStateFreshProcessEmpty"
+        }
+      ],
+      "id": "dedup-not-persisted",
+      "prerequisites": [
+        "本进程已实际显示过正常弹窗。"
+      ],
+      "steps": [
+        "在显示弹窗后检查磁盘；预期未写入去重记录；检查 popup.dedupPersistedToDisk 与 popup.persistedMarkerWritten 为 false。",
+        "在全新进程中读取去重状态；预期初始为空；检查 popup.dedupStateFreshProcessEmpty 为 true。"
+      ],
+      "title": "正常弹窗去重记录不持久化"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.scheduledButNotDisplayed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnScheduleOnly"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnAttemptOnly"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnScheduleOnly"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupRecordedAfterDisplay"
+        }
+      ],
+      "id": "dedup-recorded-only-after-display",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，但当前处于占用界面使弹窗被延后。"
+      ],
+      "steps": [
+        "读取调度阶段记录；预期未计入已提示；检查 popup.dedupRecordedOnScheduleOnly 与 popup.chanceConsumedOnScheduleOnly 为 false。",
+        "读取尝试阶段记录；预期未计入已提示；检查 popup.dedupRecordedOnAttemptOnly 为 false。",
+        "待弹窗实际显示后读取记录；预期此时才写入；检查 popup.dedupRecordedAfterDisplay 为 true。"
+      ],
+      "title": "仅在弹窗实际显示后记录已提示而不在调度或尝试阶段记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.displayCountWithinSameFrame"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownOnceInLoad"
+        }
+      ],
+      "id": "no-duplicate-same-load-frame",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "载入该存档并跨多帧观察；预期本次载入仅显示一次；检查 popup.displayCountWithinLoad 与 popup.shownOnceInLoad。",
+        "统计同一帧内显示次数；预期不超过一次；检查 popup.displayCountWithinSameFrame 为非负整数且不超过 1。"
+      ],
+      "title": "同一载入与同一帧内不重复显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileBusy"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileBusy"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-busy-menu-cutscene",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在满足资格的时机进入菜单、对话或过场等占用界面。"
+      ],
+      "steps": [
+        "在占用界面活动时观察；预期延后且不抢先显示；检查 ui.busyGateActive、popup.deferredWhileBusy 与 popup.displayedWhileBusy。",
+        "读取待显示计数；预期恰好一个待显示；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "菜单对话或过场占用界面时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhilePlayerNotControllable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhilePlayerNotControllable"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-player-not-controllable",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立的时机玩家处于不可操作状态（如受控的脚本化场景）。"
+      ],
+      "steps": [
+        "在玩家不可操作时观察；预期延后且不显示；检查 ui.playerControllable 为 false、popup.deferredWhilePlayerNotControllable 与 popup.displayedWhilePlayerNotControllable。",
+        "读取待显示计数；预期恰好一个；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "玩家不可操作时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceActiveAtEligibility"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileOtherPause"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOtherPauseActive"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceUnaffected"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-existing-pause",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立的时机已存在由其他系统发起的暂停。"
+      ],
+      "steps": [
+        "在既有暂停期间观察；预期延后且不显示；检查 pause.otherPauseSourceActiveAtEligibility、popup.deferredWhileOtherPause 与 popup.displayedWhileOtherPauseActive。",
+        "检查既有暂停是否受影响；预期未受影响；检查 pause.otherPauseSourceUnaffected 为 true。",
+        "读取待显示计数；预期恰好一个；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "已存在其他暂停来源时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.busyGateActiveAtEligibility"
+        },
+        {
+          "equals": false,
+          "observation": "ui.busyGateActiveAfterClear"
+        },
+        {
+          "integerGreaterThan": 0,
+          "observation": "ui.safetyGateTransitionCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownWhileGateActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownOnlyAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterGateClearedAndEligible"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        }
+      ],
+      "id": "defer-busy-gate-race",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "资格成立时正处于占用界面，随后占用界面被关闭。"
+      ],
+      "steps": [
+        "读取资格成立时的安全门状态；预期活动；检查 ui.busyGateActiveAtEligibility 为 true。",
+        "读取安全门清空后的状态与转换次数；预期已清空且发生过转换；检查 ui.busyGateActiveAfterClear 为 false 与 ui.safetyGateTransitionCount 为正整数。",
+        "观察弹窗；预期仅在清空后显示一次；检查 popup.shownWhileGateActive 为 false、popup.shownOnlyAfterGateCleared 与 popup.displayedAfterGateClearedAndEligible。"
+      ],
+      "title": "占用界面安全门在资格成立后清空时只在清空后显示一次"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRecheckedAfterGate"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityStillMet"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterRecheck"
+        }
+      ],
+      "id": "defer-recheck-after-gate-cleared",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "弹窗曾在占用界面期间被延后，随后界面恢复可操作。"
+      ],
+      "steps": [
+        "待安全门真正清空后重新检查资格；预期已清空并重查；检查 ui.safetyGateClear 与 popup.eligibilityRecheckedAfterGate。",
+        "读取资格与显示结果；预期仍满足并显示；检查 popup.eligibilityStillMet 与 popup.displayedAfterRecheck。"
+      ],
+      "title": "恢复可操作画面后重新检查资格并在仍满足时显示"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledWhenEligibilityLost"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterCancellation"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-consumption-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间开始布道消费当日机会。"
+      ],
+      "steps": [
+        "读取等待期间的原生机会；预期尚未消费；检查 popup.pendingDuringDeferral 与 state.sermonReadyValueBefore 不小于 1。",
+        "在等待期间开始布道消费机会；预期机会被消费；检查 state.sermonReadyValue 小于 1。",
+        "读取取消与去重结果；预期取消且不消耗、不写记录、不显示；检查 popup.canceledWhenEligibilityLost、popup.shownAfterCancellation、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间开始布道时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.dateChangedDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDayAfter"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnDateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterDateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        }
+      ],
+      "id": "cancel-on-date-change-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间游戏跨日离开布道日。"
+      ],
+      "steps": [
+        "读取等待期间日期与资格；预期有待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间跨日离开布道日；预期日期变化且不再是布道日；检查 save.dateChangedDuringDeferral 与 save.isSermonDayAfter。",
+        "读取取消与显示结果；预期取消且不显示、不消耗；检查 popup.canceledOnDateChange、popup.shownAfterDateChange、popup.chanceConsumedByCanceledPending。"
+      ],
+      "title": "等待期间离开布道日时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-church-gate-loss-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间教堂门槛变为不满足，教学门槛仍为 Completed。"
+      ],
+      "steps": [
+        "读取等待期间门槛；预期存在待显示且教堂门槛失效、教学仍完成；检查 popup.pendingDuringDeferral、save.churchUnlocked 为 false、save.tutorialCompleted 为 true。",
+        "读取取消与去重结果；预期取消且不显示、不消耗、不写记录；检查 popup.canceledOnGateChange、popup.shownAfterGateChange、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间教堂门槛失效（教学仍完成）时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-tutorial-gate-loss-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间教学门槛变为不满足，教堂门槛仍为 Completed。"
+      ],
+      "steps": [
+        "读取等待期间门槛；预期存在待显示且教学门槛失效、教堂仍完成；检查 popup.pendingDuringDeferral、save.churchUnlocked 为 true、save.tutorialCompleted 为 false。",
+        "读取取消与去重结果；预期取消且不显示、不消耗、不写记录；检查 popup.canceledOnGateChange、popup.shownAfterGateChange、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间教学门槛失效（教堂仍解锁）时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.loadedSlotChangedDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.oldLoadPendingDiscarded"
+        },
+        {
+          "equals": false,
+          "observation": "popup.oldPendingShownAfterSwitch"
+        },
+        {
+          "equals": true,
+          "observation": "popup.newLoadEvaluatedIndependently"
+        }
+      ],
+      "id": "cancel-on-load-switch-during-defer",
+      "prerequisites": [
+        "存档 A 满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间切换到另一个存档。"
+      ],
+      "steps": [
+        "读取等待期间状态；预期存在待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间切换到另一存档；预期载入槽变化且旧待显示被丢弃；检查 save.loadedSlotChangedDuringDeferral 与 popup.oldLoadPendingDiscarded。",
+        "观察旧与新载入；预期旧待显示不显示、新载入独立评估；检查 popup.oldPendingShownAfterSwitch 为 false 与 popup.newLoadEvaluatedIndependently 为 true。"
+      ],
+      "title": "等待期间切档时丢弃旧存档待显示弹窗"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.exitedSaveDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.oldPendingShownAfterExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        }
+      ],
+      "id": "cancel-on-exit-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间退出到主菜单。"
+      ],
+      "steps": [
+        "读取等待期间状态；预期存在待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间退出到主菜单；预期退出并取消待显示；检查 popup.exitedSaveDuringDeferral 与 popup.canceledOnExit。",
+        "读取显示与去重结果；预期不显示且不消耗；检查 popup.oldPendingShownAfterExit 与 popup.chanceConsumedByCanceledPending。"
+      ],
+      "title": "等待期间退出存档时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.pendingCountAfterRepeatedChecks"
+        },
+        {
+          "equals": false,
+          "observation": "popup.duplicatePendingAccumulated"
+        }
+      ],
+      "id": "pending-single-per-slot-day",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在占用界面期间多次重复满足触发条件。"
+      ],
+      "steps": [
+        "在占用界面重复触发条件并读取待显示计数；预期不累计多个；检查 popup.pendingCountDuringDeferral 与 popup.pendingCountAfterRepeatedChecks 为非负整数且不超过 1。",
+        "检查累积标志；预期未累计；检查 popup.duplicatePendingAccumulated 为 false。"
+      ],
+      "title": "同一保存槽同一具体游戏日不累计多个待显示弹窗"
+    },
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.nativeDialogUsed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.titled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.titleNonEmpty"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.title",
+          "language": "zh-CN",
+          "observation": "popup.titleText"
+        }
+      ],
+      "id": "native-titled-dialog",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "触发弹窗并观察容器；预期使用原生提示框且带标题；检查 popup.nativeDialogUsed 与 popup.titled 为 true。",
+        "读取标题文案；预期非空且为定稿文案；检查 popup.titleNonEmpty 与 popup.titleText 使用 gksr.popup.sermon.title 的 zh-CN 文案。"
+      ],
+      "title": "弹窗使用带独立标题的原生提示框"
+    },
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.confirmButtonCount"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.extraActionButtonCount"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.confirm",
+          "language": "zh-CN",
+          "observation": "popup.confirmLabel"
+        }
+      ],
+      "id": "single-confirm-button",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "触发弹窗并统计按钮；预期恰好一个确认按钮且无额外操作按钮；检查 popup.confirmButtonCount 为 1 与 popup.extraActionButtonCount 为 0。",
+        "读取确认标签；预期定稿文案；检查 popup.confirmLabel 使用 gksr.popup.sermon.confirm 的 zh-CN 文案。"
+      ],
+      "title": "弹窗仅提供一个本地化确认按钮"
+    },
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.teleportActionPresent"
+        },
+        {
+          "equals": false,
+          "observation": "popup.remindLaterActionPresent"
+        }
+      ],
+      "id": "no-extra-actions",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "触发弹窗并检查操作项；预期无跳转教堂或稍后提醒；检查 popup.teleportActionPresent 与 popup.remindLaterActionPresent 为 false。"
+      ],
+      "title": "弹窗不提供跳转教堂或稍后提醒操作"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "pause.usedNativePause"
+        },
+        {
+          "equals": false,
+          "observation": "pause.timeScaleChangedByMod"
+        },
+        {
+          "equals": false,
+          "observation": "pause.unpauseAllInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "input.playerMovedDuringPopup"
+        },
+        {
+          "equals": false,
+          "observation": "input.gameplayInputLeakedDuringPopup"
+        }
+      ],
+      "id": "native-pause-integrity",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "触发弹窗并读取暂停状态；预期使用原生暂停；检查 popup.shown、popup.pausedWhileShown、pause.usedNativePause。",
+        "读取时间缩放与全局解除暂停调用；预期模组均未使用；检查 pause.timeScaleChangedByMod 与 pause.unpauseAllInvoked 为 false。",
+        "检查移动与输入；预期无泄漏；检查 input.playerMovedDuringPopup 与 input.gameplayInputLeakedDuringPopup 为 false。"
+      ],
+      "title": "弹窗使用原生暂停且不强制重置时间缩放或不加区分地解除暂停"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedUntilConfirmed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedOpenBeforeConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.autoClosedWithoutInput"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.autoCloseTimeoutSeconds"
+        }
+      ],
+      "id": "stays-until-confirmed",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "触发弹窗后不做任何输入并等待；预期保持显示且不自动关闭；检查 popup.stayedUntilConfirmed、popup.stayedOpenBeforeConfirm、popup.autoClosedWithoutInput。",
+        "读取自动关闭超时；预期不存在自动关闭；检查 popup.autoCloseTimeoutSeconds 为 0。"
+      ],
+      "title": "弹窗保持显示直至玩家确认且不自动关闭"
+    },
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        }
+      ],
+      "id": "close-confirm",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。"
+      ],
+      "steps": [
+        "用确认按钮关闭弹窗；预期由确认关闭；检查 popup.closedByConfirm 为 true。",
+        "读取关闭后状态；预期弹窗已关闭；检查 popup.openAfterClose 为 false。"
+      ],
+      "title": "确认按钮可关闭弹窗"
+    },
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByEsc"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        }
+      ],
+      "id": "close-esc",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。",
+        "关闭时不存在由其他系统发起的暂停。"
+      ],
+      "steps": [
+        "用 Esc 关闭弹窗；预期由 Esc 关闭；检查 popup.closedByEsc 为 true 与 popup.openAfterClose 为 false。",
+        "读取暂停与输入；预期无卡住暂停且恢复游戏输入；检查 pause.stuckPauseAfterClose 为 false 与 input.gameplayInputRestoredAfterClose 为 true。"
+      ],
+      "title": "Esc 键可关闭弹窗"
+    },
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByGamepadBack"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        }
+      ],
+      "id": "close-gamepad-back",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。",
+        "关闭时不存在由其他系统发起的暂停。",
+        "已连接手柄。"
+      ],
+      "steps": [
+        "用手柄返回键关闭弹窗；预期由手柄返回关闭；检查 popup.closedByGamepadBack 为 true 与 popup.openAfterClose 为 false。",
+        "读取暂停与输入；预期无卡住暂停且恢复游戏输入；检查 pause.stuckPauseAfterClose 为 false 与 input.gameplayInputRestoredAfterClose 为 true。"
+      ],
+      "title": "手柄返回键可关闭弹窗"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseIntroducedAfterPopupShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherNativeModalRemainsOpenAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseStillActiveAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.modForcedUnpauseOnClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.ownershipStolenFromOtherSystem"
+        },
+        {
+          "equals": true,
+          "observation": "pause.nativeOnWindowClosedChecksModalStack"
+        }
+      ],
+      "id": "other-pause-preserved",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "本模组弹窗触发前不存在由其他系统发起的暂停。"
+      ],
+      "steps": [
+        "在无其他暂停时触发弹窗；预期安全显示并暂停；检查 popup.shown 与 popup.pausedWhileShown 为 true。",
+        "在弹窗显示后引入第二个原生模态暂停来源；预期已引入；检查 pause.otherPauseIntroducedAfterPopupShown 为 true。",
+        "仅关闭本模组弹窗；预期本模组弹窗关闭；检查 popup.closedByConfirm 为 true 与 popup.openAfterClose 为 false。",
+        "读取第二个原生模态与暂停；预期仍打开且暂停仍生效；检查 pause.otherNativeModalRemainsOpenAfterClose 与 pause.otherPauseStillActiveAfterClose。",
+        "检查模组是否强制解除暂停或抢占；预期均未发生；检查 pause.modForcedUnpauseOnClose 与 pause.ownershipStolenFromOtherSystem 为 false。",
+        "核对原生解除暂停路径的共存行为；预期以 MainGame.OnWindowClosed 在解除前检查模态栈的方式共存；检查 pause.nativeOnWindowClosedChecksModalStack 为 true。"
+      ],
+      "title": "本模组弹窗先安全显示，随后引入的第二原生模态暂停在只关闭本模组弹窗后仍保留"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.ownershipStolenFromOtherSystem"
+        },
+        {
+          "equals": false,
+          "observation": "input.gameplayInputLeakedDuringPopup"
+        }
+      ],
+      "id": "no-stuck-pause-after-close",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。"
+      ],
+      "steps": [
+        "用确认关闭弹窗并继续游玩；预期无卡住暂停与所有权抢占；检查 popup.closedByConfirm、pause.stuckPauseAfterClose、pause.ownershipStolenFromOtherSystem。",
+        "读取游戏输入；预期未泄漏；检查 input.gameplayInputLeakedDuringPopup 为 false。"
+      ],
+      "title": "关闭弹窗后不出现卡住的暂停或暂停所有权抢占"
+    },
+    {
+      "category": "state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueAfterConfirm"
+        },
+        {
+          "equalsObservation": "state.sermonReadyValueBefore",
+          "observation": "state.sermonReadyValueAfterConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.confirmChangedSermonState"
+        },
+        {
+          "equals": false,
+          "observation": "popup.confirmCountedAsSermonHeld"
+        }
+      ],
+      "id": "confirm-does-not-change-state",
+      "prerequisites": [
+        "存档满足全部门槛，布道日机会未消费（原生 sermon_ready 大于等于 1），弹窗已显示。"
+      ],
+      "steps": [
+        "读取确认前原生机会值；预期未消费；检查 state.sermonReadyValueBefore 不小于 1。",
+        "仅用确认关闭弹窗且不做其他操作；预期弹窗关闭；检查 popup.confirmChangedSermonState 为 false。",
+        "读取确认后原生机会值；预期不变且未记作已布道；检查 state.sermonReadyValueAfterConfirm 等于确认前值且 popup.confirmCountedAsSermonHeld 为 false。"
+      ],
+      "title": "确认弹窗不改变游戏布道状态"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.componentAvailable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnUnavailable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnUnavailable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.otherRemindersUnaffected"
+        }
+      ],
+      "id": "component-unavailable-retains-chance",
+      "prerequisites": [
+        "测试设施受控使弹窗组件不可用，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "注入受控组件不可用并载入存档；预期组件不可用；检查 popup.componentAvailable 为 false。",
+        "读取弹窗与去重结果；预期不显示、不消耗、不写记录；检查 popup.shown、popup.chanceConsumedOnUnavailable、popup.dedupRecordedOnUnavailable。",
+        "检查其他提醒；预期未受影响；检查 popup.otherRemindersUnaffected 为 true。"
+      ],
+      "title": "弹窗组件不可用时停用正常弹窗且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.createSucceeded"
+        },
+        {
+          "equals": true,
+          "observation": "popup.showFailed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnFailedShow"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnFailedShow"
+        },
+        {
+          "equals": true,
+          "observation": "popup.retryEligible"
+        }
+      ],
+      "id": "show-failure-isolation-retains-chance",
+      "prerequisites": [
+        "测试设施受控使弹窗显示调用失败，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "注入受控显示失败并触发；预期创建成功但显示失败；检查 popup.createSucceeded 为 true 与 popup.showFailed 为 true。",
+        "读取机会与去重结果；预期不消耗、不写记录且可重试；检查 popup.chanceConsumedOnFailedShow、popup.dedupRecordedOnFailedShow、popup.retryEligible。"
+      ],
+      "title": "弹窗创建或显示失败时隔离故障且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.createSucceeded"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnCreateFailure"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnCreateFailure"
+        },
+        {
+          "equals": true,
+          "observation": "popup.retryEligible"
+        },
+        {
+          "equals": true,
+          "observation": "popup.otherRemindersUnaffected"
+        }
+      ],
+      "id": "create-failure-isolation-retains-chance",
+      "prerequisites": [
+        "测试设施受控使原生提示框创建失败，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "注入受控创建失败并触发；预期创建失败；检查 popup.createSucceeded 为 false。",
+        "读取机会与去重结果；预期不消耗、不写记录且可重试、不影响其他提醒；检查 popup.chanceConsumedOnCreateFailure、popup.dedupRecordedOnCreateFailure、popup.retryEligible、popup.otherRemindersUnaffected。"
+      ],
+      "title": "弹窗创建失败时隔离故障且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.resourceMissingInitially"
+        },
+        {
+          "equals": true,
+          "observation": "popup.chanceRetainedWhileMissing"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownWhileMissing"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedBeforeActualDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recovered"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupRecordedAfterActualDisplay"
+        }
+      ],
+      "id": "resource-recovery-retains-chance-until-display",
+      "prerequisites": [
+        "测试设施受控使弹窗资源初始缺失，随后恢复，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "steps": [
+        "在资源缺失时观察；预期保留机会且不显示、不写记录；检查 popup.resourceMissingInitially、popup.chanceRetainedWhileMissing、popup.shownWhileMissing、popup.dedupRecordedBeforeActualDisplay。",
+        "恢复资源后观察；预期恢复并实际显示；检查 popup.recovered 与 popup.shownAfterRecovery 为 true。",
+        "读取显示后记录；预期此时才写入；检查 popup.dedupRecordedAfterActualDisplay 为 true。"
+      ],
+      "title": "资源缺失时保留提示机会直至弹窗实际显示"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileOtherModal"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOtherModalActive"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalUnaffected"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalClosedBeforeDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterOtherModalClosed"
+        }
+      ],
+      "id": "native-modal-coexistence",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立时存在另一个原生模态窗口。"
+      ],
+      "steps": [
+        "在另一个原生模态活动时观察；预期延后且不显示；检查 ui.otherNativeModalActive、popup.deferredWhileOtherModal、popup.displayedWhileOtherModalActive。",
+        "检查原生模态；预期未受影响；检查 ui.otherNativeModalUnaffected 为 true。",
+        "关闭原生模态后观察；预期先关闭原生模态再显示本模组弹窗；检查 ui.otherNativeModalClosedBeforeDisplay 与 popup.displayedAfterOtherModalClosed。"
+      ],
+      "title": "弹窗与其他原生模态共存时延后且不冲突"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingOrShownOnExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedAfterExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modActiveContentClearedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modPendingClearedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modOwnedReferencesReleasedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.didNotDestroySharedNativeDialog"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeDialogsUnaffected"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterExit"
+        }
+      ],
+      "id": "lifecycle-cleanup-on-exit",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示或显示状态。",
+        "退出时该模组不持有除共享原生对话框实例以外的自有弹窗残留。"
+      ],
+      "steps": [
+        "读取退出前状态；预期弹窗处于待显示或显示；检查 popup.pendingOrShownOnExit 为 true。",
+        "退出存档到主菜单并观察弹窗；预期不再显示；检查 popup.displayedAfterExit 为 false。",
+        "检查本模组内容与自有引用；预期已清理并释放；检查 popup.modActiveContentClearedOnExit、popup.modPendingClearedOnExit、popup.modOwnedReferencesReleasedOnExit。",
+        "检查本模组是否销毁或替换游戏管理的共享原生对话框实例；预期未销毁；检查 popup.didNotDestroySharedNativeDialog 为 true。",
+        "检查本模组清理是否关闭或改动其他系统已打开的对话框；预期未改动；检查 ui.otherNativeDialogsUnaffected 为 true。",
+        "检查暂停；预期无卡住暂停；检查 pause.stuckPauseAfterExit 为 false。"
+      ],
+      "title": "退出存档时清理本模组弹窗内容、待显示与自有引用，且不销毁共享原生对话框、不干扰其他对话框且无卡住暂停"
+    }
+  ],
+  "specRefs": [
+    "GKSA-1",
+    "GKSA-5",
+    "GKSA-6",
+    "GKSA-8",
+    "GKSA-10",
+    "GKSA-11",
+    "GKSA-13"
+  ],
+  "status": "requirements-not-results",
+  "ticket": "GKSA-13",
+  "title": "可配置暂停式布道弹窗：真实游戏 E2E 场景清单",
+  "validation": {
+    "buildPluginHashConsistency": [
+      [
+        "build.artifactSha256",
+        "plugin.sha256"
+      ]
+    ],
+    "measurementObservationPaths": [
+      "popup.displayCountWithinLoad",
+      "popup.displayCountWithinSameFrame",
+      "popup.pendingCountDuringDeferral",
+      "popup.pendingCountAfterRepeatedChecks",
+      "popup.confirmButtonCount",
+      "popup.extraActionButtonCount",
+      "popup.autoCloseTimeoutSeconds",
+      "save.absoluteDay",
+      "save.priorAbsoluteDay",
+      "save.dayOfWeek",
+      "save.daysInWeek",
+      "save.slotGeneration",
+      "save.slotGenerationBefore",
+      "save.slotGenerationAfter",
+      "ui.safetyGateTransitionCount",
+      "state.sermonReadyValue",
+      "state.sermonReadyValueBefore",
+      "state.sermonReadyValueAfterConfirm",
+      "layout.measurement",
+      "layout.operatorObservation"
+    ],
+    "requireLoadEvidenceLog": true,
+    "requiredEnvironmentPaths": [
+      {
+        "path": "game.sermonWeekday",
+        "type": "weekday-int"
+      },
+      {
+        "path": "game.name",
+        "type": "string"
+      },
+      {
+        "path": "game.version",
+        "type": "string"
+      },
+      {
+        "path": "game.buildId",
+        "type": "string"
+      },
+      {
+        "path": "game.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "proton.version",
+        "type": "string"
+      },
+      {
+        "path": "proton.buildId",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.version",
+        "type": "string"
+      },
+      {
+        "path": "bepinex.sha256",
+        "type": "sha256"
+      },
+      {
+        "path": "framework.name",
+        "type": "string"
+      },
+      {
+        "path": "framework.version",
+        "type": "string"
+      },
+      {
+        "path": "framework.commit",
+        "type": "string"
+      },
+      {
+        "path": "plugin.version",
+        "type": "string"
+      },
+      {
+        "path": "plugin.sha256",
+        "type": "sha256"
+      },
+      {
+        "equals": true,
+        "path": "plugin.loaded",
+        "type": "boolean"
+      },
+      {
+        "path": "resolution.width",
+        "type": "positive-int"
+      },
+      {
+        "path": "resolution.height",
+        "type": "positive-int"
+      },
+      {
+        "path": "uiScale",
+        "type": "positive-number"
+      },
+      {
+        "path": "inputDevices",
+        "type": "nonempty-string-array"
+      },
+      {
+        "path": "os",
+        "type": "string"
+      },
+      {
+        "path": "capturedAt",
+        "type": "timestamp"
+      },
+      {
+        "path": "build.sourceCommit",
+        "type": "git-commit"
+      },
+      {
+        "path": "build.command",
+        "type": "string"
+      },
+      {
+        "path": "build.sdkVersion",
+        "type": "string"
+      },
+      {
+        "path": "build.artifactSha256",
+        "type": "sha256"
+      }
+    ],
+    "supportedCaptureVersions": [
+      1
+    ]
+  }
+}
