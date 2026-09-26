@@ -1,0 +1,66 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingOrShownOnExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedAfterExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modActiveContentClearedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modPendingClearedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.modOwnedReferencesReleasedOnExit"
+        },
+        {
+          "equals": true,
+          "observation": "popup.didNotDestroySharedNativeDialog"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeDialogsUnaffected"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterExit"
+        }
+      ],
+      "id": "lifecycle-cleanup-on-exit",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示或显示状态。",
+        "退出时该模组不持有除共享原生对话框实例以外的自有弹窗残留。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取退出前状态；预期弹窗处于待显示或显示；检查 popup.pendingOrShownOnExit 为 true。",
+        "退出存档到主菜单并观察弹窗；预期不再显示；检查 popup.displayedAfterExit 为 false。",
+        "检查本模组内容与自有引用；预期已清理并释放；检查 popup.modActiveContentClearedOnExit、popup.modPendingClearedOnExit、popup.modOwnedReferencesReleasedOnExit。",
+        "检查本模组是否销毁或替换游戏管理的共享原生对话框实例；预期未销毁；检查 popup.didNotDestroySharedNativeDialog 为 true。",
+        "检查本模组清理是否关闭或改动其他系统已打开的对话框；预期未改动；检查 ui.otherNativeDialogsUnaffected 为 true。",
+        "检查暂停；预期无卡住暂停；检查 pause.stuckPauseAfterExit 为 false。"
+      ],
+      "title": "退出存档时清理本模组弹窗内容、待显示与自有引用，且不销毁共享原生对话框、不干扰其他对话框且无卡住暂停"
+    }
+  ],
+  "schemaVersion": 2
+}

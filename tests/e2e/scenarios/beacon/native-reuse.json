@@ -1,0 +1,416 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "native-reuse",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleNormal"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.usesNativeMagnifyingGlassWidget"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.independentDisplayInstance"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.underNativeHud"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconFromNativeStaticItemDefinition"
+        },
+        {
+          "equalsObservation": "native.faithIconDefinitionId",
+          "observation": "beacon.faithIconDefinitionId"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.iconSourceCopiedIntoDistribution"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.mapOnlyMark"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.independentMenuBlacklist"
+        }
+      ],
+      "id": "beacon-native-instance-and-icon-source",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "可在同一存档记录原生信仰图标的静态定义标识。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入该存档并等待信标显示；预期信标显示；检查 beacon.enabled=true。",
+        "确认自有信标位于原生 HUD 下且为独立原生 UIMagnifyingGlassWidget 实例；预期均成立；检查 beacon.underNativeHud=true 与 beacon.usesNativeMagnifyingGlassWidget=true。",
+        "核对信仰图标来源；预期取自原生静态物品定义且与原生定义一致；检查 beacon.faithIconDefinitionId 等于 native.faithIconDefinitionId。",
+        "确认未复制资源、未改成地图专用标记、未新增独立菜单名单；预期均否；检查对应布尔为 false。"
+      ],
+      "title": "复用原生 UIMagnifyingGlassWidget 独立实例并使用原生静态信仰图标"
+    },
+    {
+      "category": "native-reuse",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsObservation": "native.referenceFrame",
+          "observation": "beacon.contextFrame"
+        },
+        {
+          "equalsObservation": "native.referenceCameraId",
+          "observation": "beacon.contextCameraId"
+        },
+        {
+          "equalsObservation": "native.referenceViewportWidthPx",
+          "observation": "beacon.contextViewportWidthPx"
+        },
+        {
+          "equalsObservation": "native.referenceViewportHeightPx",
+          "observation": "beacon.contextViewportHeightPx"
+        },
+        {
+          "equalsObservation": "native.referenceUiScale",
+          "observation": "beacon.contextUiScale"
+        },
+        {
+          "numberRange": {
+            "min": 0
+          },
+          "observation": "beacon.slotWidthLocal"
+        },
+        {
+          "notEquals": 0,
+          "observation": "beacon.slotWidthLocal"
+        },
+        {
+          "notEquals": 0.0,
+          "observation": "beacon.slotWidthLocal"
+        },
+        {
+          "numberRange": {
+            "min": 0
+          },
+          "observation": "beacon.slotHeightLocal"
+        },
+        {
+          "notEquals": 0,
+          "observation": "beacon.slotHeightLocal"
+        },
+        {
+          "notEquals": 0.0,
+          "observation": "beacon.slotHeightLocal"
+        },
+        {
+          "equalsObservation": "native.slotWidthLocal",
+          "observation": "beacon.slotWidthLocal"
+        },
+        {
+          "equalsObservation": "native.slotHeightLocal",
+          "observation": "beacon.slotHeightLocal"
+        },
+        {
+          "equalsObservation": "native.pointerSpriteId",
+          "observation": "beacon.pointerSpriteId"
+        }
+      ],
+      "id": "beacon-slot-and-pointer-match-native",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "可记录同一有效路由目标未改动的原生原始 prefab 槽位局部尺寸与参考标识。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "记录自有信标与原生 API 针对同一有效路由目标的参考标识、镜头、视口、UI 缩放与帧号；预期一致；检查 beacon.effectiveTargetId 等于 native.referenceTargetId，且 beacon.contextFrame/CameraId/ViewportWidthPx/ViewportHeightPx/UiScale 分别等于 native.referenceFrame/CameraId/ViewportWidthPx/ViewportHeightPx/UiScale。",
+        "记录自有信标 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部槽宽与槽高；预期为严格正的有限值；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合通过。",
+        "比较自有实测局部槽尺寸与同一目标未改动的原生原始 prefab 槽位局部尺寸；预期相等；检查 beacon.slotWidthLocal/HeightLocal 分别等于 native.slotWidthLocal/HeightLocal。",
+        "记录自有箭头 Sprite/样式标识；预期与原生一致；检查 beacon.pointerSpriteId 等于 native.pointerSpriteId。"
+      ],
+      "title": "信标实际局部槽尺寸与箭头样式与原生来源一致"
+    },
+    {
+      "category": "native-reuse",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsObservation": "native.referenceFrame",
+          "observation": "beacon.contextFrame"
+        },
+        {
+          "equalsObservation": "native.referenceCameraId",
+          "observation": "beacon.contextCameraId"
+        },
+        {
+          "equalsObservation": "native.referenceViewportWidthPx",
+          "observation": "beacon.contextViewportWidthPx"
+        },
+        {
+          "equalsObservation": "native.referenceViewportHeightPx",
+          "observation": "beacon.contextViewportHeightPx"
+        },
+        {
+          "equalsObservation": "native.referenceUiScale",
+          "observation": "beacon.contextUiScale"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.rawProjectedScreenX"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.rawProjectedScreenY"
+        },
+        {
+          "equalsObservation": "native.rawProjectedScreenX",
+          "observation": "beacon.rawProjectedScreenX"
+        },
+        {
+          "equalsObservation": "native.rawProjectedScreenY",
+          "observation": "beacon.rawProjectedScreenY"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.clampedScreenX"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.clampedScreenY"
+        },
+        {
+          "equalsObservation": "native.clampedScreenX",
+          "observation": "beacon.clampedScreenX"
+        },
+        {
+          "equalsObservation": "native.clampedScreenY",
+          "observation": "beacon.clampedScreenY"
+        },
+        {
+          "equalsObservation": "native.edgeInsetPx",
+          "observation": "beacon.edgeInsetPx"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.edgeClampMatchesNativeRule"
+        }
+      ],
+      "id": "beacon-camera-projection-and-edge-insets",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "目标点位于镜头外，可读取原生 API 针对同一有效路由目标导出的投影与边缘内缩。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "记录自有信标与原生 API 的有效路由目标、镜头、视口、UI 缩放与帧号；预期一致；检查对应 equalsObservation 均通过。",
+        "记录未夹取的原始投影坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
+        "记录最终夹取到边界内的放置坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
+        "记录边缘内缩距离并确认沿用原生规则；预期与原生一致；检查 beacon.edgeInsetPx 等于 native.edgeInsetPx 且 beacon.edgeClampMatchesNativeRule=true。"
+      ],
+      "title": "信标沿用原生屏幕投影与边缘内缩规则"
+    },
+    {
+      "category": "native-reuse",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.edgeArrowVisibleWhenTargetOffscreen"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.clampedScreenX"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.clampedScreenY"
+        },
+        {
+          "equalsObservation": "native.clampedScreenX",
+          "observation": "beacon.clampedScreenX"
+        },
+        {
+          "equalsObservation": "native.clampedScreenY",
+          "observation": "beacon.clampedScreenY"
+        },
+        {
+          "equalsObservation": "native.edgeInsetPx",
+          "observation": "beacon.edgeInsetPx"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.edgeClampMatchesNativeRule"
+        }
+      ],
+      "id": "beacon-offscreen-edge-arrow",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "目标点位于镜头外。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "保持目标在镜头外并记录边缘方向箭头是否显示；预期显示；检查 beacon.edgeArrowVisibleWhenTargetOffscreen=true。",
+        "记录最终夹取放置坐标；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。",
+        "记录边缘内缩并与原生比较；预期与原生一致且沿用原生规则；检查 beacon.edgeInsetPx 等于 native.edgeInsetPx 且 beacon.edgeClampMatchesNativeRule=true。"
+      ],
+      "title": "目标在镜头外时按原生规则显示边缘方向箭头"
+    },
+    {
+      "category": "native-reuse",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.edgeArrowRemovedWhenTargetOnscreen"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconPlacedAtTargetWhenOnscreen"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.rawProjectedScreenX"
+        },
+        {
+          "numberRange": {
+            "max": 1.7976931348623157e+308,
+            "min": -1.7976931348623157e+308
+          },
+          "observation": "beacon.rawProjectedScreenY"
+        },
+        {
+          "equalsObservation": "native.rawProjectedScreenX",
+          "observation": "beacon.rawProjectedScreenX"
+        },
+        {
+          "equalsObservation": "native.rawProjectedScreenY",
+          "observation": "beacon.rawProjectedScreenY"
+        }
+      ],
+      "id": "beacon-onscreen-icon-arrow-removed",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "可使目标进入镜头。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "让目标进入镜头并记录边缘箭头状态；预期箭头移除；检查 beacon.edgeArrowRemovedWhenTargetOnscreen=true。",
+        "记录图标是否定位到引导目标；预期定位；检查 beacon.iconPlacedAtTargetWhenOnscreen=true。",
+        "记录原始投影坐标并与原生比较；预期为有限数值且与原生一致；检查 numberRange（IEEE754 binary64 有限范围）与 equalsObservation 通过。"
+      ],
+      "title": "目标进入镜头后移除边缘箭头并把图标定位到目标"
+    }
+  ],
+  "schemaVersion": 2
+}

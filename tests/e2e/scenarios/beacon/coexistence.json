@@ -1,0 +1,126 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "coexistence",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "quests.markerCountBeaconInactive"
+        },
+        {
+          "equalsObservation": "quests.markerCountBeaconInactive",
+          "observation": "quests.markerCountBeaconActive"
+        },
+        {
+          "equalsObservation": "quests.markerIconIdentityBeaconInactive",
+          "observation": "quests.markerIconIdentityBeaconActive"
+        },
+        {
+          "equals": true,
+          "observation": "quests.trackingCollectionUnchanged"
+        },
+        {
+          "equals": true,
+          "observation": "quests.interactionEventsUnchanged"
+        },
+        {
+          "equals": true,
+          "observation": "quests.priorityUnchanged"
+        },
+        {
+          "equalsObservation": "quests.markerPriorityReference",
+          "observation": "quests.markerPriority"
+        }
+      ],
+      "id": "beacon-quest-coexistence-unchanged",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "存档存在进行中的被追踪任务，且可在信标激活前后保持同一已加载场景。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在已加载场景中、信标未激活时记录原生任务标记数量与图标身份；预期基线可读；检查 markerCountBeaconInactive 为非负整数且图标身份已记录。",
+        "在同一场景激活信标；预期信标显示而任务标记不变；检查 beacon.enabled=true。",
+        "再次记录任务标记数量与图标身份；预期与基线相同；检查 markerCountBeaconActive 等于 markerCountBeaconInactive 且图标身份相等。",
+        "核对追踪集合、交互事件与优先级；预期均未改变；检查对应布尔为 true。"
+      ],
+      "title": "原生任务图标、追踪集合、交互事件与优先级均不变"
+    },
+    {
+      "category": "coexistence",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.registersFakeTask"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.modifiesSharedPrefab"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.writesNativeTrackingCollection"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.addsCompetingPriority"
+        },
+        {
+          "equals": false,
+          "observation": "state.nativeProgressModified"
+        },
+        {
+          "equals": 0,
+          "observation": "state.progressWriteCount"
+        },
+        {
+          "equals": false,
+          "observation": "state.ownPersistenceWritten"
+        }
+      ],
+      "id": "beacon-no-fake-task-shared-prefab",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "使信标显示并观察追踪集合与共享预制体；预期未登记假任务也未修改共享预制体；检查 beacon.registersFakeTask=false 与 beacon.modifiesSharedPrefab=false。",
+        "核对追踪集合与优先级；预期未被写入且未增加抢占优先级；检查 beacon.writesNativeTrackingCollection=false 与 beacon.addsCompetingPriority=false。",
+        "核对原生进度与自有持久化；预期均未修改；检查 state.nativeProgressModified=false、state.progressWriteCount=0 与 state.ownPersistenceWritten=false。"
+      ],
+      "title": "不登记假任务、不修改共享预制体且不写入原生追踪集合"
+    }
+  ],
+  "schemaVersion": 2
+}

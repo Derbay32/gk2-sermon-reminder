@@ -1,0 +1,1664 @@
+{
+  "baselineCommit": "5473abf5fcd9b340169c0ddd3230d3718fe8ce84",
+  "mappingVersion": 1,
+  "scenarios": [
+    {
+      "newId": "church-locked",
+      "oldId": "church-locked",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "countdown-multi-day-en",
+      "oldId": "countdown-multi-day-en",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "countdown-multi-day-zh",
+      "oldId": "countdown-multi-day-zh",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "countdown-one-day-en",
+      "oldId": "countdown-one-day-en",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "countdown-one-day-zh",
+      "oldId": "countdown-one-day-zh",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "cycle-wrap",
+      "oldId": "cycle-wrap",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "exit-cleanup",
+      "oldId": "exit-cleanup",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "hud-rebuild-uniqueness",
+      "oldId": "hud-rebuild-uniqueness",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "hud-style-clone",
+      "oldId": "hud-style-clone",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "item-count-independence",
+      "oldId": "item-count-independence",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "language-unsupported-fallback",
+      "oldId": "language-unsupported-fallback",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "layout-clock-non-overlap",
+      "oldId": "layout-clock-non-overlap",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "layout-ui-scale",
+      "oldId": "layout-ui-scale",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "loading-menu-unload-hidden",
+      "oldId": "loading-menu-unload-hidden",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "midnight-update",
+      "oldId": "midnight-update",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "native-visibility",
+      "oldId": "native-visibility",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "normal-hide-no-fault",
+      "oldId": "normal-hide-no-fault",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "old-save-rollback",
+      "oldId": "old-save-rollback",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "plugin-load-proton-countdown",
+      "oldId": "plugin-load-proton",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "same-day-unchanged",
+      "oldId": "same-day-unchanged",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "sermon-day-hidden",
+      "oldId": "sermon-day-hidden",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "switch-saves",
+      "oldId": "switch-saves",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "tutorial-incomplete",
+      "oldId": "tutorial-incomplete",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "unreadable-state-stale-hide",
+      "oldId": "unreadable-state-stale-hide",
+      "ticket": "GKSA-10"
+    },
+    {
+      "newId": "consumption-before-animation-end",
+      "oldId": "consumption-before-animation-end",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "countdown-retained-multi-day",
+      "oldId": "countdown-retained-multi-day",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "countdown-retained-one-day",
+      "oldId": "countdown-retained-one-day",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "done-en",
+      "oldId": "done-en",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "done-persists-same-date",
+      "oldId": "done-persists-same-date",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "done-zh",
+      "oldId": "done-zh",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "exclusive-corner-state",
+      "oldId": "exclusive-corner-state",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "gates-church-quest-incomplete",
+      "oldId": "gates-church-quest-incomplete",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "gates-sermon-quest-incomplete",
+      "oldId": "gates-sermon-quest-incomplete",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-addressables-load",
+      "oldId": "icon-addressables-load",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-exit-while-loading",
+      "oldId": "icon-exit-while-loading",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-failure-does-not-affect-ready",
+      "oldId": "icon-failure-does-not-affect-ready",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-hud-rebuild-cleanup",
+      "oldId": "icon-hud-rebuild-cleanup",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-load-failure-isolation-retry",
+      "oldId": "icon-load-failure-isolation-retry",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-load-pending-no-stale-state",
+      "oldId": "icon-load-pending-no-stale-state",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-single-flight-request",
+      "oldId": "icon-single-flight-request",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-space-per-state",
+      "oldId": "icon-space-per-state",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "icon-visual-style",
+      "oldId": "icon-visual-style",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "language-change-refresh",
+      "oldId": "language-change-refresh",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "load-after-sermon-save-done",
+      "oldId": "load-after-sermon-save-done",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "load-before-sermon-save-ready",
+      "oldId": "load-before-sermon-save-ready",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "native-ready-accessor-default-zero",
+      "oldId": "native-ready-accessor-default-zero",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "native-state-not-mutated",
+      "oldId": "native-state-not-mutated",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "next-day-after-done",
+      "oldId": "next-day-after-done",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "next-day-after-missed",
+      "oldId": "next-day-after-missed",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "nonfinite-native-ready-unreadable",
+      "oldId": "nonfinite-native-ready-unreadable",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "ready-en",
+      "oldId": "ready-en",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "ready-zh",
+      "oldId": "ready-zh",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "six-day-wrap-after-sermon",
+      "oldId": "six-day-wrap-after-sermon",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "stale-ready-flag-nonsermon-day",
+      "oldId": "stale-ready-flag-nonsermon-day",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "unreadable-native-read-throws",
+      "oldId": "unreadable-native-read-throws",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "unreadable-player-hidden-not-done",
+      "oldId": "unreadable-player-hidden-not-done",
+      "ticket": "GKSA-11"
+    },
+    {
+      "newId": "beacon-bearing-delta-one",
+      "oldId": "beacon-bearing-delta-one",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-boundary-edge-clamp-and-resolution",
+      "oldId": "beacon-boundary-edge-clamp-and-resolution",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-camera-projection-and-edge-insets",
+      "oldId": "beacon-camera-projection-and-edge-insets",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-cleared-first-lateupdate-after-consumption",
+      "oldId": "beacon-cleared-first-lateupdate-after-consumption",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-cleared-first-lateupdate-done-icon-pending",
+      "oldId": "beacon-cleared-first-lateupdate-done-icon-pending",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-default-enabled-first-run",
+      "oldId": "beacon-default-enabled-first-run",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-eligible-sermon-day-unconsumed",
+      "oldId": "beacon-eligible-sermon-day-unconsumed",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-exit-save-clears-instance",
+      "oldId": "beacon-exit-save-clears-instance",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-fault-recovers-without-reload",
+      "oldId": "beacon-fault-recovers-without-reload",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-follows-native-hud-visibility",
+      "oldId": "beacon-follows-native-hud-visibility",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-gate-church-incomplete",
+      "oldId": "beacon-gate-church-incomplete",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-gate-tutorial-incomplete",
+      "oldId": "beacon-gate-tutorial-incomplete",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-hidden-nonsermon-day",
+      "oldId": "beacon-hidden-nonsermon-day",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-hidden-offday-stale-ready",
+      "oldId": "beacon-hidden-offday-stale-ready",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-hidden-opportunity-consumed",
+      "oldId": "beacon-hidden-opportunity-consumed",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-hidden-unreadable-state",
+      "oldId": "beacon-hidden-unreadable-state",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-hud-rebuild-single-instance",
+      "oldId": "beacon-hud-rebuild-single-instance",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-item-shortage-still-eligible",
+      "oldId": "beacon-item-shortage-still-eligible",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-missing-component-suppresses-only-beacon",
+      "oldId": "beacon-missing-component-suppresses-only-beacon",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-missing-icon-suppresses-only-beacon",
+      "oldId": "beacon-missing-icon-suppresses-only-beacon",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-missing-target-suppresses-only-beacon",
+      "oldId": "beacon-missing-target-suppresses-only-beacon",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-native-draw-preserves-icon-and-slot",
+      "oldId": "beacon-native-draw-preserves-icon-and-slot",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-native-instance-and-icon-source",
+      "oldId": "beacon-native-instance-and-icon-source",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-no-fake-task-shared-prefab",
+      "oldId": "beacon-no-fake-task-shared-prefab",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-not-ready-loading-absent",
+      "oldId": "beacon-not-ready-loading-absent",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-off-keeps-corner-text",
+      "oldId": "beacon-off-keeps-corner-text",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-offscreen-edge-arrow",
+      "oldId": "beacon-offscreen-edge-arrow",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-onscreen-icon-arrow-removed",
+      "oldId": "beacon-onscreen-icon-arrow-removed",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-quest-coexistence-unchanged",
+      "oldId": "beacon-quest-coexistence-unchanged",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-repeated-load-recovery",
+      "oldId": "beacon-repeated-load-recovery",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-routing-indoor-entry-final-target",
+      "oldId": "beacon-routing-indoor-entry-final-target",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-routing-outdoor-final-target",
+      "oldId": "beacon-routing-outdoor-final-target",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-routing-updates-after-transition",
+      "oldId": "beacon-routing-updates-after-transition",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-setting-apply-next-load-no-restart",
+      "oldId": "beacon-setting-apply-next-load-no-restart",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-setting-apply-off-to-on-next-load",
+      "oldId": "beacon-setting-apply-off-to-on-next-load",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-setting-persists-restart",
+      "oldId": "beacon-setting-persists-restart",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-setting-survives-old-save-load",
+      "oldId": "beacon-setting-survives-old-save-load",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-settings-label-en",
+      "oldId": "beacon-settings-label-en",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-settings-label-fallback-en",
+      "oldId": "beacon-settings-label-fallback-en",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-settings-label-zh",
+      "oldId": "beacon-settings-label-zh",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-settings-page-single-registration",
+      "oldId": "beacon-settings-page-single-registration",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-single-owned-instance",
+      "oldId": "beacon-single-owned-instance",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-slot-and-pointer-match-native",
+      "oldId": "beacon-slot-and-pointer-match-native",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-switch-save-clears-old-instance",
+      "oldId": "beacon-switch-save-clears-old-instance",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-toggle-gamepad",
+      "oldId": "beacon-toggle-gamepad",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-toggle-keyboard-mouse",
+      "oldId": "beacon-toggle-keyboard-mouse",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "beacon-ui-scale-follows-native",
+      "oldId": "beacon-ui-scale-follows-native",
+      "ticket": "GKSA-12"
+    },
+    {
+      "newId": "cancel-on-church-gate-loss-during-defer",
+      "oldId": "cancel-on-church-gate-loss-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "cancel-on-consumption-during-defer",
+      "oldId": "cancel-on-consumption-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "cancel-on-date-change-during-defer",
+      "oldId": "cancel-on-date-change-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "cancel-on-exit-during-defer",
+      "oldId": "cancel-on-exit-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "cancel-on-load-switch-during-defer",
+      "oldId": "cancel-on-load-switch-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "cancel-on-tutorial-gate-loss-during-defer",
+      "oldId": "cancel-on-tutorial-gate-loss-during-defer",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "close-confirm",
+      "oldId": "close-confirm",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "close-esc",
+      "oldId": "close-esc",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "close-gamepad-back",
+      "oldId": "close-gamepad-back",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "component-unavailable-retains-chance",
+      "oldId": "component-unavailable-retains-chance",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "confirm-does-not-change-state",
+      "oldId": "confirm-does-not-change-state",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "create-failure-isolation-retains-chance",
+      "oldId": "create-failure-isolation-retains-chance",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-backward-day-identity",
+      "oldId": "dedup-backward-day-identity",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-delete-recreate-cleanup-success",
+      "oldId": "dedup-delete-recreate-cleanup-success",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-distinct-slots-same-day-independent",
+      "oldId": "dedup-distinct-slots-same-day-independent",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-identity-actual-loaded-slot",
+      "oldId": "dedup-identity-actual-loaded-slot",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-main-menu-roundtrip",
+      "oldId": "dedup-main-menu-roundtrip",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-manual-vs-auto-slots-independent",
+      "oldId": "dedup-manual-vs-auto-slots-independent",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-new-game-before-first-save",
+      "oldId": "dedup-new-game-before-first-save",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-next-week-new-date",
+      "oldId": "dedup-next-week-new-date",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-not-persisted",
+      "oldId": "dedup-not-persisted",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-ordinary-overwrite",
+      "oldId": "dedup-ordinary-overwrite",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-process-restart-resets",
+      "oldId": "dedup-process-restart-resets",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-recorded-only-after-display",
+      "oldId": "dedup-recorded-only-after-display",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-recreate-failed-delete-no-advance",
+      "oldId": "dedup-recreate-failed-delete-no-advance",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-reload-same-slot-same-day",
+      "oldId": "dedup-reload-same-slot-same-day",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "dedup-settings-toggle-retains",
+      "oldId": "dedup-settings-toggle-retains",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "defer-busy-gate-race",
+      "oldId": "defer-busy-gate-race",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "defer-busy-menu-cutscene",
+      "oldId": "defer-busy-menu-cutscene",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "defer-existing-pause",
+      "oldId": "defer-existing-pause",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "defer-player-not-controllable",
+      "oldId": "defer-player-not-controllable",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "defer-recheck-after-gate-cleared",
+      "oldId": "defer-recheck-after-gate-cleared",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-church-incomplete",
+      "oldId": "gate-church-incomplete",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-not-sermon-day",
+      "oldId": "gate-not-sermon-day",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-opportunity-consumed",
+      "oldId": "gate-opportunity-consumed",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-popup-disabled",
+      "oldId": "gate-popup-disabled",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-save-not-ready",
+      "oldId": "gate-save-not-ready",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-state-unreadable",
+      "oldId": "gate-state-unreadable",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "gate-tutorial-incomplete",
+      "oldId": "gate-tutorial-incomplete",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "item-shortage-irrelevant",
+      "oldId": "item-shortage-irrelevant",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "lifecycle-cleanup-on-exit",
+      "oldId": "lifecycle-cleanup-on-exit",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "native-modal-coexistence",
+      "oldId": "native-modal-coexistence",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "native-pause-integrity",
+      "oldId": "native-pause-integrity",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "native-titled-dialog",
+      "oldId": "native-titled-dialog",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "no-duplicate-same-load-frame",
+      "oldId": "no-duplicate-same-load-frame",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "no-extra-actions",
+      "oldId": "no-extra-actions",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "no-stuck-pause-after-close",
+      "oldId": "no-stuck-pause-after-close",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "other-pause-preserved",
+      "oldId": "other-pause-preserved",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "pending-single-per-slot-day",
+      "oldId": "pending-single-per-slot-day",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-cross-into-sermon-day",
+      "oldId": "popup-cross-into-sermon-day",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-default-off",
+      "oldId": "popup-default-off",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-fallback-language",
+      "oldId": "popup-fallback-language",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-mid-load-sermon-day",
+      "oldId": "popup-mid-load-sermon-day",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-shown-en",
+      "oldId": "popup-shown-en",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "popup-shown-when-enabled",
+      "oldId": "popup-shown-when-enabled",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "resource-recovery-retains-chance-until-display",
+      "oldId": "resource-recovery-retains-chance-until-display",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-applied-on-next-load-no-restart",
+      "oldId": "settings-applied-on-next-load-no-restart",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-autosave",
+      "oldId": "settings-autosave",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-beacon-independent",
+      "oldId": "settings-beacon-independent",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-beacon-next-load-visibility",
+      "oldId": "settings-beacon-next-load-visibility",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-old-save-no-rollback",
+      "oldId": "settings-old-save-no-rollback",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-page-exposes-toggle",
+      "oldId": "settings-page-exposes-toggle",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-persist-across-process-restart",
+      "oldId": "settings-persist-across-process-restart",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-popup-disable-next-load",
+      "oldId": "settings-popup-disable-next-load",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-toggle-gamepad",
+      "oldId": "settings-toggle-gamepad",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "settings-toggle-keyboard",
+      "oldId": "settings-toggle-keyboard",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "show-failure-isolation-retains-chance",
+      "oldId": "show-failure-isolation-retains-chance",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "single-confirm-button",
+      "oldId": "single-confirm-button",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "stays-until-confirmed",
+      "oldId": "stays-until-confirmed",
+      "ticket": "GKSA-13"
+    },
+    {
+      "newId": "bounded-logs-no-per-frame-noise",
+      "oldId": "bounded-logs-no-per-frame-noise",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "cancelled-queue-preserves-budget-for-refailure",
+      "oldId": "cancelled-queue-preserves-budget-for-refailure",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "changed-failure-details-same-category-no-extra",
+      "oldId": "changed-failure-details-same-category-no-extra",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-local-failure-isolated",
+      "oldId": "corner-hud-local-failure-isolated",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-notice-copy-en",
+      "oldId": "corner-hud-notice-copy-en",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-notice-copy-zh",
+      "oldId": "corner-hud-notice-copy-zh",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-resource-missing",
+      "oldId": "corner-hud-resource-missing",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-shared-component-loss",
+      "oldId": "corner-hud-shared-component-loss",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-hud-text-missing",
+      "oldId": "corner-hud-text-missing",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "corner-resource-recovery-refailure-same-load",
+      "oldId": "corner-resource-recovery-refailure-same-load",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "exit-drops-queued-notice",
+      "oldId": "exit-drops-queued-notice",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "icon-failed-suppresses-done-notice-once",
+      "oldId": "icon-failed-suppresses-done-notice-once",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "icon-irrelevant-failure-keeps-ready",
+      "oldId": "icon-irrelevant-failure-keeps-ready",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "icon-pending-suppresses-done-no-notice",
+      "oldId": "icon-pending-suppresses-done-no-notice",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "independent-category-budgets",
+      "oldId": "independent-category-budgets",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "intermediate-healthy-binding-keeps-episode",
+      "oldId": "intermediate-healthy-binding-keeps-episode",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "live-hud-missing-component-failure",
+      "oldId": "live-hud-missing-component-failure",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "native-hud-natural-hide-no-fault",
+      "oldId": "native-hud-natural-hide-no-fault",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "normal-load-hud-pending-no-fault",
+      "oldId": "normal-load-hud-pending-no-fault",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-coexists-with-native-notifications",
+      "oldId": "notice-coexists-with-native-notifications",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-copy-en",
+      "oldId": "notice-copy-en",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-copy-zh",
+      "oldId": "notice-copy-zh",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-deferred-while-menu-occupied",
+      "oldId": "notice-deferred-while-menu-occupied",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-fallback-unsupported-language",
+      "oldId": "notice-fallback-unsupported-language",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notice-nonblocking-no-pause-no-input-capture",
+      "oldId": "notice-nonblocking-no-pause-no-input-capture",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notifier-present-show-fails-logs-only",
+      "oldId": "notifier-present-show-fails-logs-only",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notifier-queue-single-flight",
+      "oldId": "notifier-queue-single-flight",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notifier-recovers-pending-fault-once",
+      "oldId": "notifier-recovers-pending-fault-once",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "notifier-unavailable-logs-only",
+      "oldId": "notifier-unavailable-logs-only",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "per-channel-logs-separated",
+      "oldId": "per-channel-logs-separated",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "plugin-load-proton-local-fault-notices",
+      "oldId": "plugin-load-proton",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "recovery-before-display-cancels-queue",
+      "oldId": "recovery-before-display-cancels-queue",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "recovery-refailure-same-load-no-extra",
+      "oldId": "recovery-refailure-same-load-no-extra",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "reload-fresh-budget",
+      "oldId": "reload-fresh-budget",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "repeated-failure-after-notice-no-extra",
+      "oldId": "repeated-failure-after-notice-no-extra",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-missing-ready-key-not-a-fault",
+      "oldId": "state-missing-ready-key-not-a-fault",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-read-recovery-rebuild",
+      "oldId": "state-read-recovery-rebuild",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-unreadable-hides-dependent",
+      "oldId": "state-unreadable-hides-dependent",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-unreadable-missing-player",
+      "oldId": "state-unreadable-missing-player",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-unreadable-missing-save",
+      "oldId": "state-unreadable-missing-save",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-unreadable-nonfinite-ready",
+      "oldId": "state-unreadable-nonfinite-ready",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "state-unreadable-read-exception",
+      "oldId": "state-unreadable-read-exception",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "switch-save-fresh-budget",
+      "oldId": "switch-save-fresh-budget",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "unreadable-state-no-default-ready-done",
+      "oldId": "unreadable-state-no-default-ready-done",
+      "ticket": "GKSA-14"
+    },
+    {
+      "newId": "beacon-failed-projection",
+      "oldId": "beacon-failed-projection",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "beacon-fault-with-popup-off-still-notices",
+      "oldId": "beacon-fault-with-popup-off-still-notices",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "beacon-missing-church-target",
+      "oldId": "beacon-missing-church-target",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "beacon-missing-faith-icon",
+      "oldId": "beacon-missing-faith-icon",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "beacon-missing-or-broken-component",
+      "oldId": "beacon-missing-or-broken-component",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "beacon-off-deliberate-no-beacon-notice-others-healthy",
+      "oldId": "beacon-off-deliberate-no-beacon-notice-others-healthy",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-beacon-display-once-continuous-refault-no-replenish",
+      "oldId": "budget-beacon-display-once-continuous-refault-no-replenish",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-corner-display-once-continuous-refault-no-replenish",
+      "oldId": "budget-corner-display-once-continuous-refault-no-replenish",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-genuine-reload-replenishes-category-not-popup-dedup",
+      "oldId": "budget-genuine-reload-replenishes-category-not-popup-dedup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-genuine-reload-replenishes-state-read-budget",
+      "oldId": "budget-genuine-reload-replenishes-state-read-budget",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-popup-display-once-continuous-refault-no-replenish",
+      "oldId": "budget-popup-display-once-continuous-refault-no-replenish",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "budget-state-display-once-continuous-refault-no-replenish",
+      "oldId": "budget-state-display-once-continuous-refault-no-replenish",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "button-provenance-early-failure-preserves-prior-buttons",
+      "oldId": "button-provenance-early-failure-preserves-prior-buttons",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "button-provenance-new-acquisition-unrelated-child",
+      "oldId": "button-provenance-new-acquisition-unrelated-child",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "button-provenance-observer-unavailable-fail-closed",
+      "oldId": "button-provenance-observer-unavailable-fail-closed",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "button-provenance-reused-reference-post-acquire-cleanup",
+      "oldId": "button-provenance-reused-reference-post-acquire-cleanup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "catch-up-beacon-resource-recovery-once",
+      "oldId": "catch-up-beacon-resource-recovery-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "catch-up-shared-state-recovery-once-no-duplicate-ticks",
+      "oldId": "catch-up-shared-state-recovery-once-no-duplicate-ticks",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "cleanup-persistent-partial-open-quarantined",
+      "oldId": "cleanup-persistent-partial-open-quarantined",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "cleanup-restored-after-partial-open-respects-eligibility",
+      "oldId": "cleanup-restored-after-partial-open-respects-eligibility",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "cleanup-uncertain-transfer-readonly-no-mutation",
+      "oldId": "cleanup-uncertain-transfer-readonly-no-mutation",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "combined-all-independent-displays",
+      "oldId": "combined-all-independent-displays",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "combined-beacon-popup-independent",
+      "oldId": "combined-beacon-popup-independent",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "combined-corner-beacon-independent",
+      "oldId": "combined-corner-beacon-independent",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "combined-corner-popup-independent",
+      "oldId": "combined-corner-popup-independent",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "combined-shared-state-no-fabricated-downstream-faults",
+      "oldId": "combined-shared-state-no-fabricated-downstream-faults",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-done-icon-failure-done-context",
+      "oldId": "corner-done-icon-failure-done-context",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-done-icon-failure-retry-pending-notifier-restore-displays-once",
+      "oldId": "corner-done-icon-failure-retry-pending-notifier-restore-displays-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-done-icon-failure-retry-recovers-before-notifier-restore",
+      "oldId": "corner-done-icon-failure-retry-recovers-before-notifier-restore",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-hud-lookup-exception-ready-preserves-beacon",
+      "oldId": "corner-hud-lookup-exception-ready-preserves-beacon",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-missing-copy-preserves-beacon-and-popup",
+      "oldId": "corner-missing-copy-preserves-beacon-and-popup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "corner-missing-resource-preserves-beacon-and-popup",
+      "oldId": "corner-missing-resource-preserves-beacon-and-popup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "dedup-successful-normal-display-survives-genuine-reload",
+      "oldId": "dedup-successful-normal-display-survives-genuine-reload",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "healthy-reference-setup",
+      "oldId": "healthy-reference-setup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "in-game-menu-open-not-lifecycle-boundary",
+      "oldId": "in-game-menu-open-not-lifecycle-boundary",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-church-quest-gate-lost",
+      "oldId": "ineligible-catch-up-church-quest-gate-lost",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-existing-normal-popup-record",
+      "oldId": "ineligible-catch-up-existing-normal-popup-record",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-next-non-sermon-day",
+      "oldId": "ineligible-catch-up-next-non-sermon-day",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-popup-off",
+      "oldId": "ineligible-catch-up-popup-off",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-sermon-consumed-done",
+      "oldId": "ineligible-catch-up-sermon-consumed-done",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "ineligible-catch-up-tutorial-quest-gate-lost",
+      "oldId": "ineligible-catch-up-tutorial-quest-gate-lost",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-beacon-en",
+      "oldId": "localization-diagnostics-beacon-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-beacon-zh",
+      "oldId": "localization-diagnostics-beacon-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-corner-hud-en",
+      "oldId": "localization-diagnostics-corner-hud-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-corner-hud-zh",
+      "oldId": "localization-diagnostics-corner-hud-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-popup-en",
+      "oldId": "localization-diagnostics-popup-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-popup-zh",
+      "oldId": "localization-diagnostics-popup-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-state-read-en",
+      "oldId": "localization-diagnostics-state-read-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-diagnostics-state-read-zh",
+      "oldId": "localization-diagnostics-state-read-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-fault-notices-nonblocking-native-form",
+      "oldId": "localization-fault-notices-nonblocking-native-form",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-normal-popup-preserves-native-input-pause",
+      "oldId": "localization-normal-popup-preserves-gksa13-input-native-pause",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-other-unsupported-language-falls-back-english-status",
+      "oldId": "localization-other-unsupported-language-falls-back-english-status",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-beacon-en",
+      "oldId": "localization-status-copy-beacon-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-beacon-zh",
+      "oldId": "localization-status-copy-beacon-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-corner-hud-en",
+      "oldId": "localization-status-copy-corner-hud-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-corner-hud-zh",
+      "oldId": "localization-status-copy-corner-hud-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-popup-en",
+      "oldId": "localization-status-copy-popup-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-popup-zh",
+      "oldId": "localization-status-copy-popup-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-state-read-en",
+      "oldId": "localization-status-copy-state-read-en",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-status-copy-state-read-zh",
+      "oldId": "localization-status-copy-state-read-zh",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-zh-cht-falls-back-english-diagnostics",
+      "oldId": "localization-zh-cht-falls-back-english-diagnostics",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "localization-zh-cht-falls-back-english-status",
+      "oldId": "localization-zh-cht-falls-back-english-status",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "loop-no-global-unpause-no-framework-faulted",
+      "oldId": "loop-no-global-unpause-no-framework-faulted",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "loop-no-native-shared-destruction",
+      "oldId": "loop-no-native-shared-destruction",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "loop-no-per-frame-log-flood",
+      "oldId": "loop-no-per-frame-log-flood",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "loop-no-sermon-progress-mutation",
+      "oldId": "loop-no-sermon-progress-mutation",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "main-menu-return-genuine-lifecycle-boundary",
+      "oldId": "main-menu-return-genuine-lifecycle-boundary",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notice-destroyed-retained-item-cleanup-repair-displays-once",
+      "oldId": "notice-destroyed-retained-item-cleanup-repair-displays-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-recovery-beacon-fault-already-recovered-no-stale-notice",
+      "oldId": "notifier-recovery-beacon-fault-already-recovered-no-stale-notice",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-recovery-no-extra-category-notice-no-success-toast",
+      "oldId": "notifier-recovery-no-extra-category-notice-no-success-toast",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-recovery-popup-fault-canceled-before-recovery-no-stale-notice",
+      "oldId": "notifier-recovery-popup-fault-canceled-before-recovery-no-stale-notice",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-recovery-rechecks-persistent-fault-once-at-safe-ui",
+      "oldId": "notifier-recovery-rechecks-persistent-fault-once-at-safe-ui",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-recovery-rechecks-persistent-popup-fault-once-at-safe-ui",
+      "oldId": "notifier-recovery-rechecks-persistent-popup-fault-once-at-safe-ui",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-unavailable-beacon-fault-logs-only-no-budget",
+      "oldId": "notifier-unavailable-beacon-fault-logs-only-no-budget",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "notifier-unavailable-popup-fault-logs-only-no-budget",
+      "oldId": "notifier-unavailable-popup-fault-logs-only-no-budget",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "plugin-load-proton-combined-recovery",
+      "oldId": "plugin-load-proton",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-fault-does-not-spend-dedup",
+      "oldId": "popup-fault-does-not-spend-dedup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-fault-recovery-eligible-catch-up-once",
+      "oldId": "popup-fault-recovery-eligible-catch-up-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-missing-identity-ineligible-stages-no-spend",
+      "oldId": "popup-missing-identity-ineligible-stages-no-spend",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-missing-native-dialog",
+      "oldId": "popup-missing-native-dialog",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-missing-required-text",
+      "oldId": "popup-missing-required-text",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-off-with-corner-fault-still-notices",
+      "oldId": "popup-off-with-corner-fault-still-notices",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-off-with-state-fault-still-notices",
+      "oldId": "popup-off-with-state-fault-still-notices",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "popup-partial-open-failure-owned-residue",
+      "oldId": "popup-partial-open-failure-owned-residue",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "queue-beacon-restore-notifier-and-gates-before-same-load-refault-displays-once",
+      "oldId": "queue-beacon-restore-notifier-and-gates-before-same-load-refault-displays-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "queue-beacon-unsafe-ui-no-display-recover-clear-ui",
+      "oldId": "queue-beacon-unsafe-ui-no-display-recover-clear-ui",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "queue-popup-restore-notifier-and-gates-before-same-load-refault-displays-once",
+      "oldId": "queue-popup-restore-notifier-and-gates-before-same-load-refault-displays-once",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "queue-popup-unsafe-ui-no-display-recover-clear-ui",
+      "oldId": "queue-popup-unsafe-ui-no-display-recover-clear-ui",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "recovery-during-deferral-crosses-day-discards-old-day",
+      "oldId": "recovery-during-deferral-crosses-day-discards-old-day",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "recovery-while-menu-occupied-deferred-then-eligible",
+      "oldId": "recovery-while-menu-occupied-deferred-then-eligible",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "settings-snapshot-off-to-on-next-load-allows-popup",
+      "oldId": "settings-snapshot-off-to-on-next-load-allows-popup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "settings-snapshot-on-to-off-next-load-prevents-popup",
+      "oldId": "settings-snapshot-on-to-off-next-load-prevents-popup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "settings-snapshot-retained-within-active-load",
+      "oldId": "settings-snapshot-retained-within-active-load",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-invalid-calendar",
+      "oldId": "shared-state-invalid-calendar",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-missing-player",
+      "oldId": "shared-state-missing-player",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-missing-save",
+      "oldId": "shared-state-missing-save",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-nonfinite-ready",
+      "oldId": "shared-state-nonfinite-ready",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-read-exception",
+      "oldId": "shared-state-read-exception",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shared-state-suppresses-dependent-without-replenishing-budgets",
+      "oldId": "shared-state-suppresses-dependent-without-replenishing-budgets",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shown-popup-close-foreign-takeover-safety",
+      "oldId": "shown-popup-close-foreign-takeover-safety",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shown-popup-close-preserves-additional-pause",
+      "oldId": "shown-popup-close-preserves-additional-pause",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shown-popup-closed-on-shared-state-failure",
+      "oldId": "shown-popup-closed-on-shared-state-failure",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "shown-popup-not-reopened-after-healthy-restore",
+      "oldId": "shown-popup-not-reopened-after-healthy-restore",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "state-missing-ready-key-default0-done-control",
+      "oldId": "state-missing-ready-key-default0-done-control",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "switch-save-fresh-new-save-independent-validation",
+      "oldId": "switch-save-fresh-new-save-independent-validation",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "switch-save-no-old-save-text-or-ui",
+      "oldId": "switch-save-no-old-save-text-or-ui",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "switch-save-preserves-process-dedup",
+      "oldId": "switch-save-preserves-process-dedup",
+      "ticket": "GKSA-15"
+    },
+    {
+      "newId": "switch-save-unresolved-old-cleanup-blocks-replacement",
+      "oldId": "switch-save-unresolved-old-cleanup-blocks-replacement",
+      "ticket": "GKSA-15"
+    }
+  ],
+  "sourceManifests": [
+    {
+      "path": "tests/e2e/gksa10.json",
+      "scenarioCount": 24,
+      "sha256": "cf0b1d9999e364943bd7807fb3938311bf6022b468c35aa3e5a8a3cf741a21a8",
+      "ticket": "GKSA-10"
+    },
+    {
+      "path": "tests/e2e/gksa11.json",
+      "scenarioCount": 32,
+      "sha256": "c201880649b85b96e2d6ce00eb22a5260a2291319db8388009a9ca724541b2d7",
+      "ticket": "GKSA-11"
+    },
+    {
+      "path": "tests/e2e/gksa12.json",
+      "scenarioCount": 47,
+      "sha256": "2893c31f818e9f8353a2427faaa877b304673a3ebaac0a4cd6ff1a4ea5d7a64d",
+      "ticket": "GKSA-12"
+    },
+    {
+      "path": "tests/e2e/gksa13.json",
+      "scenarioCount": 69,
+      "sha256": "04194f5b547754b3a58a4cc47c8c3317c86ea291a6e20d6bc3c54a22bea3820e",
+      "ticket": "GKSA-13"
+    },
+    {
+      "path": "tests/e2e/gksa14.json",
+      "scenarioCount": 44,
+      "sha256": "a66671b1c1d2799e237534fbf04f8cef77e51a4af84e37911d5e38057ed5c095",
+      "ticket": "GKSA-14"
+    },
+    {
+      "path": "tests/e2e/gksa15.json",
+      "scenarioCount": 108,
+      "sha256": "c6b41ce73c232af5b4b53af95feff57cc0e92758fa79c66ebe9c2f5acda55167",
+      "ticket": "GKSA-15"
+    }
+  ]
+}

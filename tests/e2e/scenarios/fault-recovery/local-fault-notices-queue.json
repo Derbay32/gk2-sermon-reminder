@@ -1,0 +1,196 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "queue",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailableBefore"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePendingBefore"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.queueCountBefore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailableAfterFaultRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuePendingAfterFaultRecovery"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.queueCountAfterFaultRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.surfaceAvailableAfterRestore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.budgetConsumedWithoutDisplay"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        }
+      ],
+      "id": "recovery-before-display-cancels-queue",
+      "phaseNote": "明确限定为消息组件真正不可用（不含仅界面被占用）。步骤包含故障恢复后恢复消息组件的独立动作。",
+      "prerequisites": [
+        "原生消息组件不可用，使故障消息只能排队。",
+        "在消息实际显示前可使故障恢复。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在消息组件不可用时注入状态读取故障。预期：排队且尚未显示。检查：notice.surfaceAvailableBefore=false 且 notice.queuePendingBefore=true。",
+        "在消息实际显示前使故障恢复。预期：清除排队消息且不消耗机会。检查：notice.queuePendingAfterFaultRecovery=false 且 notice.queueCountAfterFaultRecovery=0。",
+        "在故障恢复后恢复原生消息组件。预期：不显示过期消息且机会仍未消耗。检查：notice.surfaceAvailableAfterRestore=true 且 notice.stateReadBudgetConsumed=false。"
+      ],
+      "title": "消息组件不可用时排队、故障先恢复、随后恢复组件也不补发且不消耗机会"
+    },
+    {
+      "category": "queue",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailableBefore"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePendingBefore"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCountBefore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumedBefore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuePendingAfterCancellation"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumedAfterCancellation"
+        },
+        {
+          "equals": true,
+          "observation": "notice.surfaceAvailableBeforeRefault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClearBeforeRefault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCountAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumed"
+        }
+      ],
+      "id": "cancelled-queue-preserves-budget-for-refailure",
+      "phaseNote": "使用阶段专用键表达初始排队、取消后、恢复原生消息组件后与再次失效四个阶段：先取消排队，再恢复原生消息组件，方可在同次载入内再次失效并实际显示一次，不以终态计数代替阶段。",
+      "prerequisites": [
+        "已成功载入的合法存档：两个解锁门槛均满足，且注入前已成功观察到一次就绪读取；受影响类别的提示机会尚未消耗。",
+        "初始状态读取故障因原生消息组件不可用而被排队且尚未显示。",
+        "同次载入内可使该故障恢复并在不重载的情况下恢复原生消息组件。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "记录初始排队状态与显示次数。预期：故障消息因原生消息组件不可用而排队且尚未显示，提示机会未消耗。检查：notice.surfaceAvailableBefore=false 且 notice.queuePendingBefore=true 且 notice.stateReadDisplayedCountBefore=0 且 notice.stateReadBudgetConsumedBefore=false。",
+        "在消息显示前使故障恢复。预期：取消排队且提示机会仍未消耗。检查：notice.queuePendingAfterCancellation=false 且 notice.stateReadBudgetConsumedAfterCancellation=false。",
+        "恢复原生消息组件。预期：消息组件可用且原生 UI 安全门已清空。检查：notice.surfaceAvailableBeforeRefault=true 且 ui.safetyGateClearBeforeRefault=true。",
+        "在同次载入内再次注入同类故障。预期：实际显示一次并消耗机会，且不补发已取消的消息。检查：notice.stateReadDisplayedCountAfterRefault=1 且 notice.stateReadBudgetConsumed=true 且 notice.staleNoticeAfterRecovery=false。"
+      ],
+      "title": "取消排队后同次载入再次失效仍可显示一次并消耗机会"
+    },
+    {
+      "category": "queue",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "exit-to-menu",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "state.ordinaryLoadingOrExit"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queueClearedOnLoadExit"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.queueCountAfter"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        }
+      ],
+      "id": "exit-drops-queued-notice",
+      "prerequisites": [
+        "存在尚未显示的旧存档待显示故障消息。",
+        "退出属于普通卸载而非异常状态丢失。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在消息显示前退出存档返回主菜单。预期：识别为普通退出。检查：load.transition=exit-to-menu 且 state.ordinaryLoadingOrExit=true。",
+        "记录排队清除标志与显示次数。预期：丢弃排队且无过期消息。检查：notice.queueClearedOnLoadExit=true 且 notice.queueCountAfter=0。"
+      ],
+      "title": "退出存档丢弃旧存档待显示消息且不残留"
+    }
+  ],
+  "schemaVersion": 2
+}

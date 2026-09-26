@@ -1,0 +1,244 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCount"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCount"
+        }
+      ],
+      "id": "beacon-single-owned-instance",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期信标显示；检查 beacon.enabled=true。",
+        "统计自有实例与回调；预期单一且无重复；检查 beacon.instanceCount=1 与 beacon.duplicateCallbackCount=0。"
+      ],
+      "title": "单次载入只存在一个自有信标实例且无重复回调"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.staleTargetFromPreviousSave"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldInstanceDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldSubscriptionsCleared"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCount"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCount"
+        }
+      ],
+      "id": "beacon-switch-save-clears-old-instance",
+      "prerequisites": [
+        "存在两个满足信标资格的存档。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在第一个存档中使信标显示；预期信标显示；检查 beacon.enabled=true。",
+        "切换到第二个存档；预期清理旧实例与订阅；检查 beacon.oldInstanceDestroyed=true 与 beacon.oldSubscriptionsCleared=true。",
+        "核对残留与回调；预期无上一存档残留目标且单一无重复；检查 beacon.staleTargetFromPreviousSave=false、beacon.instanceCount=1 与 beacon.duplicateCallbackCount=0。"
+      ],
+      "title": "切换存档后清理旧实例与旧订阅且不残留旧目标"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": 0,
+          "observation": "beacon.instanceCountAfterExit"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldInstanceDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldSubscriptionsCleared"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "hud.trackedResourcesReleased"
+        }
+      ],
+      "id": "beacon-exit-save-clears-instance",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且信标已显示。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在信标显示状态下退出存档返回主菜单；预期清理自有实例；检查 beacon.oldInstanceDestroyed=true 与 beacon.oldSubscriptionsCleared=true。",
+        "统计退出后残留；预期无信标与角落残留；检查 beacon.instanceCountAfterExit=0 与 hud.instanceCount=0。",
+        "核对资源释放；预期已释放；检查 hud.trackedResourcesReleased=true。"
+      ],
+      "title": "退出存档后不残留自有信标实例与显示资源"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.hudRebuilt"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldInstanceDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.oldSubscriptionsCleared"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCount"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCount"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.underNativeHud"
+        }
+      ],
+      "id": "beacon-hud-rebuild-single-instance",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且信标已显示。",
+        "可触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "触发原生 HUD 重建；预期重建发生；检查 beacon.hudRebuilt=true。",
+        "等待重建完成；预期信标重新显示；检查 beacon.underNativeHud=true。",
+        "统计重建后的实例、回调与旧订阅；预期单一无重复且已清理；检查 beacon.oldInstanceDestroyed=true、beacon.oldSubscriptionsCleared=true、beacon.instanceCount=1 与 beacon.duplicateCallbackCount=0。"
+      ],
+      "title": "HUD 重建后只保留一个自有信标实例且旧引用已清理"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCount"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCount"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.underNativeHud"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "beacon-repeated-load-recovery",
+      "prerequisites": [
+        "存在满足信标资格的存档。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "连续三次载入同一存档；预期每次加载完成；检查 save.sermonWeekday 等于 game.sermonWeekday。",
+        "每次加载后统计实例与回调；预期不累积；检查 beacon.instanceCount=1 与 beacon.duplicateCallbackCount=0。",
+        "核对最终显示；预期信标正常且位于原生 HUD 下；检查 beacon.enabled=true、beacon.underNativeHud=true 与 hud.visible=true。"
+      ],
+      "title": "反复读档后仍只保留一个自有实例并正确恢复显示"
+    }
+  ],
+  "schemaVersion": 2
+}

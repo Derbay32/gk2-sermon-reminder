@@ -1,0 +1,116 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "countdown-retained",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh-CN",
+            "mode": "single-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        }
+      ],
+      "id": "countdown-retained-one-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 = 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "记录绝对日、星期编号与布道日星期编号 T。",
+        "读取角落倒计时文字与已显示天数。"
+      ],
+      "title": "非布道日剩余 1 天沿用 GKSA-10 倒计时"
+    },
+    {
+      "category": "countdown-retained",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh-CN",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        }
+      ],
+      "id": "countdown-retained-multi-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 在 2..5。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "记录绝对日、星期编号与布道日星期编号 T。",
+        "读取角落倒计时文字与实际选用文案键。"
+      ],
+      "title": "非布道日多天倒计时沿用 GKSA-10 文案"
+    }
+  ],
+  "schemaVersion": 2
+}

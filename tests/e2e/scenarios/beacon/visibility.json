@@ -1,0 +1,64 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "visibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "native.hudVisibleNormal"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleNormal"
+        },
+        {
+          "equals": false,
+          "observation": "native.hudVisibleHiddenPhase"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleHiddenPhase"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.followsNativeHudVisibility"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.independentMenuBlacklist"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.mapOnlyMark"
+        }
+      ],
+      "id": "beacon-follows-native-hud-visibility",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可在同一存档中观察原生提示层在正常画面与某一使其实质隐藏的画面（例如过场或对话）下的真实显隐。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在正常可操作画面记录原生提示层与自有信标可见性；预期原生可见且信标继承；检查 native.hudVisibleNormal=true 且 beacon.visibleNormal=true。",
+        "进入使原生提示层实际隐藏的画面并记录两者；预期原生隐藏且信标随之隐藏；检查 native.hudVisibleHiddenPhase=false 且 beacon.visibleHiddenPhase=false。",
+        "确认未新增独立菜单隐藏名单或地图专用标记；预期均不存在；检查 beacon.independentMenuBlacklist=false 且 beacon.mapOnlyMark=false。"
+      ],
+      "title": "信标继承原生 HUD 显隐且不新增独立菜单名单或地图专用标记"
+    }
+  ],
+  "schemaVersion": 2
+}

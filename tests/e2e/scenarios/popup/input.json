@@ -1,0 +1,142 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        }
+      ],
+      "id": "close-confirm",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "用确认按钮关闭弹窗；预期由确认关闭；检查 popup.closedByConfirm 为 true。",
+        "读取关闭后状态；预期弹窗已关闭；检查 popup.openAfterClose 为 false。"
+      ],
+      "title": "确认按钮可关闭弹窗"
+    },
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByEsc"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        }
+      ],
+      "id": "close-esc",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。",
+        "关闭时不存在由其他系统发起的暂停。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "用 Esc 关闭弹窗；预期由 Esc 关闭；检查 popup.closedByEsc 为 true 与 popup.openAfterClose 为 false。",
+        "读取暂停与输入；预期无卡住暂停且恢复游戏输入；检查 pause.stuckPauseAfterClose 为 false 与 input.gameplayInputRestoredAfterClose 为 true。"
+      ],
+      "title": "Esc 键可关闭弹窗"
+    },
+    {
+      "category": "input",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByGamepadBack"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        }
+      ],
+      "id": "close-gamepad-back",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。",
+        "关闭时不存在由其他系统发起的暂停。",
+        "已连接手柄。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "用手柄返回键关闭弹窗；预期由手柄返回关闭；检查 popup.closedByGamepadBack 为 true 与 popup.openAfterClose 为 false。",
+        "读取暂停与输入；预期无卡住暂停且恢复游戏输入；检查 pause.stuckPauseAfterClose 为 false 与 input.gameplayInputRestoredAfterClose 为 true。"
+      ],
+      "title": "手柄返回键可关闭弹窗"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,931 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.beaconBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCountBeforeRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCountAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.beaconBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumedBeforeFault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        }
+      ],
+      "id": "budget-beacon-display-once-continuous-refault-no-replenish",
+      "phaseNote": "阶段含义：DuringFault=首次故障实际显示、BeforeRefault=持续故障多个检查点后、AfterRefault=同次载入再次失效后。",
+      "prerequisites": [
+        "存档满足资格且目标通道健康，其他通道保持健康。",
+        "测试设施可受控反复使目标通道失效并恢复。",
+        "观察区间为一次存档载入内的多个阶段。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入目标故障；预期该类别故障消息实际显示一次；检查 notice.beaconDisplayedCount=1 且 notice.beaconBudgetConsumed=true。",
+        "保持故障持续多个检查点；预期不再增加；检查 notice.beaconDisplayedCountBeforeRefault=1 且 notice.duplicateNoticeCount=0。",
+        "恢复目标通道后再同次载入再次失效；预期不补充预算；检查 notice.beaconDisplayedCountAfterRefault=1 且 notice.beaconBudgetConsumedAfterRefault=true。"
+      ],
+      "title": "信标类别首次故障显示一次且持续或同次载入复发不补充预算"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "popup.availableBeforeFirstFailure"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.openFailed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.ownedResidue"
+        },
+        {
+          "equals": true,
+          "observation": "notice.popupBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCountBeforeRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "equals": true,
+          "observation": "popup.availableAfterResourceRestore"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.windowCloseCompletedBeforeCleanupFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupFaultObserved"
+        },
+        {
+          "observation": "popup.ownCloseCleanupFaultInjected",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupRepaired"
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "popup.categoryFaultRemainingAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordRetainedAfterCleanupFault"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterCleanupFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterCleanupFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.reopenAfterCleanupRepair"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCountAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.popupBudgetConsumedAfterRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "budget-popup-display-once-continuous-refault-no-replenish",
+      "phaseNote": "阶段含义：BeforeFault=门保持且已安排打开资源故障条件（尚未执行 Open）、AfterFailedOpen=清空门后实际原生 window.Open 失败并成功完成初始清理（界面安全、无自有残留）、显示一次安全故障消息、BeforeRefault=资源持续失败多检查点、AfterGateCleared=恢复资源后正常弹窗显示一次、AfterRefault=自有弹窗原生关闭/清理事务中受控清理故障且故障持续时记录已花费类别计数、AfterRepair=受控修复完成并随后断言不重开；累计与区间口径以 vocabulary 为准，故障消息绝不在安全门前断言。",
+      "prerequisites": [
+        "存档满足资格且正常弹窗通道健康，其他通道健康。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "清空门后实际原生 window.Open 调用失败（而非仅缺失组件解析失败），并成功完成初始清理使界面保持安全、无自有残留。",
+        "首次故障消息显示后恢复打开资源，允许合格正常弹窗成功显示一次。",
+        "测试设施可在自有弹窗成功后于其原生关闭/清理事务中受控注入同类清理故障。",
+        "操作者记录实际注入、恢复与清理故障方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "保持安全门并仅安排首次弹窗打开资源故障条件（此时尚未执行 Open）；预期门仍未清空、弹窗尚未显示且通道不可用；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.availableBeforeFirstFailure=false、popup.actualDisplaysBeforeRecovery=0。",
+        "在资源仍失败时清空安全门；预期观察到实际原生 window.Open 失败并成功完成初始清理（界面安全、无自有残留），随后在安全时机显示一次弹窗类别故障消息；检查 ui.safetyGateClear=true、popup.openFailed=true、popup.ownedResidue=false、notice.popupDisplayedCount=1、notice.popupBudgetConsumed=true。",
+        "在多个检查点保持资源失败；预期不重复弹窗类别故障消息；检查 notice.popupDisplayedCountBeforeRefault=1、notice.duplicateNoticeCount=0。",
+        "受控恢复弹窗打开资源；预期合格正常弹窗成功显示一次并写入记录；检查 popup.availableAfterResourceRestore=true、popup.actualDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "在自有弹窗原生关闭/清理事务中注入受控同类清理故障；预期窗口关闭与模态栈移除先完成且界面安全，随后清理故障被观察到；检查 popup.windowCloseCompletedBeforeCleanupFault=true、popup.cleanupFaultObserved=true、popup.ownCloseCleanupFaultInjected 存在。",
+        "在清理故障仍存在且界面安全时观察已花费类别计数；预期已花费的类别计数保持 1 且不重复；检查 popup.cleanupFaultObserved=true、notice.popupDisplayedCountAfterRefault=1、notice.duplicateNoticeCount=0、notice.popupBudgetConsumedAfterRefault=true。",
+        "受控修复该清理事务并观察完成；预期清理完成且界面安全；检查 popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、popup.categoryFaultRemainingAfterRepair=false。",
+        "清理修复完成后观察同次载入复发后的类别计数与正常弹窗；预期不补充预算、记录仍已花费且不重开；检查 notice.popupDisplayedCountAfterRefault=1、notice.popupBudgetConsumedAfterRefault=true、popup.recordRetainedAfterCleanupFault=true、popup.actualDisplaysAfterCleanupFault=1、popup.newDisplaysAfterCleanupFault=0、popup.reopenAfterCleanupRepair=false。"
+      ],
+      "title": "弹窗类别首次故障显示一次，随后自有弹窗成功显示并在其关闭清理事务同次载入复发仍不补充预算"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCountBeforeRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCountAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.beaconBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumedBeforeFault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        }
+      ],
+      "id": "budget-corner-display-once-continuous-refault-no-replenish",
+      "phaseNote": "阶段含义：DuringFault=首次故障实际显示、BeforeRefault=持续故障多个检查点后、AfterRefault=同次载入再次失效后。",
+      "prerequisites": [
+        "存档满足资格且目标通道健康，其他通道保持健康。",
+        "测试设施可受控反复使目标通道失效并恢复。",
+        "观察区间为一次存档载入内的多个阶段。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入目标故障；预期该类别故障消息实际显示一次；检查 notice.cornerHudDisplayedCount=1 且 notice.cornerHudBudgetConsumed=true。",
+        "保持故障持续多个检查点；预期不再增加；检查 notice.cornerHudDisplayedCountBeforeRefault=1 且 notice.duplicateNoticeCount=0。",
+        "恢复目标通道后再同次载入再次失效；预期不补充预算；检查 notice.cornerHudDisplayedCountAfterRefault=1 且 notice.cornerHudBudgetConsumedAfterRefault=true。"
+      ],
+      "title": "角落类别首次故障显示一次且持续或同次载入复发不补充预算"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCountBeforeRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCountAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": false,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.beaconBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        }
+      ],
+      "id": "budget-state-display-once-continuous-refault-no-replenish",
+      "phaseNote": "阶段含义：DuringFault=首次故障实际显示、BeforeRefault=持续故障多个检查点后、AfterRefault=同次载入再次失效后。",
+      "prerequisites": [
+        "存档满足资格且目标通道健康，其他通道保持健康。",
+        "测试设施可受控反复使目标通道失效并恢复。",
+        "观察区间为一次存档载入内的多个阶段。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入目标故障；预期该类别故障消息实际显示一次；检查 notice.stateReadDisplayedCount=1 且 notice.stateReadBudgetConsumed=true。",
+        "保持故障持续多个检查点；预期不再增加；检查 notice.stateReadDisplayedCountBeforeRefault=1 且 notice.duplicateNoticeCount=0。",
+        "恢复目标通道后再同次载入再次失效；预期不补充预算；检查 notice.stateReadDisplayedCountAfterRefault=1 且 notice.stateReadBudgetConsumedAfterRefault=true。"
+      ],
+      "title": "状态读取类别首次故障显示一次且持续或同次载入复发不补充预算"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameIdentityAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameDayAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameSlotDayAcrossLoads"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase1RecordAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase2RecordAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "notice.beaconBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.popupBudgetConsumedAfterRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 3,
+            "min": 3
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "budget-genuine-reload-replenishes-category-not-popup-dedup",
+      "phaseNote": "阶段含义：PriorLoad=上一次载入已消耗三类本地预算、AfterReload=真正重新载入后三类新预算；正常弹窗身份两载均未花费，故可在新载入观察其类别故障消息，不依赖被去重阻断的新 Open。",
+      "prerequisites": [
+        "上一次载入已分别使信标、角落与弹窗通道故障并各显示一次对应类别故障消息；三类本地故障互不抑制。",
+        "正常弹窗身份在两载均未花费（从未成功打开正常弹窗，故无记录）。",
+        "重新载入同一存档后三类故障仍然存在。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认两载正常弹窗身份均未花费；检查 popup.phase1RecordAbsent=true、popup.phase2RecordAbsent=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "重新载入同一存档；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true、save.sameSlotDayAcrossLoads=true。",
+        "观察三类本地通道；预期新载入各允许再显示一次对应类别故障消息；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=1、notice.popupDisplayedCount=1、notice.stateReadDisplayedCount=0、notice.totalDisplayedCount=3。",
+        "逐类确认预算重新消耗；检查 notice.beaconBudgetConsumedAfterRefault=true、notice.cornerHudBudgetConsumedAfterRefault=true、notice.popupBudgetConsumedAfterRefault=true。"
+      ],
+      "title": "真正重新载入后信标、角落与弹窗三类本地预算均重新可用（正常弹窗身份两载均未花费）"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameIdentityAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameDayAcrossReload"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordBeforeDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        }
+      ],
+      "id": "dedup-successful-normal-display-survives-genuine-reload",
+      "phaseNote": "阶段含义：PriorLoad=上一次载入成功显示一次并写入记录、AfterReload=真正同槽同日重载后新载入累计从 0 起；记录被保留（recordBeforeDisplay=true）故不重开，新载入新增显示为 0。",
+      "prerequisites": [
+        "上一次载入已成功显示过一次正常弹窗并写入该槽该日的进程内记录。",
+        "重新载入同一槽同一实际游戏日（未真正删除存档）。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "重新载入同一槽同日；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true。",
+        "读取新载入的累计正常弹窗显示次数；预期新载入自零累计；检查 popup.actualDisplaysBeforeRecovery=0。",
+        "观察正常弹窗；预期因记录保留而不再重开；检查 dedup.recordRetainedAcrossReload=true、popup.recordBeforeDisplay=true、popup.eligibleOnRecovery=false、popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0。"
+      ],
+      "title": "已成功显示的正常弹窗记录跨真正同槽同日重载仍保留并阻止重开"
+    },
+    {
+      "category": "budget",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameIdentityAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameDayAcrossReload"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterRefault"
+        },
+        {
+          "equals": false,
+          "observation": "fault.downstreamResourceFaultFabricated"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "budget-genuine-reload-replenishes-state-read-budget",
+      "phaseNote": "阶段含义：PriorLoad=上一次载入已消耗状态读取预算、AfterReload=真正重新载入后该类别新预算；共享状态故障抑制下游类别。",
+      "prerequisites": [
+        "上一次载入已使共享状态故障并显示一次状态读取类别故障消息。",
+        "重新载入同一存档后共享状态故障仍然存在。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "重新载入同一存档；预期识别为重载且同槽同日；检查 load.transition=reload、save.sameIdentityAcrossReload=true、save.sameDayAcrossReload=true。",
+        "观察状态读取类别；预期新载入允许再显示一次；检查 notice.stateReadDisplayedCount=1、notice.stateReadBudgetConsumedAfterRefault=true。",
+        "确认共享状态故障抑制下游类别且未伪造下游故障；检查 notice.beaconDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1、fault.downstreamResourceFaultFabricated=false。"
+      ],
+      "title": "真正重新载入后状态读取类别预算重新可用"
+    }
+  ],
+  "schemaVersion": 2
+}

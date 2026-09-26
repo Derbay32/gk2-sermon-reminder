@@ -1,0 +1,373 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "switch-save",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "observation": "save.slotNamePhaseA",
+          "present": true
+        },
+        {
+          "observation": "save.slotNamePhaseB",
+          "present": true
+        },
+        {
+          "observation": "dedup.capturedIdentityPhaseA",
+          "present": true
+        },
+        {
+          "observation": "dedup.capturedIdentityPhaseB",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuedNoticeCarriedToNextLoad"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeInNextSave"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleOldBindingPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        }
+      ],
+      "id": "switch-save-no-old-save-text-or-ui",
+      "prerequisites": [
+        "存档 A 存在排队的故障消息或已显示的自有界面。",
+        "随后切换到存档 B 并等待加载完成。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "切换到存档 B；预期识别为切档；检查 load.transition=switch-save。",
+        "读取各阶段实际加载槽身份；预期 A、B 槽名各自记录；检查 save.slotNamePhaseA 存在、save.slotNamePhaseB 存在、dedup.capturedIdentityPhaseA 存在、dedup.capturedIdentityPhaseB 存在。",
+        "观察旧存档消息与界面；预期均不出现；检查 notice.queuedNoticeCarriedToNextLoad=false、notice.staleNoticeInNextSave=false、hud.staleOldBindingPresent=false、notice.staleNoticeAfterRecovery=false。"
+      ],
+      "title": "切换存档后不显示旧存档文本也不恢复其界面"
+    },
+    {
+      "category": "switch-save",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedPhaseA"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "observation": "dedup.capturedIdentityPhaseA",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossSaveSwitch"
+        },
+        {
+          "observation": "dedup.capturedIdentityPhaseB",
+          "present": true
+        },
+        {
+          "notEqualsObservation": "dedup.capturedIdentityPhaseA",
+          "observation": "dedup.capturedIdentityPhaseB"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.activeIdentityFrozenWithinPhaseB"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        }
+      ],
+      "id": "switch-save-preserves-process-dedup",
+      "phaseNote": "阶段含义：PhaseA=存档 A 已显示并留有进程内存记录、PhaseB=切换到明确不同原生槽 B 后其活动身份在 B 载入内冻结；要求捕获的 A、B 身份彼此不同（不要求 native generation 字段），A 的记录跨切档保留，不要求同一身份跨 A→B 稳定。",
+      "prerequisites": [
+        "存档 A 已实际显示过一次正常弹窗并写入进程内存记录。",
+        "存档 B 为一个明确不同的原生槽；随后切换到存档 B。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "切换前记录 A 阶段身份与去重；预期记录存在；检查 dedup.recordRetainedPhaseA=true、popup.recordAfterDisplay=true、dedup.capturedIdentityPhaseA 存在。",
+        "切换到明确不同的原生槽 B 并读取 B 阶段身份；预期 A、B 捕获身份彼此不同，且 A 的进程内存记录在切档后仍保留，且 B 的活动身份在 B 载入内冻结；检查 dedup.capturedIdentityPhaseB 存在且与 capturedIdentityPhaseA 不同（notEqualsObservation）、dedup.recordRetainedAcrossSaveSwitch=true、dedup.activeIdentityFrozenWithinPhaseB=true。",
+        "确认身份来源与 A/B 相位；预期分别记录且不合并；检查 dedup.capturedIdentityPhaseA 存在、dedup.capturedIdentityPhaseB 存在、dedup.usedLatestSlotGuess=false。"
+      ],
+      "title": "切换存档保留进程内存档 A 的正常弹窗去重记录且 A、B 身份相异"
+    },
+    {
+      "category": "switch-save",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": false,
+          "observation": "popup.recordBeforeDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRechecked"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.available"
+        }
+      ],
+      "id": "switch-save-fresh-new-save-independent-validation",
+      "phaseNote": "阶段含义：PhaseB=全新载入；新载入自零累计，正常弹窗实际显示一次后累计为 1（actualDisplaysAfterGateCleared）且该区间增量为 1（newDisplaysAfterGateCleared）。",
+      "prerequisites": [
+        "存档 A 已实际显示过一次正常弹窗。",
+        "存档 B 为不同的槽或不同游戏日，且满足所有资格条件。",
+        "切档后存档 B 尚未显示过正常弹窗。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "切换到存档 B 并等待加载完成；预期识别为切档；检查 load.transition=switch-save。",
+        "读取新存档身份与去重；预期新槽显示前无本槽本日记录；检查 popup.recordBeforeDisplay=false、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "观察新存档；预期按自身资格独立显示一次并写入记录；检查 popup.eligibilityRechecked=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true、popup.chanceConsumed=true。"
+      ],
+      "title": "新存档按自身槽与日期独立判定"
+    },
+    {
+      "category": "switch-save",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.ownershipCleanupPending"
+        },
+        {
+          "equals": true,
+          "observation": "cleanup.cleanupPending"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "cleanup.newOwnedReplacementAttempts"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "dedup.ownedReplacementCount"
+        },
+        {
+          "equals": false,
+          "observation": "ui.sharedDialogDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "cleanup.quarantined"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleOldBindingPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeInNextSave"
+        }
+      ],
+      "id": "switch-save-unresolved-old-cleanup-blocks-replacement",
+      "prerequisites": [
+        "存档 A 的自有清理尚未完成且被隔离。",
+        "随后切换到存档 B 并要求建立自有显示或消息实例。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在旧清理未完成时切换；预期存在未完成清理；检查 dedup.ownershipCleanupPending=true、cleanup.cleanupPending=true。",
+        "尝试建立新的自有替换；预期被阻塞且不创建新实例；检查 cleanup.newOwnedReplacementAttempts=0、dedup.ownedReplacementCount<=1、ui.sharedDialogDestroyed=false。",
+        "确认旧清理未完成时旧实例被隔离；检查 cleanup.quarantined=true、hud.staleOldBindingPresent=false、notice.staleNoticeInNextSave=false。"
+      ],
+      "title": "未完成的旧存档清理阻塞新的自有替换实例"
+    }
+  ],
+  "schemaVersion": 2
+}

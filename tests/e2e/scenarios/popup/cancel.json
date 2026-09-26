@@ -1,0 +1,348 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledWhenEligibilityLost"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterCancellation"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-consumption-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间开始布道消费当日机会。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间的原生机会；预期尚未消费；检查 popup.pendingDuringDeferral 与 state.sermonReadyValueBefore 不小于 1。",
+        "在等待期间开始布道消费机会；预期机会被消费；检查 state.sermonReadyValue 小于 1。",
+        "读取取消与去重结果；预期取消且不消耗、不写记录、不显示；检查 popup.canceledWhenEligibilityLost、popup.shownAfterCancellation、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间开始布道时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.dateChangedDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDayAfter"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnDateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterDateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        }
+      ],
+      "id": "cancel-on-date-change-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间游戏跨日离开布道日。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间日期与资格；预期有待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间跨日离开布道日；预期日期变化且不再是布道日；检查 save.dateChangedDuringDeferral 与 save.isSermonDayAfter。",
+        "读取取消与显示结果；预期取消且不显示、不消耗；检查 popup.canceledOnDateChange、popup.shownAfterDateChange、popup.chanceConsumedByCanceledPending。"
+      ],
+      "title": "等待期间离开布道日时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-church-gate-loss-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间教堂门槛变为不满足，教学门槛仍为 Completed。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间门槛；预期存在待显示且教堂门槛失效、教学仍完成；检查 popup.pendingDuringDeferral、save.churchUnlocked 为 false、save.tutorialCompleted 为 true。",
+        "读取取消与去重结果；预期取消且不显示、不消耗、不写记录；检查 popup.canceledOnGateChange、popup.shownAfterGateChange、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间教堂门槛失效（教学仍完成）时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterGateChange"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "cancel-on-tutorial-gate-loss-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间教学门槛变为不满足，教堂门槛仍为 Completed。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间门槛；预期存在待显示且教学门槛失效、教堂仍完成；检查 popup.pendingDuringDeferral、save.churchUnlocked 为 true、save.tutorialCompleted 为 false。",
+        "读取取消与去重结果；预期取消且不显示、不消耗、不写记录；检查 popup.canceledOnGateChange、popup.shownAfterGateChange、popup.chanceConsumedByCanceledPending、popup.dedupRecordedForCanceledPending。"
+      ],
+      "title": "等待期间教学门槛失效（教堂仍解锁）时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.loadedSlotChangedDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.oldLoadPendingDiscarded"
+        },
+        {
+          "equals": false,
+          "observation": "popup.oldPendingShownAfterSwitch"
+        },
+        {
+          "equals": true,
+          "observation": "popup.newLoadEvaluatedIndependently"
+        }
+      ],
+      "id": "cancel-on-load-switch-during-defer",
+      "prerequisites": [
+        "存档 A 满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间切换到另一个存档。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间状态；预期存在待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间切换到另一存档；预期载入槽变化且旧待显示被丢弃；检查 save.loadedSlotChangedDuringDeferral 与 popup.oldLoadPendingDiscarded。",
+        "观察旧与新载入；预期旧待显示不显示、新载入独立评估；检查 popup.oldPendingShownAfterSwitch 为 false 与 popup.newLoadEvaluatedIndependently 为 true。"
+      ],
+      "title": "等待期间切档时丢弃旧存档待显示弹窗"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.exitedSaveDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledOnExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.oldPendingShownAfterExit"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        }
+      ],
+      "id": "cancel-on-exit-during-defer",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗处于待显示状态。",
+        "在等待安全门清空期间退出到主菜单。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取等待期间状态；预期存在待显示；检查 popup.pendingDuringDeferral 为 true。",
+        "在等待期间退出到主菜单；预期退出并取消待显示；检查 popup.exitedSaveDuringDeferral 与 popup.canceledOnExit。",
+        "读取显示与去重结果；预期不显示且不消耗；检查 popup.oldPendingShownAfterExit 与 popup.chanceConsumedByCanceledPending。"
+      ],
+      "title": "等待期间退出存档时取消待显示弹窗且不消耗提示机会"
+    },
+    {
+      "category": "cancel",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.pendingCountAfterRepeatedChecks"
+        },
+        {
+          "equals": false,
+          "observation": "popup.duplicatePendingAccumulated"
+        }
+      ],
+      "id": "pending-single-per-slot-day",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在占用界面期间多次重复满足触发条件。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在占用界面重复触发条件并读取待显示计数；预期不累计多个；检查 popup.pendingCountDuringDeferral 与 popup.pendingCountAfterRepeatedChecks 为非负整数且不超过 1。",
+        "检查累积标志；预期未累计；检查 popup.duplicatePendingAccumulated 为 false。"
+      ],
+      "title": "同一保存槽同一具体游戏日不累计多个待显示弹窗"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,61 @@
+# Python tooling for the GKSA-23 source/structure guard, E2E verifier and the
+# frozen acceptance matrices. This project is a virtual (non-package) uv
+# project: it pins the interpreter and the dev-only quality tools, but it never
+# builds or distributes a Python package. The mod itself ships from C#; the
+# pinned tools below are development-only and are never part of the plugin.
+[project]
+name = "gksa-tooling"
+version = "0.0.0"
+description = "Development-only Python tooling for the GK2 Sermon Reminder source/structure and E2E checks."
+requires-python = "==3.13.11"
+
+[tool.uv]
+package = false
+required-version = "==0.12.19"
+python-downloads = "never"
+
+[dependency-groups]
+dev = [
+    "ruff==0.16.9",
+    "pyright==1.1.414",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+exclude = [
+    ".git",
+    ".agents",
+    ".venv",
+    "artifacts",
+    "dist",
+    "bin",
+    "obj",
+    "**/__pycache__",
+    "**/.ruff_cache",
+    "**/.pytest_cache",
+    "**/bin",
+    "**/obj",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.13"
+include = ["tools", "tests"]
+exclude = [
+    ".agents",
+    ".venv",
+    "artifacts",
+    "dist",
+    "bin",
+    "obj",
+    "**/__pycache__",
+    "**/.ruff_cache",
+    "**/.pytest_cache",
+    "**/bin",
+    "**/obj",
+]
+extraPaths = ["tools"]

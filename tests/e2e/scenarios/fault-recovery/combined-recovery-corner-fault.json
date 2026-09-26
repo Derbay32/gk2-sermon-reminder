@@ -1,0 +1,1319 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "corner.requiredTextResolved"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByCornerFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "corner-missing-copy-preserves-beacon-and-popup",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "信标通道健康，正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "当前语言及英语回退均无法解析必需角落文案。",
+        "本场景为 Ready 上下文，用于与 Done 图标证明分离。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 state.readable=true、state.sermonReadyValue>=1、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前使必需角落文案在当前语言与英语回退下均缺失；预期仅抑制角落呈现；检查 corner.requiredTextResolved=false、hud.dependentPresentationSuppressed=true、hud.visible=false。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.suppressedByCornerFault=false、popup.available=true。",
+        "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false、corner.visibleAtSafeUi=false。",
+        "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。"
+      ],
+      "title": "就绪状态下角落文案缺失仅抑制角落且信标与正常弹窗继续"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "hud.requiredCornerResourcePresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "hud.unrelatedPresentationPreserved"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByCornerFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "corner-missing-resource-preserves-beacon-and-popup",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "信标通道健康，正常弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "测试设施可受控使角落文字必需资源缺失。",
+        "本场景为 Ready 上下文。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 state.readable=true、state.sermonReadyValue>=1、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前注入角落文字必需资源缺失；预期仅抑制角落呈现；检查 hud.requiredCornerResourcePresent=false、hud.dependentPresentationSuppressed=true、hud.unrelatedPresentationPreserved=true。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 popup.actualDisplaysAfterGateCleared=1、popup.suppressedByCornerFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.totalDisplayedCount=1。"
+      ],
+      "title": "就绪状态下角落必需资源缺失仅抑制角落且信标与正常弹窗继续"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKey"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneRenderAttempted"
+        },
+        {
+          "equals": false,
+          "observation": "corner.iconDoneResourceAvailable"
+        },
+        {
+          "equals": false,
+          "observation": "corner.iconDoneSuppressedCountdown"
+        },
+        {
+          "equals": true,
+          "observation": "corner.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.componentAvailable"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "corner-done-icon-failure-done-context",
+      "prerequisites": [
+        "存档当日布道机会已消费（原生 sermon_ready 为任意有限且 <1 的值，含 0），属于已布道 Done 而不符合正常弹窗资格。",
+        "角落文字组件存在且需在 Done 阶段实际渲染打勾图标。",
+        "测试设施可受控使打勾图标资源加载或渲染失败。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取就绪状态；预期已布道且非弹窗资格；检查 state.readable=true、state.sermonReadyValue<1。",
+        "在 Done 阶段实际触发图标渲染并注入资源失败；预期 Done 呈现被抑制；检查 corner.iconDoneRenderAttempted=true、corner.iconDoneResourceAvailable=false、corner.dependentPresentationSuppressed=true。",
+        "确认图标故障不抑制倒计时语义；预期未错误抑制倒计时；检查 corner.iconDoneSuppressedCountdown=false。",
+        "在角落局部故障仍存在且原生 HUD 可见的安全时机观察信标；预期信标可见；检查 beacon.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "观察类别计数；预期仅角落类别故障消息显示一次；检查 notice.cornerHudDisplayedCount=1、notice.totalDisplayedCount=1。",
+        "确认 Done 不是弹窗资格场景；预期不产生弹窗类别消息且正常弹窗不显示；检查 popup.componentAvailable=true、popup.actualDisplaysBeforeRecovery=0、notice.popupDisplayedCount=0。"
+      ],
+      "title": "已布道 Done 上下文中打勾图标实际渲染失败归入角落类别一次"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupOffDeliberate"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "popup-off-with-corner-fault-still-notices",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "正常弹窗开关为关闭且该关闭为玩家主动选择。",
+        "信标通道健康。",
+        "测试设施可受控仅使角落文字通道失效。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档；预期弹窗开关关闭属主动缺省而非故障；检查 settings.popupEnabled=false、settings.popupOffDeliberate=true。",
+        "注入受控角落故障；预期角落类别故障消息仍显示一次且角落呈现被抑制；检查 corner.visibleDuringFault=false、notice.cornerHudDisplayedCount=1。",
+        "确认关闭不抑制角落故障消息且信标健康；检查 beacon.visibleAtSafeUi=true、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。"
+      ],
+      "title": "弹窗开关关闭时角落故障消息仍显示"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeVisiblyObservedAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nativeHudPresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.lookupExceptionHeld"
+        },
+        {
+          "equals": true,
+          "observation": "hud.lookupExceptionDistinctFromGenuineNull"
+        },
+        {
+          "equals": true,
+          "observation": "hud.lookupExceptionScopedToCornerHudLookup"
+        },
+        {
+          "equals": true,
+          "observation": "hud.sharedNativeHostLookupsUnaffected"
+        },
+        {
+          "observation": "hud.lookupExceptionRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringLookupFault"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "notice.category"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.healthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleDuringHeldFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailableAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailableDuringHeldFault"
+        },
+        {
+          "equals": true,
+          "observation": "log.initialDiagnosticPresent"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "log.perFrameRepeatCount"
+        },
+        {
+          "equals": true,
+          "observation": "log.boundedDuringLoop"
+        },
+        {
+          "equals": true,
+          "observation": "hud.lookupExceptionRepaired"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.additionalNotifierNoticeShown"
+        }
+      ],
+      "id": "corner-hud-lookup-exception-ready-preserves-beacon",
+      "phaseNote": "阶段含义：BeforeInjection=健康就绪资格建立且原生 HUD 独立确认前言；DuringLookupException=仅角落 HUD 查找访问持续抛出受控访问异常、角落呈现被抑制且角落类别消息已在实际安全时机显示一次；AfterRepair=受控修复该角落查找后角落恢复且无成功提示与额外消息。信标与消息组件在注入前独立健康，并在故障持有期间持续安全可用。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "载入后先成功观察一次原生就绪读取，原生 HUD 与信标健康，正常弹窗开关关闭属玩家主动缺省，信标开关开启。",
+        "测试设施仅受控使角落 HUD 查找访问抛出访问异常，作用域限于该角落查找，不改变信标或消息组件可能共享的原生宿主，也不是返回普通加载期的真实 null。",
+        "操作者记录实际注入与修复方法，供 GKSA-16 复现；本清单不发明任何原生注入 API。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待就绪；预期共享状态可读、资格成立且原生 HUD 独立确认健康；检查 state.readable=true、state.sermonReadyValue>=1、state.gatesSatisfied=true、state.readinessObservedBeforeInjection=true、resource.nativeHealthyAtBaseline=true、hud.nativeHudPresent=true、settings.popupEnabled=false、settings.beaconEnabled=true、beacon.healthyAtBaseline=true、notice.notifierAvailableAtBaseline=true。",
+        "在就绪后仅受控使角落 HUD 查找访问抛出访问异常；预期仅该角落查找通道异常且角落呈现被抑制；检查 hud.lookupExceptionHeld=true、hud.lookupExceptionDistinctFromGenuineNull=true、hud.lookupExceptionScopedToCornerHudLookup=true、hud.sharedNativeHostLookupsUnaffected=true、hud.lookupExceptionRecorded 存在、hud.dependentPresentationSuppressed=true、hud.visibleDuringLookupFault=false、corner.visibleDuringFault=false。",
+        "保持该角落查找访问异常并观察共享状态与合格信标；预期状态仍可读、信标与消息组件持续安全可用；检查 state.readable=true、beacon.visibleAtSafeUi=true、beacon.visibleDuringHeldFault=true、beacon.suppressedByCornerFault=false、notice.notifierAvailableDuringHeldFault=true。",
+        "在安全实际时机观察故障消息；预期仅角落类别消息实际显示一次且其他类别为零；检查 ui.safetyGateClear=true、notice.category=corner-hud、notice.cornerHudDisplayedCount=1、notice.cornerHudBudgetConsumed=true、notice.stateReadDisplayedCount=0、notice.beaconDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
+        "在访问异常持续多个连续帧期间观察日志；预期初始诊断保留且无逐帧刷屏；检查 log.initialDiagnosticPresent=true、log.perFrameRepeatCount=0、log.boundedDuringLoop=true。",
+        "受控修复角落 HUD 查找；预期角落恢复且不显示成功提示或额外消息；检查 hud.lookupExceptionRepaired=true、corner.visibleAfterRecovery=true、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false、notice.successMessageShown=false、notice.additionalNotifierNoticeShown=false、notice.totalDisplayedCount=1。"
+      ],
+      "title": "就绪状态原生 HUD 查找抛出访问异常仅归入角落类别且状态与信标不受影响"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nativeHudPresent"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKey"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFailure"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringRetryPending"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleAtNotifierRestore"
+        },
+        {
+          "equals": true,
+          "observation": "hud.doneStateReadableDuringRetryPending"
+        },
+        {
+          "equals": true,
+          "observation": "hud.doneStateReadableAtNotifierRestore"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneFailedFirstAttempt"
+        },
+        {
+          "observation": "corner.iconDoneFailureRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneFailureEpisodeRetained"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneRetryPending"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneHeldPendingAtNotifierRestore"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneResolvedAfterRetry"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAbsentDuringFailure"
+        },
+        {
+          "equals": false,
+          "observation": "notice.notifierAvailableDuringFailure"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailableDuringFailure"
+        },
+        {
+          "equals": true,
+          "observation": "notice.logOnlyNoSurface"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePending"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCountWhileNotifierAbsent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.cornerHudBudgetConsumedWhileNotifierAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailableAtRestore"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierRecoveryRevalidate"
+        },
+        {
+          "equals": true,
+          "observation": "notice.noticeDisplayedWhileIconPendingAtRestore"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.additionalNotifierNoticeShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "corner-done-icon-failure-retry-pending-notifier-restore-displays-once",
+      "phaseNote": "阶段含义：Failure=首个 Done 打勾图标请求实际失败且 Done 呈现被抑制；NotifierAbsent=原生消息组件缺失、角落类别消息仅排队不消耗；RetryPending=有界重试开始但新请求保持待定；NotifierRestored=打勾图标仍待定且业务仍为已布道时消息组件与安全时机恢复，角落类别消息恰显示一次；Recovered=图标成功解析后 Done 恢复且无成功提示或额外消息。各阶段使用带阶段名的可观察字段，避免把不同阶段的组件状态混为一谈。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会已消费（原生 sermon_ready 为有限且 <1）。",
+        "角落文字组件存在且需在 Done 阶段实际请求打勾图标；原生 HUD 健康。",
+        "原生消息组件初始不可用。",
+        "测试设施可受控使首个打勾图标请求失败、使其后的新请求保持待定、再受控恢复消息组件并最终使图标成功。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现；本清单不发明任何原生注入 API。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待就绪；预期业务为已布道且原生 HUD 健康；检查 state.readable=true、state.sermonReadyValue<1、hud.nativeHudPresent=true、hud.selectedTextKey=gksr.hud.sermonDone。",
+        "实际触发 Done 阶段打勾图标请求并使其失败；预期整个 Done 呈现被抑制且角落类别故障成立；检查 corner.iconDoneFailedFirstAttempt=true、corner.iconDoneFailureRecorded 存在、corner.visibleDuringFault=false、hud.visibleDuringFailure=false。",
+        "在消息组件缺失下观察故障消息；预期仅排队不实际显示且预算未消耗，阶段可用性用显式失败阶段字段表达；检查 notice.notifierAbsentDuringFailure=true、notice.notifierAvailableDuringFailure=false、notice.surfaceAvailableDuringFailure=false、notice.logOnlyNoSurface=true、notice.queuePending=true、notice.cornerHudDisplayedCountWhileNotifierAbsent=0、notice.cornerHudBudgetConsumedWhileNotifierAbsent=false。",
+        "让有界重试开始但保持新请求待定；预期已有失败情节保留、业务仍为已布道且 Done 选中状态可读但不可见；检查 corner.iconDoneRetryPending=true、corner.iconDoneFailureEpisodeRetained=true、hud.selectedTextKey=gksr.hud.sermonDone、hud.doneStateReadableDuringRetryPending=true、hud.visibleDuringRetryPending=false。",
+        "在图标仍待定且业务仍为已布道时受控恢复消息组件与安全时机；预期角落类别消息恰显示一次且 Done 仍隐藏；检查 corner.iconDoneHeldPendingAtNotifierRestore=true、notice.notifierAvailableAtRestore=true、notice.notifierRecoveryRevalidate=true、notice.noticeDisplayedWhileIconPendingAtRestore=true、ui.safetyGateClear=true、hud.doneStateReadableAtNotifierRestore=true、hud.visibleAtNotifierRestore=false、notice.cornerHudDisplayedCount=1、notice.cornerHudBudgetConsumed=true。",
+        "随后使打勾图标成功解析；预期 Done 恢复且无成功提示或额外消息；检查 corner.iconDoneResolvedAfterRetry=true、corner.visibleAfterRecovery=true、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false、notice.additionalNotifierNoticeShown=false、notice.successMessageShown=false、notice.totalDisplayedCount=1。"
+      ],
+      "title": "已布道打勾图标失败后重试待定、消息组件恢复时角落类别恰显示一次且 Done 保持隐藏"
+    },
+    {
+      "category": "corner-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nativeHudPresent"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKey"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringRetryPending"
+        },
+        {
+          "equals": true,
+          "observation": "hud.doneStateReadableDuringRetryPending"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneFailedFirstAttempt"
+        },
+        {
+          "observation": "corner.iconDoneFailureRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneFailureEpisodeRetained"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneRetryPending"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneResolvedAfterRetry"
+        },
+        {
+          "equals": true,
+          "observation": "corner.iconDoneResolvedBeforeNotifierRestore"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAbsentDuringFailure"
+        },
+        {
+          "equals": false,
+          "observation": "notice.notifierAvailableDuringFailure"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailableDuringFailure"
+        },
+        {
+          "equals": true,
+          "observation": "notice.logOnlyNoSurface"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePendingDuringRetry"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAbsentAtTrueRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCountAfterTrueRecoveryBeforeNotifierRestore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.cornerHudBudgetConsumedAfterTrueRecoveryBeforeNotifierRestore"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailableAtRestore"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuePending"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "corner-done-icon-failure-retry-recovers-before-notifier-restore",
+      "phaseNote": "阶段含义：Failure=首个 Done 图标请求实际失败；RetryPending=有界重试新请求保持待定且角落消息仅排队；TrueRecovery=打勾图标成功解析且 Done 已渲染，此时消息组件仍缺失；RestoredNotifier=随后才恢复消息组件，预期无过期补发且预算仍未消耗。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会已消费（原生 sermon_ready 为有限且 <1）。",
+        "角落文字组件存在且需在 Done 阶段实际请求打勾图标；原生 HUD 健康。",
+        "原生消息组件在打勾图标成功恢复并渲染前保持不可用。",
+        "测试设施可受控使首个打勾图标请求失败、使其后的新请求保持待定、再受控使图标成功，最后才恢复消息组件。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现；本清单不发明任何原生注入 API。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待就绪；预期业务为已布道且原生 HUD 健康；检查 state.readable=true、state.sermonReadyValue<1、hud.nativeHudPresent=true、hud.selectedTextKey=gksr.hud.sermonDone。",
+        "实际触发 Done 阶段打勾图标请求并使其失败；预期整个 Done 呈现被抑制且阶段可用性显式；检查 corner.iconDoneFailedFirstAttempt=true、corner.iconDoneFailureRecorded 存在、notice.notifierAbsentDuringFailure=true、notice.notifierAvailableDuringFailure=false、notice.surfaceAvailableDuringFailure=false、notice.logOnlyNoSurface=true、notice.cornerHudBudgetConsumedWhileNotifierAbsent=false。",
+        "让有界重试开始但保持新请求待定；预期已有失败情节保留、待显示消息仅排队不消耗且 Done 选中状态可读但不可见；检查 corner.iconDoneRetryPending=true、corner.iconDoneFailureEpisodeRetained=true、notice.queuePendingDuringRetry=true、hud.doneStateReadableDuringRetryPending=true、hud.visibleDuringRetryPending=false。",
+        "使打勾图标成功解析并实际渲染 Done，此时消息组件仍缺失；预期真实恢复、消息组件仍不可用且恢复窗口内零显示与零消耗；检查 corner.iconDoneResolvedAfterRetry=true、corner.iconDoneResolvedBeforeNotifierRestore=true、corner.visibleAfterRecovery=true、notice.notifierAbsentAtTrueRecovery=true、notice.cornerHudDisplayedCountAfterTrueRecoveryBeforeNotifierRestore=0、notice.cornerHudBudgetConsumedAfterTrueRecoveryBeforeNotifierRestore=false。",
+        "在真实恢复后才恢复消息组件；预期无过期角落消息补发且预算仍未消耗；检查 notice.notifierAvailableAtRestore=true、notice.staleNoticeAfterRecovery=false、notice.queuePending=false、notice.cornerHudDisplayedCount=0、notice.cornerHudBudgetConsumed=false。",
+        "确认无成功提示与额外消息；检查 notice.recoveryToastShown=false、notice.successMessageShown=false、notice.duplicateNoticeCount=0、notice.totalDisplayedCount=0。"
+      ],
+      "title": "已布道打勾图标在消息组件恢复前成功重试并渲染则不补发过期角落消息"
+    }
+  ],
+  "schemaVersion": 2
+}

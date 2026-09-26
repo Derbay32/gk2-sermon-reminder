@@ -1,0 +1,639 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "settings.popupDefaultValue"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconDefaultValue"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.pendingCount"
+        }
+      ],
+      "id": "popup-default-off",
+      "prerequisites": [
+        "测试环境尚未写入本模组设置（或已清除为首次使用状态）。",
+        "存档满足教堂与教学门槛且处于布道日机会未消费状态。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组；预期插件实际加载；检查 plugin.loaded 为 true。",
+        "在主菜单打开 GK2 Mod Framework 的 Mods 入口；预期本模组设置页面可打开；检查 settings.modsEntryUsed 为 true。",
+        "读取本模组的弹窗开关与信标开关；预期弹窗为关闭、信标为开启；检查 settings.popupDefaultValue 与 settings.beaconDefaultValue。",
+        "载入已就绪的布道日存档；预期不出现弹窗；检查 popup.shown 为 false 且 popup.pendingCount 为 0。"
+      ],
+      "title": "首次使用且无已保存设置时正常布道弹窗开关默认为关闭"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.modsEntryUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.pageRegisteredOnce"
+        },
+        {
+          "finalTextKey": "gksr.settings.group.title",
+          "language": "zh-CN",
+          "observation": "settings.groupTitle"
+        },
+        {
+          "finalTextKey": "gksr.settings.popup.label",
+          "language": "zh-CN",
+          "observation": "settings.popupLabel"
+        },
+        {
+          "finalTextKey": "gksr.settings.popup.description",
+          "language": "zh-CN",
+          "observation": "settings.popupDescription"
+        },
+        {
+          "finalTextKey": "gksr.settings.beacon.label",
+          "language": "zh-CN",
+          "observation": "settings.beaconLabel"
+        },
+        {
+          "finalTextKey": "gksr.settings.beacon.description",
+          "language": "zh-CN",
+          "observation": "settings.beaconDescription"
+        },
+        {
+          "equals": false,
+          "observation": "settings.applyButtonUsed"
+        },
+        {
+          "equals": false,
+          "observation": "settings.saveButtonUsed"
+        }
+      ],
+      "id": "settings-page-exposes-toggle",
+      "prerequisites": [
+        "测试环境可从主菜单进入 Mods 入口。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在主菜单打开 GK2 Mod Framework 的 Mods 列表；预期只列出本模组一个设置页面；检查 settings.pageRegisteredOnce 为 true。",
+        "打开本模组设置页面并读取标题；预期显示定稿页面名；检查 settings.groupTitle 使用 gksr.settings.group.title 的 zh-CN 文案。",
+        "读取弹窗与信标开关的名称与说明；预期均显示定稿文案；检查 settings.popupLabel/description 与 settings.beaconLabel/description。",
+        "检查页面操作控件；预期没有应用或保存按钮；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。"
+      ],
+      "title": "Mods 的模组设置页面暴露弹窗与信标开关并使用定稿文案"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "keyboard-mouse",
+          "observation": "settings.inputDeviceUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.toggleChanged"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        }
+      ],
+      "id": "settings-toggle-keyboard",
+      "prerequisites": [
+        "测试环境可进入模组设置页面，初始弹窗开关为关闭。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "用键鼠在设置页面把弹窗开关切为开启；预期开关值变化；检查 settings.toggleChanged 为 true 且 settings.popupEnabledAfterToggle 为 true。",
+        "不离开页面读取持久化结果；预期已自动保存；检查 settings.autosavedAfterToggle 为 true。"
+      ],
+      "title": "键鼠可在 Mods 页修改弹窗开关"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "gamepad",
+          "observation": "settings.inputDeviceUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.gamepadNavigationWorked"
+        },
+        {
+          "equals": true,
+          "observation": "settings.toggleChanged"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        }
+      ],
+      "id": "settings-toggle-gamepad",
+      "prerequisites": [
+        "测试环境可进入模组设置页面，初始弹窗开关为关闭，已连接手柄。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "仅用手柄在设置页面导航到弹窗开关；预期手柄可完整导航；检查 settings.gamepadNavigationWorked 为 true。",
+        "用手柄把弹窗开关切为开启；预期开关值变化且自动保存；检查 settings.toggleChanged、settings.popupEnabledAfterToggle、settings.autosavedAfterToggle。"
+      ],
+      "title": "手柄可在 Mods 页修改弹窗开关"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.autosavedAfterToggle"
+        },
+        {
+          "equals": false,
+          "observation": "settings.applyButtonUsed"
+        },
+        {
+          "equals": false,
+          "observation": "settings.saveButtonUsed"
+        },
+        {
+          "equals": true,
+          "observation": "settings.persistedValueEqualsToggled"
+        }
+      ],
+      "id": "settings-autosave",
+      "prerequisites": [
+        "测试环境可进入模组设置页面。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "切换弹窗开关且不点击任何应用或保存按钮；预期无需额外按钮即写入；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。",
+        "读取已写入的设置值；预期与切换结果一致；检查 settings.autosavedAfterToggle 与 settings.persistedValueEqualsToggled。"
+      ],
+      "title": "修改弹窗开关后立即自动保存全局设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": false,
+          "observation": "settings.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.appliedValueOnLoad"
+        },
+        {
+          "equals": false,
+          "observation": "settings.restartRequired"
+        },
+        {
+          "equals": false,
+          "observation": "settings.valueBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "settings-applied-on-next-load-no-restart",
+      "prerequisites": [
+        "测试环境未重启游戏进程，弹窗开关已由关闭改为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "确认游戏进程未重启；预期仍为同一进程；检查 settings.processRestarted 为 false。",
+        "在不重启的条件下载入已就绪的布道日存档；预期使用新开关值并显示弹窗；检查 settings.appliedValueOnLoad 与 popup.shown 为 true。",
+        "观察是否出现重启提示；预期没有重启要求；检查 settings.restartRequired 为 false。"
+      ],
+      "title": "修改开关后未重启即在下一次载入存档时生效"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": false,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": false,
+          "observation": "pause.otherPauseSourceActiveAtEligibility"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterDisable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        }
+      ],
+      "id": "settings-popup-disable-next-load",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个满足教堂与教学两个精确门槛、处于布道日且原生 sermon_ready>=1 的存档；载入后存档完整就绪、安全门真正清空且玩家可操作，弹窗与角落文字资源健康可用，界面无菜单、对话或过场占用且无其他暂停来源。本进程对该槽该具体游戏日从未提示过，即尚无去重记录。",
+        "初始弹窗开关为开启。",
+        "上述夹具前提（资源健康、就绪/安全/可操作、无占用界面与其他暂停）由操作者截图或观察独立确认，不得按弹窗是否出现反推。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取该槽该日的载入前去重状态；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在主菜单把弹窗开关切为关闭；预期持久化值为关闭；检查 settings.popupEnabled 为 false。",
+        "载入该从未提示过的合格存档并读取资格、日期与就绪状态；预期除弹窗开关外资格满足且画面就绪、安全、可操作；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue、save.readyToPlay、ui.safetyGateClear、ui.playerControllable 与 settings.popupEnabled。",
+        "确认该次载入界面无菜单、对话或过场占用且无其他暂停来源；预期两项排除条件均成立；检查 ui.busyGateActive 为 false 与 pause.otherPauseSourceActiveAtEligibility 为 false。",
+        "观察弹窗并检查提示机会；预期不显示且未消耗机会；检查 popup.shownAfterDisable 为 false 与 popup.chanceConsumed 为 false。"
+      ],
+      "title": "弹窗开关由开启切为关闭后在下次载入从未提示过的合格存档时不显示弹窗"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.processExited"
+        },
+        {
+          "equals": true,
+          "observation": "settings.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterRestart"
+        },
+        {
+          "equals": true,
+          "observation": "settings.persistedValueEqualsBeforeRestart"
+        },
+        {
+          "equals": true,
+          "observation": "settings.appliedValueOnLoad"
+        }
+      ],
+      "id": "settings-persist-across-process-restart",
+      "prerequisites": [
+        "弹窗开关已设为开启并使设置已落盘。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "正常退出游戏进程；预期进程结束；检查 settings.processExited 为 true。",
+        "重新启动游戏进程；预期为新进程且已加载已落盘设置；检查 settings.processRestarted 为 true。",
+        "在主菜单读取弹窗开关；预期保留已保存值；检查 settings.popupEnabledAfterRestart 与 settings.persistedValueEqualsBeforeRestart 为 true。",
+        "载入已就绪的布道日存档；预期按已保存值生效；检查 settings.appliedValueOnLoad 为 true。"
+      ],
+      "title": "正常退出并重启游戏后保留已保存的开关设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.saveTimestampOlderThanSettingChange"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "settings.rolledBackByOldSave"
+        },
+        {
+          "equals": true,
+          "observation": "settings.valueAfterOldSaveLoad"
+        }
+      ],
+      "id": "settings-old-save-no-rollback",
+      "prerequisites": [
+        "存在一个保存时间早于本次设置修改的旧存档，当前弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "载入保存时间早于本次设置修改的旧存档；预期不回滚全局设置；检查 save.saveTimestampOlderThanSettingChange 为 true。",
+        "读取当前弹窗开关；预期仍为开启；检查 settings.popupEnabled 与 settings.valueAfterOldSaveLoad 为 true 且 settings.rolledBackByOldSave 为 false。"
+      ],
+      "title": "读取时间早于设置修改的旧存档不回滚当前全局设置"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "settings.popupEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterPopupToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconSettingUnchangedByPopupToggle"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabledAfter"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconPersistedValueEqualsAfter"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupSettingUnchangedByBeaconToggle"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconIndependentOfPopup"
+        }
+      ],
+      "id": "settings-beacon-independent",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "初始持久化状态：弹窗开关为关闭，信标开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在主菜单读取两个持久化开关值；预期弹窗关闭、信标开启；检查 settings.popupEnabledBefore 为 false 与 settings.beaconEnabledBefore 为 true。",
+        "在主菜单只把弹窗开关切为开启；预期弹窗持久化值变化而信标持久化值不变；检查 settings.popupEnabledAfterPopupToggle 为 true 与 settings.beaconSettingUnchangedByPopupToggle 为 true。",
+        "在主菜单只把信标开关切为关闭；预期信标持久化值变化并已落盘、弹窗持久化值不变；检查 settings.beaconEnabledAfter 为 false、settings.beaconPersistedValueEqualsAfter 为 true 与 settings.popupSettingUnchangedByBeaconToggle 为 true。",
+        "比较两个开关；预期互不连动；检查 settings.beaconIndependentOfPopup 为 true。"
+      ],
+      "title": "信标开关与弹窗开关在持久化值上相互独立且互不连动"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.readyToPlay"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledBefore"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadWhileEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.returnedToMainMenu"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabledAfter"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterReload"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.shownOnLoadAfterDisable"
+        },
+        {
+          "equals": true,
+          "observation": "settings.hudTextStillShownOnNextLoad"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "save.absoluteDayAfterRoundtrip"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabledAfterReverseToggle"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.shownOnLoadAfterReenable"
+        }
+      ],
+      "id": "settings-beacon-next-load-visibility",
+      "prerequisites": [
+        "测试环境可从主菜单 Mods 入口进入模组设置页面；本模组不提供游戏内 Mods 界面，所有开关操作都在主菜单进行。",
+        "存在一个完整就绪、教堂与教学两个精确门槛任务均 Completed、处于布道日且原生 sermon_ready>=1 的存档；其信仰图标、教堂目标点与原生 widget 资源健康可用，且原生 HUD 实际可见。弹窗开关为关闭以避免弹窗干扰，初始信标开关为开启。",
+        "开启、关闭与重新开启三个阶段载入的是同一存档的同一具体游戏日，绝对日保持不变。",
+        "上述资格、日期与资源健康条件属于夹具前提，必须由操作者截图或观察对每次载入独立确认，不得按本模组信标是否出现反推。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在主菜单读取信标开关持久化值；预期为开启；检查 settings.beaconEnabledBefore 为 true。",
+        "载入同一存档（第 1 次，开关为开启）并核对资格、日期与资源健康；预期完整就绪、两个门槛任务 Completed、处于布道日且 sermon_ready>=1，原生 HUD 可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.sermonWeekday 等于 game.sermonWeekday。",
+        "观察第 1 次载入的原生信标；预期信标显示；检查 beacon.shownOnLoadWhileEnabled 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "在主菜单只把信标开关切为关闭；预期持久化值为关闭；检查 settings.beaconEnabledAfter 为 false。",
+        "再次载入同一存档的同一绝对日（第 2 次，开关为关闭）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterReload 等于 save.absoluteDay。",
+        "观察第 2 次载入的原生信标；预期信标不再显示；检查 beacon.shownOnLoadAfterDisable 为 false。",
+        "读取角落文字提醒；预期仍显示；检查 settings.hudTextStillShownOnNextLoad 为 true。",
+        "退出该存档到主菜单；预期已回到主菜单；检查 save.returnedToMainMenu 为 true。",
+        "打开本模组设置页面；预期设置页面可打开；检查 settings.modsEntryUsed 为 true。",
+        "把信标开关切回开启；预期持久化值为开启；检查 settings.beaconEnabledAfterReverseToggle 为 true。",
+        "再次载入同一存档的同一绝对日（第 3 次，开关重新开启）并重新核对资格、日期与资源健康；预期与第 1 次一致且绝对日不变、原生 HUD 仍可见；检查 save.readyToPlay、save.churchUnlocked、save.tutorialCompleted、save.isSermonDay、state.sermonReadyValue 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。",
+        "观察第 3 次载入的原生信标；预期信标恢复显示；检查 beacon.shownOnLoadAfterReenable 为 true。"
+      ],
+      "title": "信标开关按已保存值在下次载入存档时生效（关闭后不显示、重新开启后恢复显示）"
+    }
+  ],
+  "schemaVersion": 2
+}

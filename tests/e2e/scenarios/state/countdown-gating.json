@@ -1,0 +1,75 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "church-locked",
+      "prerequisites": [
+        "当前存档中教堂开启任务不是 Completed。",
+        "其余解锁条件已满足或不影响判定。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组并载入该存档。",
+        "等待存档加载完成并进入可操作画面。",
+        "观察左上角时钟下方区域。"
+      ],
+      "title": "教堂未解锁时不显示倒计时"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "tutorial-incomplete",
+      "prerequisites": [
+        "当前存档中教堂开启任务为 Completed。",
+        "当前存档中首次布道教学任务不是 Completed。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "观察左上角时钟下方区域。"
+      ],
+      "title": "首次布道教学未完成时不显示倒计时"
+    }
+  ],
+  "schemaVersion": 2
+}

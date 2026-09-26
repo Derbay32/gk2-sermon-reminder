@@ -1,0 +1,565 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "defer",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "popup.partialOpenFailureArranged"
+        },
+        {
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "popup.initialOpenSafetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.ownedCleanupTransactionPresent"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction"
+        },
+        {
+          "observation": "popup.cleanupFailureInjectionRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePendingDuringUnsafe"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.displayAttemptCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOccupied"
+        },
+        {
+          "equals": true,
+          "observation": "popup.externalGateHeldDuringRepair"
+        },
+        {
+          "equals": true,
+          "observation": "popup.availableAfterResourceRestore"
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupRepaired"
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "popup.categoryFaultRemainingAfterRepair"
+        },
+        {
+          "equals": false,
+          "observation": "popup.recordAfterPartialOpenRepair"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuePendingAfterRepair"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumedBeforeRefault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRechecked"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        }
+      ],
+      "id": "recovery-while-menu-occupied-deferred-then-eligible",
+      "phaseNote": "阶段含义：Prereq=注入前独立确认弹窗开关 ON、信标开关 ON 与原生资源健康基线、合格未显示；PartialOpen=初始安全门清空时部分 Open 失败建立自有清理事务、DuringUnsafe=既有事务清理失败在菜单占用界面下被观察且零通知、DuringRepair=保持独立外部门并移除初始 Open 失败条件后修复清理、AfterRepairBeforeGateClear=修复完成且最终门仍保持时记录累计显示 0 与未花费记录、AfterGateClear=修复后清空门按新鲜资格显示一次；故障通知不在安全门前断言，不跨门进行资源发现。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，且尚未显示正常弹窗。",
+        "注入前独立确认正常弹窗开关为 ON、信标开关为 ON 且原生资源健康基线成立，此确认不以本模组弹窗输出为证据。",
+        "测试设施可在合格未显示载入中，在初始安全门清空时安排受控部分原生 Open 失败（建立自有清理事务，不花费去重）。",
+        "测试设施可在不安全界面使该自有清理持续失败，并在修复期间保持独立外部普通 UI 门。",
+        "操作者记录部分 Open 失败、清理失败与修复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入前在合格且未显示的载入中独立记录初始前置；预期正常弹窗开关 ON、信标开关 ON、原生资源健康基线成立、两个门槛与布道日成立、状态可读、当日机会未消费且该槽该日尚未显示；检查 settings.popupEnabled=true、settings.beaconEnabled=true、resource.nativeHealthyAtBaseline=true、save.churchUnlocked=true、save.tutorialCompleted=true、save.isSermonDay=true、state.gatesSatisfied=true、state.readable=true、state.sermonReadyValue>=1、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "在初始安全门清空时安排并观察受控部分原生 Open 失败；预期实际 Open 尝试发生时初始安全门已清空、建立自有清理事务、未成功显示且不花费去重；检查 popup.initialOpenSafetyGateClear=true、popup.partialOpenFailureArranged=true、popup.partialOpenFailureRecorded 存在、popup.ownedCleanupTransactionPresent=true、popup.actualDisplaysBeforeRecovery=0。",
+        "保留部分原生模态暂停或菜单占用使界面不安全，并保持自有清理失败；预期在既有事务上观察到实际清理失败、菜单占用成立、故障排队且零实际通知；检查 popup.cleanupFailureObservedOnExistingTransaction=true、popup.cleanupFailureInjectionRecorded 存在、ui.busyGateActive=true、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、notice.popupDisplayedCount=0、popup.displayedWhileOccupied=false。",
+        "保持独立外部普通 UI 门，移除注入的初始 Open 失败条件（观察资源恢复），随后受控修复自有清理；预期资源恢复、清理完成且无残留类别故障、未显示队列被取消且预算未消耗；检查 popup.externalGateHeldDuringRepair=true、popup.availableAfterResourceRestore=true、popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、notice.popupBudgetConsumedBeforeRefault=false。",
+        "在最终外部 UI 门仍保持、清理修复完成后记录累计正常显示与记录状态；预期累计正常显示仍为 0 且该槽该日尚未写入记录；检查 popup.externalGateHeldDuringRepair=true、popup.actualDisplaysBeforeRecovery=0、popup.recordAfterPartialOpenRepair=false。",
+        "只有清理修复后才清空外部 UI 门；预期合格正常弹窗按当前资格显示一次并重查资格；检查 ui.safetyGateClear=true、popup.eligibilityRechecked=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
+      ],
+      "title": "部分 Open 清理故障在占用界面下被观察到，修复并清空界面后按新鲜资格补发一次"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "save.dateChangedDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDayBeforeDeferral"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBeforeDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "popup.partialOpenFailureArranged"
+        },
+        {
+          "observation": "popup.partialOpenFailureRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "popup.initialOpenSafetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.ownedCleanupTransactionPresent"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupFailureObservedOnExistingTransaction"
+        },
+        {
+          "observation": "popup.cleanupFailureInjectionRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePendingDuringUnsafe"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.displayAttemptCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOccupied"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dayCrossedBeforeGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.externalGateHeldDuringRepair"
+        },
+        {
+          "equals": true,
+          "observation": "popup.availableAfterResourceRestore"
+        },
+        {
+          "equals": true,
+          "observation": "popup.cleanupRepaired"
+        },
+        {
+          "observation": "popup.cleanupRepairRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "popup.categoryFaultRemainingAfterRepair"
+        },
+        {
+          "equals": false,
+          "observation": "popup.recordAfterPartialOpenRepair"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuePendingAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        }
+      ],
+      "id": "recovery-during-deferral-crosses-day-discards-old-day",
+      "phaseNote": "阶段含义：Prereq=注入前独立确认弹窗开关 ON、原生资源健康基线、初始布道日与有限机会、合格未显示；PartialOpen=初始安全门清空时部分 Open 失败建立自有清理事务、DuringUnsafe=保持外部门并在清理失败期间跨入非布道日且零通知（严格整数尝试计数 0）、DuringRepair=移除初始 Open 失败条件后修复清理、AfterRepairBeforeGateClear=修复完成且最终门仍保持时记录累计显示 0 与未花费记录、AfterGateClear=修复后清空门按当前非布道日零输出；只在当前状态上判定，不重放旧日。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且初始处于布道日、当日机会未消费，且尚未显示正常弹窗。",
+        "注入前独立确认正常弹窗开关为 ON 且原生资源健康基线成立，此确认不以本模组弹窗输出为证据。",
+        "测试设施可在合格未显示载入中，在初始安全门清空时安排受控部分原生 Open 失败（建立自有清理事务，不花费去重）。",
+        "清理失败期间保持独立外部普通 UI 门，并在清空门前明确跨入非布道日。",
+        "操作者记录部分 Open 失败、清理失败与修复及跨日方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入前独立记录初始前置；预期正常弹窗开关 ON、原生资源健康基线成立、两个门槛与初始布道日成立、状态可读、初始当日机会未消费（阶段专属字段）且该槽该日尚未显示；检查 settings.popupEnabled=true、resource.nativeHealthyAtBaseline=true、save.churchUnlocked=true、save.tutorialCompleted=true、save.isSermonDayBeforeDeferral=true、state.readable=true、state.sermonReadyValueBeforeDeferral>=1、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "在初始安全门清空时安排并观察受控部分原生 Open 失败；预期实际 Open 尝试发生时初始安全门已清空、建立自有清理事务、未成功显示且不花费去重；检查 popup.initialOpenSafetyGateClear=true、popup.partialOpenFailureArranged=true、popup.partialOpenFailureRecorded 存在、popup.ownedCleanupTransactionPresent=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清理失败期间跨日离开布道日且保持外部门；预期在既有事务上观察到实际清理失败、故障排队、跨日成立且占用期间零实际通知；检查 popup.cleanupFailureObservedOnExistingTransaction=true、popup.cleanupFailureInjectionRecorded 存在、notice.queuePendingDuringUnsafe=true、notice.displayAttemptCount=0、popup.displayedWhileOccupied=false、save.isSermonDay=false、save.dateChangedDuringDeferral=true、popup.dayCrossedBeforeGateClear=true、popup.externalGateHeldDuringRepair=true。",
+        "移除注入的初始 Open 失败条件（观察资源恢复）并受控修复自有清理；预期资源恢复、清理完成且无残留类别故障、未显示队列被取消；检查 popup.availableAfterResourceRestore=true、popup.cleanupRepaired=true、popup.cleanupRepairRecorded 存在、popup.categoryFaultRemainingAfterRepair=false、notice.queuePendingAfterRepair=false、popup.actualDisplaysBeforeRecovery=0。",
+        "在最终外部 UI 门仍保持、清理修复完成后记录累计正常显示与记录状态；预期累计正常显示仍为 0 且该槽该日尚未写入记录；检查 popup.externalGateHeldDuringRepair=true、popup.actualDisplaysBeforeRecovery=0、popup.recordAfterPartialOpenRepair=false。",
+        "修复后才清空外部 UI 门；预期按当前非布道日判定且零正常弹窗输出；检查 ui.safetyGateClear=true、popup.eligibleOnRecovery=false、popup.actualDisplaysAfterGateCleared=0、popup.newDisplaysAfterGateCleared=0、notice.staleNoticeAfterRecovery=false、notice.popupDisplayedCount=0。"
+      ],
+      "title": "部分 Open 清理故障在延后期间跨日后丢弃旧日并只使用当前状态"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "dedup.processRecordPresent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePending"
+        },
+        {
+          "equals": true,
+          "observation": "ui.mainMenuReturn"
+        },
+        {
+          "equals": true,
+          "observation": "save.returnToMainMenu"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuedNoticeCarriedToNextLoad"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeInNextSave"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        }
+      ],
+      "id": "main-menu-return-genuine-lifecycle-boundary",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "退出前已在本槽本日实际显示过一次正常弹窗并写入进程内存记录。",
+        "同时存在仍在排队的故障消息或未完成的旧存档待显示工作；随后从存档返回主菜单。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认退出前既有已显示记录又有排队工作；预期两者并存；检查 dedup.processRecordPresent=true、notice.queuePending=true。",
+        "返回主菜单；预期识别为主菜单返回边界；检查 ui.mainMenuReturn=true、save.returnToMainMenu=true。",
+        "观察排队消息；预期旧存档工作被丢弃；检查 notice.queuedNoticeCarriedToNextLoad=false、notice.staleNoticeInNextSave=false。",
+        "检查进程内去重；预期按进程内存保留；检查 dedup.processRecordPresent=true、popup.recordAfterDisplay=true。"
+      ],
+      "title": "返回主菜单是真正的生命周期边界"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "ui.menuOpen"
+        },
+        {
+          "equals": false,
+          "observation": "ui.mainMenuReturn"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": true,
+          "observation": "notice.popupBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.loadBudgetResetOnFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "in-game-menu-open-not-lifecycle-boundary",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "在打开游戏内菜单前已实际显示过一次弹窗类别故障消息。",
+        "在游戏内打开菜单而不退出存档。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "先注入弹窗故障并在安全时机显示一次弹窗类别故障消息；预期已显示；检查 notice.popupDisplayedCount=1、notice.popupBudgetConsumed=true。",
+        "在游戏内打开菜单；预期仍处于同一载入；检查 ui.menuOpen=true、ui.mainMenuReturn=false。",
+        "检查载入身份；预期未变化；检查 dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。",
+        "检查已消耗的类别预算；预期未因打开菜单而重置；检查 notice.popupBudgetConsumed=true、notice.loadBudgetResetOnFault=false。"
+      ],
+      "title": "打开游戏内菜单不是生命周期边界"
+    }
+  ],
+  "schemaVersion": 2
+}

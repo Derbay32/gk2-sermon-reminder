@@ -1,0 +1,166 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "layout",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.clonedFromNative"
+        },
+        {
+          "equals": "HUD.happinessLabel",
+          "observation": "hud.style.nativeSource"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.fontMatchesNative"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.fontSizeMatchesNative"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.materialMatchesNative"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.outlineMatchesNative"
+        },
+        {
+          "equals": true,
+          "observation": "hud.style.colorMatchesNative"
+        }
+      ],
+      "id": "hud-style-clone",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "对比倒计时文字与 HUD.happinessLabel 所标识的原生幸福度文字来源的字体、字号、材质、描边与颜色。"
+      ],
+      "title": "文字样式复制运行时原生 HUD 幸福度文字"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "below_clock",
+          "observation": "layout.anchor"
+        },
+        {
+          "equals": false,
+          "observation": "layout.clockOverlap"
+        }
+      ],
+      "id": "layout-clock-non-overlap",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在受测分辨率下测量时钟区域与倒计时文字区域。",
+        "记录测量值或明确观察结论并留存截图。"
+      ],
+      "title": "受测布局不与时钟重叠"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "below_clock",
+          "observation": "layout.anchor"
+        },
+        {
+          "equals": true,
+          "observation": "layout.uiScaleFollowsNative"
+        },
+        {
+          "equals": false,
+          "observation": "layout.clockOverlap"
+        }
+      ],
+      "id": "layout-ui-scale",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在受测分辨率与原生 UI 缩放设置下测量文字位置。",
+        "记录测量值或明确观察结论并留存截图。"
+      ],
+      "title": "不同 UI 缩放下文字保持时钟下方可读布局"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.visibilityInheritsNative"
+        },
+        {
+          "equals": true,
+          "observation": "hud.layerEqualsNative"
+        },
+        {
+          "equals": false,
+          "observation": "hud.separateMenuHideList"
+        }
+      ],
+      "id": "native-visibility",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "打开背包或菜单观察 HUD 显隐表现。",
+        "对比原生提示层与本模组文字层级。"
+      ],
+      "title": "倒计时继承原生 HUD 可见性与层级且不新增隐藏名单"
+    }
+  ],
+  "schemaVersion": 2
+}

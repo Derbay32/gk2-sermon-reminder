@@ -1,0 +1,694 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "beacon-gate-church-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 不是 Completed。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入教堂开启任务未完成的存档并等待加载完成；预期存档可用；检查 save.sermonWeekday 等于 game.sermonWeekday。",
+        "记录门槛与信标；预期未解锁且信标停用；检查 save.churchUnlocked=false 与 beacon.enabled=false。",
+        "核对角落文字；预期不显示正常提醒；检查 hud.visible=false 且 hud.textKey 不等于 gksr.hud.sermonReminder 与 gksr.hud.sermonDone。"
+      ],
+      "title": "教堂开启任务未完成时不显示信标"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "beacon-gate-tutorial-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 为 Completed。",
+        "当前存档中任务 19_base_ceremony_sermon 不是 Completed。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入教堂已解锁但教学未完成的存档并等待加载完成；预期教堂解锁；检查 save.churchUnlocked=true。",
+        "记录教学门槛与信标；预期教学未完成且信标停用；检查 save.tutorialCompleted=false 与 beacon.enabled=false。",
+        "核对角落文字；预期不显示正常提醒；检查 hud.visible=false。"
+      ],
+      "title": "首次布道教学任务未完成时不显示信标"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.underNativeHud"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleNormal"
+        },
+        {
+          "equals": true,
+          "observation": "native.hudVisibleNormal"
+        }
+      ],
+      "id": "beacon-eligible-sermon-day-unconsumed",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足；检查 save.churchUnlocked=true 与 save.tutorialCompleted=true。",
+        "记录绝对日、星期编号与布道日星期编号 T；预期三者自洽且为布道日；检查 dateCheck sermon-day 通过。",
+        "核对资格与信标；预期机会未消费、资源健康、开关开启且信标显示；检查 state.sermonReadyValue>=1、beacon.targetAvailable=true、beacon.iconAvailable=true、beacon.componentAvailable=true、beacon.enabled=true 与 beacon.underNativeHud=true。",
+        "核对原生可见性与角落文字；预期原生提示层可见且显示 Ready 文案；检查 native.hudVisibleNormal=true 与 hud.textKey=gksr.hud.sermonReminder。"
+      ],
+      "title": "布道日机会尚未消费时按开关显示信标"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh-CN",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "notEqualsObservation": "save.sermonWeekday",
+          "observation": "save.dayOfWeek"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonCountdown.other",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "beacon-hidden-nonsermon-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 在 2..5。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",
+        "记录绝对日、星期编号与布道日星期编号 T；预期三者自洽；检查 dateCheck multi-day 通过。",
+        "核对信标与倒计时文字；预期信标隐藏且显示多天倒计时文案；检查 beacon.enabled=false 且 hud.textKey=gksr.hud.sermonCountdown.other。",
+        "核对倒计时整数天数；预期等于 (T - 当前星期编号 + 6) % 6；检查 hud.countdownDays 与 helper 推导值相等。"
+      ],
+      "title": "非布道日（距布道日 2..5 天）不显示信标而保留多天倒计时文字"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "done.iconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "done.presentationHealthy"
+        }
+      ],
+      "id": "beacon-hidden-opportunity-consumed",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。",
+        "Done 文字与图标资源均健康可用（done.iconAvailable=true 且 done.presentationHealthy=true）。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入布道日且机会已消费的存档并等待加载完成；预期状态可读且机会已消费；检查 state.readable=true 与 state.sermonReadyValue<1。",
+        "核对信标；预期停用；检查 settings.beacon.enabled=true 与 beacon.enabled=false。",
+        "核对 Done 文字与图标健康；预期 Done 可正常呈现；检查 done.iconAvailable=true、done.presentationHealthy=true 且 hud.textKey=gksr.hud.sermonDone。"
+      ],
+      "title": "当日布道机会已消费后不显示信标而保留 Done 文字"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "notEqualsObservation": "save.sermonWeekday",
+          "observation": "save.dayOfWeek"
+        },
+        {
+          "equals": true,
+          "observation": "state.staleNativeReadyFlag"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "beacon-hidden-offday-stale-ready",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "刚跨过布道日进入非布道日，原生 ready 标志仍 >= 1。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "跨过布道日进入非布道日；预期日期已推进；检查 save.dayOfWeek 不等于 save.sermonWeekday。",
+        "记录残留 ready 标志与信标；预期残留标志仍 >=1 但信标停用；检查 state.staleNativeReadyFlag=true、state.sermonReadyValue>=1 与 beacon.enabled=false。",
+        "核对角落文字；预期回到非布道日倒计时；检查 hud.nonSermonCountdownShown=true 且 hud.textKey 不等于 gksr.hud.sermonReminder 与 gksr.hud.sermonDone。"
+      ],
+      "title": "非布道日残留原生 ready 标志时不显示信标与 Ready"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.readException"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        }
+      ],
+      "id": "beacon-hidden-unreadable-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生状态读取抛出异常。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入原生状态读取异常；预期状态不可读；检查 state.readException=true 与 state.readable=false。",
+        "观察信标与角落文字；预期均停用；检查 beacon.enabled=false 与 hud.visible=false。",
+        "确认未沿用旧判定；预期未沿用；检查 fault.staleValueReused=false。"
+      ],
+      "title": "必要状态不可读时停用信标且不沿用旧判定"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "inventory.itemShortage"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "beacon-item-shortage-still-eligible",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "当前存档存在物品或材料短缺。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "准备物品/材料不足但满足布道资格的存档；预期短缺存在；检查 inventory.itemShortage=true。",
+        "载入该存档并等待加载完成；预期门槛满足；检查 save.churchUnlocked=true 与 save.tutorialCompleted=true。",
+        "观察信标；预期不受短缺影响仍显示；检查 state.sermonReadyValue>=1 与 beacon.enabled=true。",
+        "核对角落文字；预期 Ready 可见；检查 hud.visible=true。"
+      ],
+      "title": "物品或材料不足不影响符合条件的信标"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh-CN",
+            "mode": "single-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonCountdown.one",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "beacon-bearing-delta-one",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 = 1。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",
+        "记录绝对日、星期编号与布道日星期编号 T；预期三者自洽；检查 dateCheck single-day 通过。",
+        "核对信标与倒计时文字；预期信标隐藏且显示单日文案；检查 beacon.enabled=false 且 hud.textKey=gksr.hud.sermonCountdown.one。"
+      ],
+      "title": "非布道日距布道日 1 天时不显示信标而使用单日倒计时文案"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.loading"
+        },
+        {
+          "equals": false,
+          "observation": "save.loadedBeforeReady"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabledBeforeReady"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.instanceCountBeforeReady"
+        },
+        {
+          "equals": true,
+          "observation": "save.loadedAfterReady"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabledAfterReady"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCountAfterReady"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleNormal"
+        }
+      ],
+      "id": "beacon-not-ready-loading-absent",
+      "prerequisites": [
+        "存在满足信标资格的存档。",
+        "信标开关为开启。",
+        "可在加载中与未就绪状态观察信标。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "进入存档加载过程中记录状态；预期处于加载中且无信标；检查 save.loading=true、beacon.enabledBeforeReady=false 与 beacon.instanceCountBeforeReady=0。",
+        "在尚未就绪的可操作前画面记录状态；预期未就绪且无信标；检查 save.loadedBeforeReady=false 与 beacon.enabledBeforeReady=false。",
+        "等待加载完成；预期存档就绪、资格健康且信标出现；检查 save.loadedAfterReady=true、beacon.enabledAfterReady=true、beacon.instanceCountAfterReady=1、state.readable=true、state.sermonReadyValue>=1、save.churchUnlocked=true 与 save.tutorialCompleted=true。"
+      ],
+      "title": "存档未就绪或加载中时不存在信标"
+    }
+  ],
+  "schemaVersion": 2
+}

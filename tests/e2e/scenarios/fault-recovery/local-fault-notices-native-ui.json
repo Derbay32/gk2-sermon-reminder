@@ -1,0 +1,146 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "native-ui",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "notice.pausedGame"
+        },
+        {
+          "equals": false,
+          "observation": "notice.inputCapture"
+        },
+        {
+          "equals": false,
+          "observation": "notice.confirmControlPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.titlePresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.iconPresent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeLocation"
+        },
+        {
+          "equals": true,
+          "observation": "notice.styleInherited"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeLifetime"
+        },
+        {
+          "equals": true,
+          "observation": "notice.autoDismiss"
+        }
+      ],
+      "id": "notice-nonblocking-no-pause-no-input-capture",
+      "prerequisites": [
+        "故障消息实际显示且游戏处于可操作画面。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在故障消息显示期间记录暂停与输入占用。预期：非阻塞。检查：notice.pausedGame=false 且 notice.inputCapture=false。",
+        "记录消息形式。预期：无标题无图标无确认控件。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。",
+        "记录位置、样式、时长与自动消失。预期：沿用原生行为。检查：notice.nativeLocation=true 且 notice.autoDismiss=true。"
+      ],
+      "title": "故障消息非阻塞且不暂停不抢占输入"
+    },
+    {
+      "category": "native-ui",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "notice.nativeNotificationIntactDuringNotice"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeNotificationDurationUnaffected"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notice-coexists-with-native-notifications",
+      "prerequisites": [
+        "存在同时显示的原生通知。",
+        "故障消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "触发一个原生通知。预期：原生通知正常显示。检查：notice.nativeNotificationIntactDuringNotice=true。",
+        "在故障消息显示期间观察原生通知。预期：时长与行为不受影响。检查：notice.nativeNotificationDurationUnaffected=true。"
+      ],
+      "title": "故障消息不破坏同时存在的原生通知"
+    },
+    {
+      "category": "native-ui",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "notice.deferredWhileMenuOccupied"
+        },
+        {
+          "equals": true,
+          "observation": "notice.displayedAfterScreenPlayable"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.pausedGame"
+        },
+        {
+          "equals": false,
+          "observation": "notice.inputCapture"
+        }
+      ],
+      "id": "notice-deferred-while-menu-occupied",
+      "prerequisites": [
+        "菜单、对话或过场占用界面。",
+        "必要状态读取故障发生且尚未提示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在界面被占用时注入必要状态读取故障。预期：延后且未显示。检查：notice.deferredWhileMenuOccupied=true 且 notice.totalDisplayedCount=0。",
+        "返回可操作画面。预期：显示一次且非阻塞。检查：notice.displayedAfterScreenPlayable=true 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "菜单或过场占用界面时延后故障消息并在可操作后显示"
+    }
+  ],
+  "schemaVersion": 2
+}

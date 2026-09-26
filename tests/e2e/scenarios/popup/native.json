@@ -1,0 +1,136 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.nativeDialogUsed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.titled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.titleNonEmpty"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.title",
+          "language": "zh-CN",
+          "observation": "popup.titleText"
+        }
+      ],
+      "id": "native-titled-dialog",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "触发弹窗并观察容器；预期使用原生提示框且带标题；检查 popup.nativeDialogUsed 与 popup.titled 为 true。",
+        "读取标题文案；预期非空且为定稿文案；检查 popup.titleNonEmpty 与 popup.titleText 使用 gksr.popup.sermon.title 的 zh-CN 文案。"
+      ],
+      "title": "弹窗使用带独立标题的原生提示框"
+    },
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.confirmButtonCount"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.extraActionButtonCount"
+        },
+        {
+          "finalTextKey": "gksr.popup.sermon.confirm",
+          "language": "zh-CN",
+          "observation": "popup.confirmLabel"
+        }
+      ],
+      "id": "single-confirm-button",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "触发弹窗并统计按钮；预期恰好一个确认按钮且无额外操作按钮；检查 popup.confirmButtonCount 为 1 与 popup.extraActionButtonCount 为 0。",
+        "读取确认标签；预期定稿文案；检查 popup.confirmLabel 使用 gksr.popup.sermon.confirm 的 zh-CN 文案。"
+      ],
+      "title": "弹窗仅提供一个本地化确认按钮"
+    },
+    {
+      "category": "native",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.teleportActionPresent"
+        },
+        {
+          "equals": false,
+          "observation": "popup.remindLaterActionPresent"
+        }
+      ],
+      "id": "no-extra-actions",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "触发弹窗并检查操作项；预期无跳转教堂或稍后提醒；检查 popup.teleportActionPresent 与 popup.remindLaterActionPresent 为 false。"
+      ],
+      "title": "弹窗不提供跳转教堂或稍后提醒操作"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -36,16 +36,22 @@ ALLOWLIST = (
 # Archive member paths for each allowlisted source, so the archive layout is
 # as explicit as the allowlist itself.
 ARCHIVE_LAYOUT = {
-    "src/GK2.SermonReminder/bin/Release/netstandard2.1/GK2.SermonReminder.dll":
-        "BepInEx/plugins/GK2.SermonReminder/GK2.SermonReminder.dll",
+    "src/GK2.SermonReminder/bin/Release/netstandard2.1/GK2.SermonReminder.dll": (
+        "BepInEx/plugins/GK2.SermonReminder/GK2.SermonReminder.dll"
+    ),
     "LICENSE": "BepInEx/plugins/GK2.SermonReminder/LICENSE",
 }
 
 METADATA_ARCHIVE_PATH = "BepInEx/plugins/GK2.SermonReminder/gksa10-metadata.json"
 
 PROHIBITED_BASENAMES = (
-    "assembly-csharp.dll", "lazybeartechnology.dll", "unityengine.dll",
-    "bepinex.dll", "0harmony.dll", "gk2.framework.dll", "newtonsoft.json.dll",
+    "assembly-csharp.dll",
+    "lazybeartechnology.dll",
+    "unityengine.dll",
+    "bepinex.dll",
+    "0harmony.dll",
+    "gk2.framework.dll",
+    "newtonsoft.json.dll",
 )
 
 GUID_RE = re.compile(rb"com\.derbay32\.gk2\.sermonreminder")
@@ -60,7 +66,7 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GKSA-10 distribution packaging helper.")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--artifacts-dir", default="artifacts/dist")
@@ -73,10 +79,10 @@ def main(argv=None) -> int:
     archive_path = artifacts / args.output_name
     metadata_path = artifacts / "gksa10-metadata.json"
 
-    errors = []
+    errors: list[str] = []
 
     # 1. Every allowlisted source must exist exactly where declared.
-    members = []
+    members: list[tuple[Path, str]] = []
     for relative in ALLOWLIST:
         source = root / relative
         if not source.is_file():
@@ -128,9 +134,7 @@ def main(argv=None) -> int:
     }
 
     if not GUID_RE.search(dll_bytes):
-        sys.stderr.write(
-            "FAIL [package] plugin DLL does not contain the expected plugin GUID constant\n"
-        )
+        sys.stderr.write("FAIL [package] plugin DLL does not contain the expected plugin GUID constant\n")
         return 2
 
     with metadata_path.open("w", encoding="utf-8") as handle:

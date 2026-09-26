@@ -1,0 +1,162 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.loadedBeforeSermonSave"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        }
+      ],
+      "id": "load-before-sermon-save-ready",
+      "prerequisites": [
+        "同一进程先前已进入布道日当天的 Done 状态。",
+        "存在一份布道日当天、布道动作之前（原生 ready>=1）的同日存档。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "在 Done 状态下重新载入布道日当天布道动作之前的存档。",
+        "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
+        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
+      ],
+      "title": "载入布道日当天、布道动作前的存档恢复 Ready"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.loadedAfterSermonSave"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        }
+      ],
+      "id": "load-after-sermon-save-done",
+      "prerequisites": [
+        "同一进程先前已进入布道日当天的 Ready 状态。",
+        "存在一份布道日当天、布道动作之后（原生 ready<1）的同日存档。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "在 Ready 状态下重新载入布道日当天布道动作之后的存档。",
+        "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
+        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
+      ],
+      "title": "载入布道日当天、布道动作后的存档恢复 Done"
+    }
+  ],
+  "schemaVersion": 2
+}

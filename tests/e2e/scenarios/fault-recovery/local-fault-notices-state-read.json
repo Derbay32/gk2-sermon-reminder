@@ -1,0 +1,679 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "fault.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleDateReused"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.tmpTextCleared"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "state-unreadable-hides-dependent",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "布道日当天已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使必要状态读取失败。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：进入可操作画面。检查：两个门槛任务均 Completed 且原生 sermon_ready 成功读取一次。",
+        "注入必要状态读取故障。预期：必要状态不可读。检查：state.readable=false。",
+        "观察角落区域与消息计数。预期：依赖显示被抑制且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "必要状态不可读时隐藏依赖显示且不沿用旧判定"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingPlayer"
+        },
+        {
+          "equals": false,
+          "observation": "state.missingCurrentSave"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingPlayerOrSave"
+        },
+        {
+          "equals": true,
+          "observation": "state.exceptionalStateLoss"
+        },
+        {
+          "equals": false,
+          "observation": "state.ordinaryLoadingOrExit"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleDateReused"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "state-unreadable-missing-player",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使原生玩家在就绪后意外缺失。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入原生玩家意外缺失。预期：属于异常状态丢失而非普通加载。检查：state.exceptionalStateLoss=true 且 state.ordinaryLoadingOrExit=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "就绪后玩家意外缺失时隐藏且不解释为未布道或已布道"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingCurrentSave"
+        },
+        {
+          "equals": false,
+          "observation": "state.missingPlayer"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingPlayerOrSave"
+        },
+        {
+          "equals": true,
+          "observation": "state.exceptionalStateLoss"
+        },
+        {
+          "equals": false,
+          "observation": "state.ordinaryLoadingOrExit"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "state-unreadable-missing-save",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使当前存档在就绪后意外缺失。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入当前存档意外缺失。预期：属于异常状态丢失而非普通退出。检查：state.exceptionalStateLoss=true 且 state.ordinaryLoadingOrExit=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "就绪后当前存档意外缺失时隐藏且不解释为已布道"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": true,
+          "observation": "state.readException"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "state-unreadable-read-exception",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使原生状态读取抛出异常。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：就绪且业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入原生读取异常。预期：必要状态不可读。检查：state.readException=true 且 state.readable=false。",
+        "观察角落与消息计数。预期：隐藏且状态读取类别消息显示一次。检查：hud.visible=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "就绪后原生读取抛出异常时隐藏且不显示 Done"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": true,
+          "observation": "state.nativeReadyNonFinite"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "state-unreadable-nonfinite-ready",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使原生 sermon_ready 返回非有限值。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：布道日就绪且业务状态可读一次。检查：save.isSermonDay=true 且 state.readinessObservedBeforeInjection=true。",
+        "注入原生 ready 非有限值。预期：视为不可读。检查：state.nativeReadyNonFinite=true 且 state.readable=false。",
+        "观察角落与消息计数。预期：隐藏且未显示 Done，状态读取类别消息显示一次。检查：hud.selectedTextKeyPresent=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "就绪后原生 ready 浮点为非有限值时视为不可读而非 Done"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "state.readyKeyAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "numberRange": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "hud.healthyCornerResources"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoaded"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "state-missing-ready-key-not-a-fault",
+      "phaseNote": "在资源健康前提下断言 Done 可见，避免在打勾图标异步待定时误期可见。",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "当前存档中不存在原生 sermon_ready 键（访问器文档默认 0）。",
+        "否则健康：打勾图标资源、角落文字组件与原生 HUD 均可用。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：缺键按文档默认 0 得到可读 Done，而不是伪造回退。检查：state.readyKeyAbsent=true 且 state.readable=true。",
+        "观察角落与故障报告。预期：在资源健康前提下正常显示 Done 且不报告故障。检查：hud.healthyCornerResources=true 且 fault.reported=false。"
+      ],
+      "title": "原生缺键按文档默认 0 判定为已布道且不是故障"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        },
+        {
+          "equals": false,
+          "observation": "hud.duplicateSubscriptions"
+        },
+        {
+          "equals": false,
+          "observation": "hud.duplicateCallbacks"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleOldBindingPresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.countsConsistentWithHealthyBaseline"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleTextPresent"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleSpritePresent"
+        },
+        {
+          "equals": false,
+          "observation": "hud.crossSaveOwnership"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": false,
+          "observation": "recovery.requiresReload"
+        },
+        {
+          "equals": false,
+          "observation": "recovery.requiresRestart"
+        },
+        {
+          "equals": false,
+          "observation": "recovery.successMessageShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "state-read-recovery-rebuild",
+      "prerequisites": [
+        "状态读取故障已发生且已实际显示一次状态读取类别消息。",
+        "无需重新读档或重启游戏。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "解除故障使必要状态恢复可读。预期：自动恢复判定。检查：state.readable=true 且 recovery.autoRecovered=true。",
+        "观察显示实例与绑定。预期：唯一实例且与健康基线一致。检查：hud.instanceCount=1 且 hud.countsConsistentWithHealthyBaseline=true。",
+        "观察消息计数与成功消息。预期：不显示恢复成功消息且不重复消耗提示机会。检查：recovery.successMessageShown=false 且 notice.stateReadDisplayedCount=1。"
+      ],
+      "title": "必要状态恢复后自动重建唯一显示且无成功消息"
+    },
+    {
+      "category": "state-read",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "fault.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.selectedTextKeyPresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.tmpTextCleared"
+        }
+      ],
+      "id": "unreadable-state-no-default-ready-done",
+      "prerequisites": [
+        "布道日当天，两个门槛任务均为 Completed。",
+        "注入前已成功观察到一次原生 sermon_ready 就绪读取。",
+        "测试设施可受控使必要状态不可读。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "注入必要状态不可读。预期：不伪造回退值。检查：state.defaultValueUsed=false 且 fault.defaultValueUsed=false。",
+        "观察角落。预期：未显示 Ready 或 Done。检查：hud.visible=false 且 hud.selectedTextKeyPresent=false。"
+      ],
+      "title": "不可读状态不得被伪造回退解释为未布道或已布道"
+    }
+  ],
+  "schemaVersion": 2
+}

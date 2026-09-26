@@ -1,0 +1,43 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "environment",
+      "evidence": {
+        "log": true,
+        "measurement": false,
+        "screenshot": false
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "plugin.loaded"
+        },
+        {
+          "observation": "framework.version",
+          "present": true
+        },
+        {
+          "observation": "plugin.version",
+          "present": true
+        }
+      ],
+      "id": "plugin-load-proton-combined-recovery",
+      "prerequisites": [
+        "CachyOS x86-64 PC 上的 Steam Proton 环境。",
+        "BepInEx 5.4.23.5 Windows x64 Unity Mono 加载路线。",
+        "完整加载真实游戏与本模组。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "启动游戏并检查插件；预期插件实际加载；检查 plugin.loaded=true。",
+        "检查框架与插件版本；预期已加载且可识别；检查 framework.version 与 plugin.version 均存在。"
+      ],
+      "title": "在目标 Proton 环境证明插件与框架实际加载"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,66 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "localization",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "zh_cn",
+          "observation": "language.activeBefore"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN",
+          "observation": "hud.textBefore"
+        },
+        {
+          "equals": "en",
+          "observation": "language.activeAfter"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyAfter"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "en",
+          "observation": "hud.textAfter"
+        },
+        {
+          "equals": true,
+          "observation": "language.hudRefreshedWithoutReload"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        }
+      ],
+      "id": "language-change-refresh",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于 Ready 状态。",
+        "可在运行中切换原生语言。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "以简体中文观察 Ready 文字。",
+        "切换游戏语言为英语。",
+        "再次观察 Ready 文字是否在未重载存档的情况下刷新。"
+      ],
+      "title": "原生语言切换后刷新文字而不重载存档"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,201 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "baseline",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "save.loaded"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeVisiblyObservedAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthIndependentlyObserved"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nativeHudPresent"
+        },
+        {
+          "equals": true,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "healthy-reference-setup",
+      "phaseNote": "阶段含义：BeforeFault=注入前的资源健康独立确认（不花费弹窗机会，且不要求门保持期间自有 HUD 可见）、AfterGateCleared=清空安全门后累计正常弹窗显示次数、AfterClose/SafeUi=用原生输入关闭自有弹窗后原生 HUD 可见时的健康通道可见性；popup.actualDisplays* 为自当前载入起累计口径，popup.newDisplays* 为其命名区间增量口径。",
+      "prerequisites": [
+        "完整模组在真实 Proton 环境加载。",
+        "存档满足两个解锁门槛且处于布道日、当日布道机会未消费。",
+        "正常弹窗开关开启，信标开关开启。",
+        "首个正常弹窗机会前先保持普通安全门，用于先独立确认资源健康并避免过早花费弹窗机会。",
+        "未注入任何故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期进入可操作画面且安全门先保持；检查 save.loaded=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、dedup.recordAbsentForThisSlotDayBeforeLoad=true。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康（不要求门保持期间自有 HUD 或信标可见）；检查 resource.nativeHealthyAtBaseline=true、resource.nativeVisiblyObservedAtBaseline=true、resource.nativeHealthIndependentlyObserved=true、hud.nativeHudPresent=true、popup.available=true。",
+        "清空安全门到安全可操作时机；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、ui.playerControllable=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在原生 HUD 可见的安全时机观察健康通道；预期角落与信标均可见；检查 corner.visibleAtSafeUi=true、beacon.visibleAtSafeUi=true。",
+        "观察四类故障消息计数；预期全部为零；检查 notice.stateReadDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.beaconDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=0。"
+      ],
+      "title": "健康基线：全部提醒资格成立且不产生任何故障消息"
+    }
+  ],
+  "schemaVersion": 2
+}

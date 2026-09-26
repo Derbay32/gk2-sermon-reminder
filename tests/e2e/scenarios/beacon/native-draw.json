@@ -1,0 +1,119 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "native-draw",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "integerGreaterThan": 0,
+          "observation": "beacon.drawRefreshCount"
+        },
+        {
+          "integerGreaterThan": 1,
+          "observation": "beacon.offscreenOnscreenTransitionCount"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconStillMatchesNativeAfterDrawRefresh"
+        },
+        {
+          "equalsObservation": "native.faithIconDefinitionId",
+          "observation": "beacon.faithIconDefinitionIdAfterDraw"
+        },
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsObservation": "native.referenceFrame",
+          "observation": "beacon.contextFrame"
+        },
+        {
+          "equalsObservation": "native.referenceCameraId",
+          "observation": "beacon.contextCameraId"
+        },
+        {
+          "equalsObservation": "native.referenceViewportWidthPx",
+          "observation": "beacon.contextViewportWidthPx"
+        },
+        {
+          "equalsObservation": "native.referenceViewportHeightPx",
+          "observation": "beacon.contextViewportHeightPx"
+        },
+        {
+          "equalsObservation": "native.referenceUiScale",
+          "observation": "beacon.contextUiScale"
+        },
+        {
+          "numberRange": {
+            "min": 0
+          },
+          "observation": "beacon.slotWidthLocalAfterTransitions"
+        },
+        {
+          "notEquals": 0,
+          "observation": "beacon.slotWidthLocalAfterTransitions"
+        },
+        {
+          "notEquals": 0.0,
+          "observation": "beacon.slotWidthLocalAfterTransitions"
+        },
+        {
+          "numberRange": {
+            "min": 0
+          },
+          "observation": "beacon.slotHeightLocalAfterTransitions"
+        },
+        {
+          "notEquals": 0,
+          "observation": "beacon.slotHeightLocalAfterTransitions"
+        },
+        {
+          "notEquals": 0.0,
+          "observation": "beacon.slotHeightLocalAfterTransitions"
+        },
+        {
+          "equalsObservation": "native.slotWidthLocal",
+          "observation": "beacon.slotWidthLocalAfterTransitions"
+        },
+        {
+          "equalsObservation": "native.slotHeightLocal",
+          "observation": "beacon.slotHeightLocalAfterTransitions"
+        },
+        {
+          "equalsObservation": "native.pointerSpriteId",
+          "observation": "beacon.pointerSpriteIdAfterTransitions"
+        }
+      ],
+      "id": "beacon-native-draw-preserves-icon-and-slot",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（机会未消费，Ready）。",
+        "信标开关为开启。",
+        "可使目标反复进出镜头并触发原生绘制刷新。",
+        "可记录原生信仰图标静态定义标识与未改动的原生原始 prefab 槽位局部尺寸。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "使目标反复进出镜头至少两次并触发原生绘制刷新；预期发生多次刷新与转换；检查 drawRefreshCount>0 且 offscreenOnscreenTransitionCount>1。",
+        "记录刷新后的信仰图标来源；预期仍为原生信仰图标；检查 beacon.iconStillMatchesNativeAfterDrawRefresh=true 且 faithIconDefinitionIdAfterDraw 等于 native.faithIconDefinitionId。",
+        "记录刷新后自有信标 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部槽尺寸；预期为严格正的有限值且与同一目标未改动的原生原始 prefab 槽位局部尺寸相等；检查 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 组合及 equalsObservation 通过。",
+        "记录刷新后箭头 Sprite/样式；预期与原生一致；检查 equalsObservation 通过。"
+      ],
+      "title": "原生绘制刷新与反复进出镜头后仍保持信仰图标与原始 prefab 槽局部尺寸"
+    }
+  ],
+  "schemaVersion": 2
+}

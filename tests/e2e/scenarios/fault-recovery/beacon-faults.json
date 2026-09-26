@@ -1,0 +1,305 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.targetAvailableBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabledBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailableAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabledAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveryWithoutReload"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCountAfterRecovery"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCountAfterRecovery"
+        }
+      ],
+      "id": "beacon-missing-target-suppresses-only-beacon",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使教堂目标点不可用。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入教堂目标点不可用；预期仅信标依赖被停用；检查 beacon.targetAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.targetAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
+      ],
+      "title": "目标点不可用时只停用信标并保留 Ready 文字与业务状态"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.iconAvailableBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabledBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.substituteIconOrFakeMarkerUsed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconAvailableAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabledAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveryWithoutReload"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCountAfterRecovery"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCountAfterRecovery"
+        }
+      ],
+      "id": "beacon-missing-icon-suppresses-only-beacon",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使原生信仰图标不可用。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入原生信仰图标不可用；预期仅信标依赖被停用；检查 beacon.iconAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
+        "确认未使用替代图标或假任务标记；预期均否；检查 beacon.substituteIconOrFakeMarkerUsed=false。",
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.iconAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
+      ],
+      "title": "原生信仰图标不可用时只停用信标且不使用替代图或假任务"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.componentAvailableBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabledBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailableAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabledAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveryWithoutReload"
+        },
+        {
+          "equals": 1,
+          "observation": "beacon.instanceCountAfterRecovery"
+        },
+        {
+          "equals": 0,
+          "observation": "beacon.duplicateCallbackCountAfterRecovery"
+        }
+      ],
+      "id": "beacon-missing-component-suppresses-only-beacon",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控使信标组件不可用。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入信标组件不可用；预期仅信标依赖被停用；检查 beacon.componentAvailableBeforeRecovery=false 与 beacon.enabledBeforeRecovery=false。",
+        "核对角落 Ready 文字与业务状态；预期保留可读 Ready 且不显示信标；检查 state.readable=true、state.sermonReadyValue>=1、hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
+        "解除故障但不读档不重启；预期信标自动恢复；检查 beacon.componentAvailableAfterRecovery=true、beacon.enabledAfterRecovery=true 与 beacon.recoveryWithoutReload=true。",
+        "统计恢复后实例与回调；预期单一无重复；检查 beacon.instanceCountAfterRecovery=1 与 beacon.duplicateCallbackCountAfterRecovery=0。"
+      ],
+      "title": "信标组件不可用时只停用信标并保留其他提醒"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveryTargetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveredEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.recoveryWithoutReload"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.underNativeHud"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "beacon-fault-recovers-without-reload",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1（Ready 状态）。",
+        "测试设施可受控注入并随后解除目标点不可用故障。",
+        "信标开关为开启。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入目标点不可用并确认信标停用；预期仅信标停用；检查 beacon.targetAvailable=false 与 beacon.enabled=false。",
+        "解除故障但不读档不重启；预期目标恢复可用；检查 beacon.recoveryTargetAvailable=true 与 beacon.recoveryWithoutReload=true。",
+        "核对信标；预期自动恢复且位于原生 HUD 下；检查 beacon.recoveredEnabled=true 与 beacon.underNativeHud=true。",
+        "核对角落文字与状态；预期仍正常；检查 state.readable=true 与 hud.visible=true。"
+      ],
+      "title": "资源恢复后无需读档或重启自动重新显示信标"
+    }
+  ],
+  "schemaVersion": 2
+}

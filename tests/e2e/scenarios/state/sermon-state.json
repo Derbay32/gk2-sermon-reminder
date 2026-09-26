@@ -1,0 +1,58 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": false,
+          "observation": "hud.readyAndDoneCoexist"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "exclusive-corner-state",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于 Ready 状态。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入存档并等待加载完成。",
+        "统计角落文字状态数量并确认没有同时存在 Ready 与 Done。"
+      ],
+      "title": "同一角落同一时刻只有一个文字状态"
+    }
+  ],
+  "schemaVersion": 2
+}
