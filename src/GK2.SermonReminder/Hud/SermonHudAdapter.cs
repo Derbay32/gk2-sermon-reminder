@@ -159,7 +159,20 @@ namespace GK2.SermonReminder.Hud
             if (!EnsureFields())
                 return FailBinding("native HUD members unavailable");
 
-            HUD hud = TryGetHud();
+            HUD hud;
+            try
+            {
+                hud = LazyUI.Get<HUD>();
+            }
+            catch (Exception ex)
+            {
+                // A real native lookup failure is a resource fault, not ordinary
+                // pending unreadiness: fail closed with a stable technical reason and
+                // never let the native exception escape this tick. A genuine null
+                // below still follows the ordinary pending/rebound path.
+                return FailBinding("native HUD lookup: " + ex.GetType().Name);
+            }
+
             if (hud == null)
             {
                 // The native HUD is simply not live right now (menu, loading, or a
@@ -434,18 +447,6 @@ namespace GK2.SermonReminder.Hud
 
             fieldsResolved = true;
             return happinessLabelField != null && wheelField != null && leftUpGroupField != null;
-        }
-
-        private static HUD TryGetHud()
-        {
-            try
-            {
-                return LazyUI.Get<HUD>();
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
 
         private static T ReadMember<T>(FieldInfo field, object target) where T : class

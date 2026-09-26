@@ -1,0 +1,114 @@
+{
+  "kind": "gksa15-e2e-capture-example",
+  "captureVersion": 1,
+  "_note": [
+    "SCHEMA EXAMPLE ONLY — THIS FILE IS NOT EVIDENCE.",
+    "Its kind is deliberately not 'gksa15-e2e-capture', so tests/e2e/verify.py",
+    "rejects it as an unsupported schema. Do not treat this file as a passing",
+    "capture; the validator never generates a capture and never marks a scenario",
+    "passed.",
+    "This file exists so the negative check can prove that an unexecuted example",
+    "is rejected instead of silently accepted.",
+    "The four fault categories are state-read (gksr.status.reminderUnavailable),",
+    "corner-hud (gksr.status.hudUnavailable), beacon (gksr.status.beaconUnavailable)",
+    "and popup (gksr.status.popupUnavailable); there is no fifth category for a",
+    "notifier failure.",
+    "Fault notices are titleless, iconless, non-blocking plain-text notifications",
+    "with native lifetime and auto-dismiss; they never pause the game or capture",
+    "input.",
+    "At most one actually displayed fault notice per category per genuine load; a",
+    "failed show logs only and never consumes eligibility; a queued notice is",
+    "cleared if the fault recovers before display or the load ends; recovery adds",
+    "no success message. Normal-popup actual display counts are separate from the",
+    "popup-category fault-notice count.",
+    "observationVocabulary keys are an evidence schema, not a mandatory production",
+    "telemetry API; real facts may be collected by operator observation, logs, or an",
+    "authorized future test facility.",
+    "Every value below is an obvious non-evidence placeholder; replace them only",
+    "with facts actually observed in GKSA-16."
+  ],
+  "environment": {
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "proton.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "bepinex.version": "5.4.23.5",
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "plugin.version": "REPLACE",
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.loaded": true,
+    "resolution.width": 1920,
+    "resolution.height": 1080,
+    "uiScale": 1.0,
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "evidenceFiles": {
+      "screenshots/unexecuted-example.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "game.sermonWeekday": 2
+  },
+  "observations": {
+    "healthy-reference-setup": {
+      "save.sermonWeekday": 2,
+      "state.readable": true,
+      "state.sermonReadyValue": 1,
+      "resource.nativeHealthyAtBaseline": true,
+      "resource.nativeVisiblyObservedAtBaseline": true,
+      "resource.nativeHealthIndependentlyObserved": true,
+      "popup.actualDisplaysAfterGateCleared": 1,
+      "notice.stateReadDisplayedCount": 0,
+      "notice.cornerHudDisplayedCount": 0,
+      "notice.beaconDisplayedCount": 0,
+      "notice.popupDisplayedCount": 0,
+      "notice.totalDisplayedCount": 0
+    },
+    "localization-status-copy-beacon-zh": {
+      "language.active": "zh_cn",
+      "notice.category": "beacon",
+      "notice.textKey": "gksr.status.beaconUnavailable",
+      "notice.text": "[布道提醒] 教堂信标点不可用。"
+    }
+  },
+  "results": [
+    {
+      "scenarioId": "healthy-reference-setup",
+      "status": "UNEXECUTED",
+      "evidence": {
+        "screenshot": [
+          "screenshots/unexecuted-example.png"
+        ],
+        "log": [
+          "logs/BepInEx-load.log"
+        ]
+      },
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+    },
+    {
+      "scenarioId": "localization-status-copy-beacon-zh",
+      "status": "UNEXECUTED",
+      "evidence": {
+        "screenshot": [
+          "screenshots/unexecuted-example.png"
+        ],
+        "log": [
+          "logs/BepInEx-load.log"
+        ]
+      },
+      "notes": "REPLACE with the observed notice text; never mark an unexecuted scenario as passed."
+    }
+  ]
+}

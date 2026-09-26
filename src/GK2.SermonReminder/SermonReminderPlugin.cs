@@ -113,7 +113,6 @@ namespace GK2.SermonReminder
         // actually completes or at a true lifecycle / eligibility boundary.
         private string lastStateDiagnostic;
         private string lastCornerDiagnostic;
-        private string lastIconDiagnostic;
         private string lastBeaconDiagnostic;
         private string lastPopupDiagnostic;
         private SermonDisplayState loggedDisplay;
@@ -285,6 +284,12 @@ namespace GK2.SermonReminder
             {
                 SafeLogError("GKSR_PATCH_FAILED: " + ex.GetType().Name);
             }
+
+            // Bind the existing Harmony owner for the popup provenance install. A
+            // failure here is contained and never disables lifecycle hooks, HUD or
+            // beacon; the popup itself fails closed until the observer is available.
+            try { popup.ConfigureHarmony(harmony); }
+            catch (Exception) { }
 
             try
             {
@@ -509,6 +514,7 @@ namespace GK2.SermonReminder
             // Fresh flags for THIS tick; no stale classification can survive.
             bool stateReadFailed = false;
             bool cornerHudFailed = false;
+            bool beaconFailed = false;
             bool stateReady = false;
 
             // The popup is fed the same fresh snapshot the other reminders use. If the
@@ -531,7 +537,7 @@ namespace GK2.SermonReminder
 
                 popupSnapshot = snapshot;
                 stateReady = true;
-                TickCorner(snapshot, ref cornerHudFailed);
+                TickCorner(snapshot, ref cornerHudFailed, ref beaconFailed);
             }
             catch (Exception ex)
             {
@@ -562,59 +568,77 @@ namespace GK2.SermonReminder
                 // Exactly one contained popup delivery per tick, independent of the
                 // corner/state early returns, so an eligible popup is never skipped by a
                 // missing corner text, a HUD/icon failure, or a healthy beacon update.
-                // The popup contains its own failures and never suppresses them here.
-                TickPopup(popupSnapshot);
+                // The popup always advances its own cleanup and reports its current
+                // category failure independently of the corner channels.
+                bool popupFailed = TickPopup(popupSnapshot);
 
                 // Exactly one contained flag delivery per tick for every path, so a
                 // buffered failure is never discarded by a scattered flush.
-                try { notices?.Update(stateReadFailed, cornerHudFailed); }
+                try { notices?.Update(stateReadFailed, cornerHudFailed, beaconFailed, popupFailed); }
                 catch (Exception) { }
             }
         }
 
         /// <summary>
-        /// Deliver one contained popup evaluation for the fresh snapshot. A Failed
-        /// outcome is logged with a bounded technical stage/detail diagnostic and its
-        /// episode is preserved through Pending; it is cleared only on an actual Healthy
-        /// completion or a true lifecycle/eligibility (Inactive) boundary. A popup
-        /// failure is never classified as a state or corner fault, and never suppresses
-        /// the other reminders.
+        /// Deliver one contained popup evaluation for the fresh snapshot and return the
+        /// popup category's current failure. The popup always advances its own cleanup,
+        /// so a repaired transaction ends its diagnostic episode immediately even when
+        /// the same tick then reports an ordinary Pending gate. A popup failure is never
+        /// classified as a state or corner fault, and never suppresses the other
+        /// reminders. Shared-state unreadability suppresses dependent popup notification
+        /// eligibility without being reclassified as a popup fault.
         /// </summary>
-        private void TickPopup(SermonStateSnapshot snapshot)
+        private bool TickPopup(SermonStateSnapshot snapshot)
         {
+            bool failed = false;
             try
             {
                 SermonPopupOutcome outcome = popup.Update(snapshot);
-                switch (outcome.Status)
+
+                // Current category failure: a concrete Failed outcome, or an ordinary
+                // Pending hold whose owned failure episode is still unresolved
+                // (retained cleanup or a failed attempt with no live transaction).
+                failed = outcome.Status == SermonPopupStatus.Failed
+                    || (outcome.Status == SermonPopupStatus.Pending && popup.HasActiveFailure);
+
+                if (failed)
                 {
-                    case SermonPopupStatus.Failed:
+                    if (outcome.Status == SermonPopupStatus.Failed)
+                    {
+                        // A concrete Failed outcome starts (or repeats) the bounded
+                        // episode; the channel deduplicates on the exact episode key.
                         LogPopupDiagnostic(
                             "popup-failed:" + outcome.Stage + ":" + (outcome.Detail ?? "unknown"),
                             "GKSR_POPUP_FAILED: stage=" + outcome.Stage
-                                + " detail=" + (outcome.Detail ?? "unknown"));
-                        break;
+                                + " detail=" + (outcome.Detail ?? "unknown"),
+                            null);
+                    }
 
-                    case SermonPopupStatus.Healthy:
-                        // The only point where the popup episode is complete.
-                        ClearPopupDiagnostic();
-                        break;
-
-                    default:
-                        // Pending keeps the episode (a persisting failure is not re-logged
-                        // per tick); Inactive is a true eligibility boundary that clears it.
-                        if (outcome.Status == SermonPopupStatus.Inactive)
-                            ClearPopupDiagnostic();
-                        break;
+                    // An ordinary Pending hold with an unresolved episode keeps the
+                    // existing bounded diagnostic and is never re-logged per tick.
+                }
+                else
+                {
+                    // Healthy completion, a genuine eligibility boundary, or a repaired
+                    // cleanup all end this bounded diagnostic episode.
+                    ClearPopupDiagnostic();
                 }
             }
             catch (Exception ex)
             {
                 // The popup core contains every native failure; this is a defensive net.
                 // It stays a popup-category diagnostic, never a state or corner fault.
+                failed = true;
                 LogPopupDiagnostic(
                     "popup-tick:" + ex.GetType().Name,
-                    "GKSR_POPUP_FAILED: tick " + ex.GetType().Name);
+                    "GKSR_POPUP_FAILED: tick " + ex.GetType().Name,
+                    ex);
             }
+
+            // An unreadable shared state suppresses dependent popup eligibility: the
+            // popup's own cleanup still advanced above, but no popup fault notice may be
+            // fabricated from that suppression.
+            return failed && snapshot.Readable;
         }
 
         /// <summary>
@@ -754,18 +778,21 @@ namespace GK2.SermonReminder
         /// failure or a Done-required failed icon set the corner flag; ordinary Pending,
         /// gates closed, a naturally absent HUD and an irrelevant icon failure do not.
         /// The corner flag is passed by reference so a computed Done-icon failure is never
-        /// lost when the subsequent render reports Pending. This whole stage is contained:
-        /// a corner presentation/native/log exception becomes a corner failure and never a
-        /// state fault, and the healthy eligible beacon is preserved.
+        /// lost when the subsequent render reports Pending. The beacon category flag is
+        /// carried independently by reference so a beacon fault computed before any
+        /// corner early return is never lost. This whole stage is contained: a corner
+        /// presentation/native/log exception becomes a corner failure and never a state
+        /// fault, and the healthy eligible beacon is preserved.
         /// </summary>
-        private void TickCorner(SermonStateSnapshot snapshot, ref bool cornerHudFailed)
+        private void TickCorner(SermonStateSnapshot snapshot, ref bool cornerHudFailed, ref bool beaconFailed)
         {
             try
             {
                 // The beacon advances before any corner/Done work, so on the first
                 // LateUpdate after consumption a false eligibility clears it independently
-                // of the corner text and the Done icon being Pending or Failed.
-                UpdateBeacon(activeSave, snapshot);
+                // of the corner text and the Done icon being Pending or Failed. The beacon
+                // flag is delivered through the by-reference parameter on every path.
+                UpdateBeacon(activeSave, snapshot, ref beaconFailed);
 
                 SermonDisplayState state = snapshot.Display;
                 string text = snapshot.GatesSatisfied ? ResolveText(state, snapshot.Delta) : string.Empty;
@@ -805,8 +832,9 @@ namespace GK2.SermonReminder
                 if (binding.Status == SermonHudStatus.Failed)
                 {
                     // Actual binding failure: a corner-category fault. The binding failure
-                    // already removed the owned presentation; the icon episode is kept.
-                    ResetEligibility(preserveIconDiagnostic: true);
+                    // already removed the owned presentation, so only the resource handle
+                    // is released here.
+                    ResetEligibility();
                     LogCornerDiagnostic("hud-failed:" + binding.Failure,
                         "GKSR_HUD_FAILED: " + binding.Failure, null);
                     cornerHudFailed = true;
@@ -835,17 +863,15 @@ namespace GK2.SermonReminder
                 bool doneIconFailed = false;
                 string doneIconReason = null;
 
-                if (!spriteEligible || icon.Status == NativeCheckSpriteStatus.Ready)
+                if (spriteEligible && icon.Status != NativeCheckSpriteStatus.Ready
+                    && checkSprite.HasActiveFailure && state == SermonDisplayState.Done)
                 {
-                    ClearIconDiagnostic();
-                }
-                else if (icon.Status == NativeCheckSpriteStatus.Failed && state == SermonDisplayState.Done)
-                {
-                    // A native Done icon failed AND the current display requires it: a
-                    // corner-category fault. Logging is DEFERRED until the render result is
-                    // known so exactly one corner diagnostic is emitted per tick and an
-                    // immediate render failure is never overwritten by the icon message (or
-                    // vice versa) on the next frame.
+                    // A native Done icon failure episode is still active (including a
+                    // bounded retry whose new request is pending) AND the current display
+                    // requires it: a corner-category fault. Logging is DEFERRED until the
+                    // render result is known so exactly one corner diagnostic is emitted per
+                    // tick and an immediate render failure is never overwritten by the icon
+                    // message (or vice versa) on the next frame.
                     doneIconReason = checkSprite.LastFailure ?? "unknown";
                     doneIconFailed = true;
                 }
@@ -907,9 +933,11 @@ namespace GK2.SermonReminder
         /// Advance the owned beacon for this tick. Eligibility is derived from the fresh
         /// per-tick snapshot: the load-snapshot toggle, a readable state, satisfied
         /// gates, and the Ready display state (sermon day with the opportunity intact).
-        /// Failure is contained so it can never propagate into the corner work.
+        /// The current beacon category failure is reported by reference as a concrete
+        /// Failed outcome or an unresolved Pending hold, never from stale diagnostic
+        /// text. Failure is contained so it can never propagate into the corner work.
         /// </summary>
-        private void UpdateBeacon(GameSave save, SermonStateSnapshot snapshot)
+        private void UpdateBeacon(GameSave save, SermonStateSnapshot snapshot, ref bool beaconFailed)
         {
             bool eligible = beaconEnabledForLoad
                 && snapshot.Readable
@@ -926,10 +954,22 @@ namespace GK2.SermonReminder
                 // Defensive net: beacon.Update already contains recoverable errors.
                 // Release owned resources but PRESERVE the beacon episode, so repeated
                 // identical eligible failures deduplicate instead of re-logging per tick.
+                // A true beacon escape is classified only as beacon.
                 ResetBeaconResources();
+                beaconFailed = true;
                 LogBeaconDiagnostic("beacon-tick:" + ex.GetType().Name,
-                    "GKSR_BEACON_FAILED: tick " + ex.GetType().Name);
+                    "GKSR_BEACON_FAILED: tick " + ex.GetType().Name, ex);
                 return;
+            }
+
+            // Current category failure: a concrete Failed outcome, or an ordinary Pending
+            // hold whose beacon failure episode is still unresolved (bounded retry
+            // backoff or a temporarily absent native HUD). Recovery (a complete Draw or a
+            // true ineligible/reset boundary) clears the episode in the module itself.
+            if (result.Status == BeaconStatus.Failed
+                || (result.Status == BeaconStatus.Pending && beacon.HasActiveFailure))
+            {
+                beaconFailed = true;
             }
 
             switch (result.Status)
@@ -944,7 +984,8 @@ namespace GK2.SermonReminder
                     LogBeaconDiagnostic(
                         "beacon-failed:" + result.Failure + ":" + (beacon.LastFailure ?? "unknown"),
                         "GKSR_BEACON_FAILED: stage=" + result.Failure
-                            + " reason=" + (beacon.LastFailure ?? "unknown"));
+                            + " reason=" + (beacon.LastFailure ?? "unknown"),
+                        null);
                     break;
 
                 default:
@@ -1047,6 +1088,11 @@ namespace GK2.SermonReminder
             catch (Exception) { }
             harmony = null;
 
+            // Drop the provenance configuration; UnpatchSelf above already removed the
+            // transpiler for this owner, so a re-enable must re-verify registration.
+            try { popup.ClearHarmonyConfiguration(); }
+            catch (Exception) { }
+
             // Disable/shutdown is a genuine lifecycle boundary: close the notice load
             // period before dropping readiness so no stale notice can show afterwards.
             try { notices?.EndLoad(); }
@@ -1111,14 +1157,22 @@ namespace GK2.SermonReminder
 
         /// <summary>
         /// One bounded diagnostic per distinct beacon failure episode, on its own
-        /// channel. It is preserved across retries and Pending holds and cleared only
-        /// on a Healthy complete Draw or at a true eligibility / load reset boundary.
+        /// channel. It emits the approved user-facing explanation separately from the
+        /// technical stage/reason and the real caught exception detail when one exists
+        /// (never a fabricated stack for a logical failure). It is preserved across
+        /// retries and Pending holds and cleared only on a Healthy complete Draw or at a
+        /// true eligibility / load reset boundary. Every lookup and log is contained.
         /// </summary>
-        private void LogBeaconDiagnostic(string key, string message)
+        private void LogBeaconDiagnostic(string key, string message, Exception ex)
         {
-            if (string.Equals(lastBeaconDiagnostic, key, StringComparison.Ordinal)) return;
-            lastBeaconDiagnostic = key;
-            try { log?.Warning(message); }
+            try
+            {
+                if (string.Equals(lastBeaconDiagnostic, key, StringComparison.Ordinal)) return;
+                lastBeaconDiagnostic = key;
+                LogCategoryDiagnostic(SermonReminderLocalization.DiagnosticsBeaconUnavailableKey);
+                SafeWarn(message);
+                LogExceptionDetail(ex);
+            }
             catch (Exception) { }
         }
 
@@ -1126,18 +1180,21 @@ namespace GK2.SermonReminder
 
         /// <summary>
         /// One bounded diagnostic per distinct popup failure episode, on its own channel.
-        /// It is preserved through Pending and cleared only on an actual Healthy
-        /// completion or a true lifecycle/eligibility boundary. It is never a state or
-        /// corner category and never emits an approved user-facing fault-notice sentence
-        /// (the four-category notices stay with GKSA-15).
+        /// It emits the approved user-facing explanation separately from the technical
+        /// stage/detail and the real caught exception detail when one exists. It is
+        /// preserved while the popup retains a current failure and cleared on an actual
+        /// Healthy completion, a true eligibility boundary, or a repaired cleanup. It is
+        /// never a state or corner category.
         /// </summary>
-        private void LogPopupDiagnostic(string key, string message)
+        private void LogPopupDiagnostic(string key, string message, Exception ex)
         {
             try
             {
                 if (string.Equals(lastPopupDiagnostic, key, StringComparison.Ordinal)) return;
                 lastPopupDiagnostic = key;
+                LogCategoryDiagnostic(SermonReminderLocalization.DiagnosticsPopupUnavailableKey);
                 SafeWarn(message);
+                LogExceptionDetail(ex);
             }
             catch (Exception) { }
         }
@@ -1215,30 +1272,16 @@ namespace GK2.SermonReminder
         }
 
         /// <summary>
-        /// Clear the sprite-handle failure episode. Kept separate from the corner
-        /// diagnostics: the sprite handle is a distinct channel, so its recovery never
-        /// clears a corner render/text episode and vice versa.
-        /// </summary>
-        private void ClearIconDiagnostic() => lastIconDiagnostic = null;
-
-        /// <summary>
         /// End the current resource-eligibility episode: release the owned sprite
         /// handle and drop its failure/backoff state. Called on every path where the
         /// mod stops needing the asset (gates closed, off-day, unreadable state, a
         /// replaced or failed host, readiness loss, shutdown), so a stale ownership
         /// and an old failure episode can never survive into unrelated work.
-        ///
-        /// <paramref name="preserveIconDiagnostic"/> keeps the icon channel's
-        /// episode (used for a host failure: a broken asset stays broken across a
-        /// rebind, so its warning must not be re-emitted as a new episode).
         /// </summary>
-        private void ResetEligibility(bool preserveIconDiagnostic = false)
+        private void ResetEligibility()
         {
             try { checkSprite.Release(); }
             catch (Exception) { }
-
-            if (!preserveIconDiagnostic)
-                lastIconDiagnostic = null;
         }
 
         /// <summary>Reset every diagnostic channel for a newly authoritative save.</summary>
@@ -1246,7 +1289,6 @@ namespace GK2.SermonReminder
         {
             lastStateDiagnostic = null;
             lastCornerDiagnostic = null;
-            lastIconDiagnostic = null;
             lastBeaconDiagnostic = null;
             lastPopupDiagnostic = null;
             hasLoggedDisplay = false;
