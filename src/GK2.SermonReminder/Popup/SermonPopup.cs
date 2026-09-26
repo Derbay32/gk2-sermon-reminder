@@ -137,6 +137,15 @@ namespace GK2.SermonReminder.Popup
         // The single owned native transaction, retained until cleanup completes.
         private OwnedTransaction transaction;
 
+        // Current failure evidence, independent of any logging or notice budget.
+        // `attemptedDisplayFaulted` records a concrete failed evaluation/attempt;
+        // `cleanupFaulted` records required owned cleanup that is still unresolved.
+        // They are kept distinct because a genuine load boundary discards only the
+        // ordinary attempted-display evidence, while an unresolved owned cleanup must
+        // stay reported until it actually resolves.
+        private bool attemptedDisplayFaulted;
+        private bool cleanupFaulted;
+
         internal SermonPopupStatus LastStatus { get; private set; }
         internal SermonPopupStage LastStage { get; private set; }
 
@@ -145,6 +154,15 @@ namespace GK2.SermonReminder.Popup
 
         /// <summary>True while an owned native transaction is still being resolved.</summary>
         internal bool HasUnresolvedTransaction => transaction != null;
+
+        /// <summary>
+        /// True while a concrete popup fault is active: a Failed evaluation/attempt is
+        /// recorded, or a required owned cleanup is still unresolved. Preserved across
+        /// ordinary Pending and bounded backoff; cleared on an actual Healthy
+        /// completion, a genuinely Inactive boundary, or the moment an existing owned
+        /// cleanup resolves. It never depends on logging or notice budgets.
+        /// </summary>
+        internal bool HasActiveFailure => attemptedDisplayFaulted || cleanupFaulted;
 
         /// <summary>
         /// Freeze the immutable native slot key and generation for a load, before
@@ -200,6 +218,11 @@ namespace GK2.SermonReminder.Popup
             try
             {
                 this.enabled = enabled;
+
+                // A genuine load boundary discards the prior load's ordinary
+                // attempted-display evidence; an unresolved owned cleanup keeps its own
+                // evidence until TryResolveTransaction actually resolves it.
+                attemptedDisplayFaulted = false;
                 ClearPendingRetry();
                 TryResolveTransaction();
 
@@ -237,6 +260,11 @@ namespace GK2.SermonReminder.Popup
             frozenSlot = null;
             identityFailure = null;
 
+            // A genuine lifecycle boundary discards ordinary attempted-display
+            // evidence; an unresolved owned cleanup keeps its own evidence until it
+            // resolves.
+            attemptedDisplayFaulted = false;
+
             try
             {
                 TryResolveTransaction();
@@ -269,6 +297,28 @@ namespace GK2.SermonReminder.Popup
         }
 
         /// <summary>
+        /// Bind the plugin's existing Harmony owner for the lazy provenance install.
+        /// Contained; when the observer stays unavailable the popup fails closed
+        /// before any pre-claim or native open.
+        /// </summary>
+        internal void ConfigureHarmony(Harmony harmony)
+        {
+            try { SermonPopupButtonCapture.ConfigureHarmony(harmony); }
+            catch (Exception) { }
+        }
+
+        /// <summary>
+        /// Drop the provenance configuration on teardown. The owner's UnpatchSelf
+        /// already removed this transpiler; this only clears the cached owner and the
+        /// supported flag so a re-enable cannot trust a stale success.
+        /// </summary>
+        internal void ClearHarmonyConfiguration()
+        {
+            try { SermonPopupButtonCapture.ClearConfiguration(); }
+            catch (Exception) { }
+        }
+
+        /// <summary>
         /// Evaluate the fresh snapshot against the frozen load identity and drive
         /// the popup. Contained: an unexpected failure never discards an owned
         /// transaction before its required native cleanup succeeds.
@@ -283,29 +333,93 @@ namespace GK2.SermonReminder.Popup
             catch (Exception ex)
             {
                 // Retain the owned transaction; native cleanup is retried, never
-                // skipped, so references are not cleared before cleanup succeeds.
+                // skipped, so references are not cleared before cleanup succeeds. The
+                // Failed(Cleanup) outcome below derives the failure evidence.
                 if (transaction != null)
                     transaction.CleanupNeeded = true;
                 ArmCleanupRetry();
                 outcome = new SermonPopupOutcome(SermonPopupStatus.Failed, SermonPopupStage.Cleanup, ex.GetType().Name);
             }
 
+            // Derive the current failure episode from the concrete outcome, not from
+            // any diagnostic text or notice budget.
+            UpdateFailureEvidence(outcome);
+
             LastStatus = outcome.Status;
             LastStage = outcome.Stage;
             return outcome;
         }
 
+        /// <summary>
+        /// Fold one concrete outcome into the popup failure evidence. A Healthy or
+        /// genuinely Inactive outcome ends the ordinary attempted-display episode; a
+        /// concrete Failed outcome starts it; a Pending hold is never recovery. A
+        /// still-unresolved owned cleanup is tracked separately and ended only at its
+        /// own resolution boundary.
+        /// </summary>
+        private void UpdateFailureEvidence(SermonPopupOutcome outcome)
+        {
+            switch (outcome.Status)
+            {
+                case SermonPopupStatus.Healthy:
+                    // An actual displayed or live-shown popup is recovery.
+                    attemptedDisplayFaulted = false;
+                    cleanupFaulted = false;
+                    break;
+
+                case SermonPopupStatus.Failed:
+                    attemptedDisplayFaulted = true;
+                    if (outcome.Stage == SermonPopupStage.Cleanup)
+                        cleanupFaulted = true;
+                    break;
+
+                case SermonPopupStatus.Inactive:
+                    // Genuinely Inactive (disabled, not eligible, unreadable, no work)
+                    // ends ordinary attempted-display evidence. The popup core never
+                    // returns Inactive while an owned transaction is unresolved, so a
+                    // still-pending cleanup keeps its own evidence.
+                    attemptedDisplayFaulted = false;
+                    break;
+
+                default:
+                    // Pending (unsafe UI, gate held, or bounded backoff) preserves the
+                    // episode: it is not recovery.
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// The explicit recovery boundary of a failed transaction: once its required
+        /// owned cleanup has completed, both the cleanup evidence and the ordinary
+        /// attempted-display evidence for that transaction end immediately, even when
+        /// the same Update then returns an ordinary Pending due to an external gate.
+        /// </summary>
+        private void ClearFailedTransactionEvidence()
+        {
+            cleanupFaulted = false;
+            attemptedDisplayFaulted = false;
+        }
+
         private SermonPopupOutcome UpdateCore(SermonStateSnapshot snapshot)
         {
+            // The fresh readability fact is needed before the owned-shown shortcut: an
+            // unreadable shared state must close/suppress our own dialog, never report
+            // Healthy.
+            bool readable = snapshot.Readable;
+
             // Any owned transaction is resolved before new work is considered.
             if (transaction != null)
             {
                 // Own-shown must precede the external pause safety gate so our own
-                // native pause can never be read as a deferral that auto-closes us.
-                if (!transaction.CleanupNeeded && transaction.Displayed && OwnsShownWindow(transaction))
+                // native pause can never be read as a deferral that auto-closes us. It
+                // is only a live healthy display while the fresh state is readable.
+                if (readable && !transaction.CleanupNeeded && transaction.Displayed && OwnsShownWindow(transaction))
                     return Outcome(SermonPopupStatus.Healthy, SermonPopupStage.None, "shown");
 
-                // No longer a live owned display: it must be cleaned, not dropped.
+                // No longer a live owned display (or the shared state is unreadable):
+                // it must be cleaned, not dropped. A shared-state failure never calls
+                // EndLoad/BeginLoad, never recaptures identity, and never clears the
+                // process dedup maps.
                 transaction.CleanupNeeded = true;
 
                 if (!CleanupRetryElapsed())
@@ -317,8 +431,13 @@ namespace GK2.SermonReminder.Popup
                     return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Cleanup, "cleanup-incomplete");
                 }
 
+                // Required owned cleanup completed: this is the explicit recovery
+                // boundary for the failed-transaction/cleanup episode. It ends here,
+                // before any later Pending gate, so a repaired cleanup never leaves a
+                // stale fault notice queued and never opens a replacement.
                 transaction = null;
                 DisarmCleanupRetry();
+                ClearFailedTransactionEvidence();
             }
 
             if (!enabled)
@@ -327,16 +446,11 @@ namespace GK2.SermonReminder.Popup
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "disabled");
             }
 
-            if (!hasIdentity)
+            if (!readable)
             {
-                // Retain the identity failure so an eligible evaluation can report it.
-                ClearPendingRetry();
-                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Identity, identityFailure);
-            }
-
-            if (!snapshot.Readable)
-            {
-                // No stale Ready/day may survive an unreadable read.
+                // An unreadable shared state suppresses dependent popup eligibility. It
+                // is never classified as an identity fault, so unreadability alone does
+                // not invent a popup identity failure. No stale Ready/day survives it.
                 ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "unreadable");
             }
@@ -344,9 +458,19 @@ namespace GK2.SermonReminder.Popup
             bool opportunity = snapshot.GatesSatisfied && snapshot.Display == SermonDisplayState.Ready;
             if (!opportunity)
             {
-                // Closed gates, off day, or an already-consumed opportunity.
+                // Closed gates, off day, or an already-consumed opportunity: not
+                // eligible, so a missing identity is never implicated or reported.
                 ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "not-eligible");
+            }
+
+            if (!hasIdentity)
+            {
+                // Identity is required only for the dedup classification of an eligible
+                // opportunity; retain the failure so a readable eligible evaluation
+                // reports it.
+                ClearPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Identity, identityFailure);
             }
 
             if (dedupRecords.Contains(new DedupKey(identity, snapshot.AbsoluteDay)))
@@ -428,6 +552,18 @@ namespace GK2.SermonReminder.Popup
                 return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve, "window-in-use");
             }
 
+            // Provenance capability is required BEFORE any pre-claim or native open:
+            // without an instrumented acquisition observer the mod cannot prove which
+            // buttons this attempt acquired, so it must fail closed instead of
+            // claiming the frozen active list. Lazy install is bounded to this attempt
+            // (AttemptDisplay already runs on the finite retry clock).
+            if (!SermonPopupButtonCapture.EnsureReady(out string captureDetail))
+            {
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Resolve,
+                    "capture:" + (captureDetail ?? "unavailable"));
+            }
+
             // Freeze the exact native pool/list/content/prefab before preclaim so
             // cleanup can still run after the shared window changes underneath us.
             Pool pool;
@@ -465,6 +601,7 @@ namespace GK2.SermonReminder.Popup
             }
 
             tx.Data = data;
+            tx.ExpectedAcquisitionCount = data.ButtonsData != null ? data.ButtonsData.Count : 0;
 
             // Claim the transaction by installing our own data before the native
             // open, so a partial open is attributable to this attempt.
@@ -480,21 +617,73 @@ namespace GK2.SermonReminder.Popup
 
             transaction = tx;
 
+            SermonPopupButtonCapture.CaptureScope scope = null;
+            try
+            {
+                scope = SermonPopupButtonCapture.BeginScope(window, data, button => RecordAcquiredButton(tx, button));
+            }
+            catch (Exception ex)
+            {
+                FailTransaction(tx);
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Claim, "capture-scope:" + ex.GetType().Name);
+            }
+
+            if (scope == null)
+            {
+                FailTransaction(tx);
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Claim, "capture-scope-null");
+            }
+
+            // Run the native open inside the observation scope, then finalize the
+            // capture outcome and restore the scope BEFORE any native cleanup.
+            // FailTransaction must never run while the observation scope is still
+            // active or before a lost record is reflected on the transaction.
+            Exception openException = null;
             try
             {
                 window.Open(data, tx.NativeClosed);
             }
             catch (Exception ex)
             {
+                openException = ex;
+            }
+            finally
+            {
+                // A failure to read the scope outcome or to unwind the scope is itself
+                // a loss of provenance and must fail closed, never read as success.
+                try { tx.CaptureRecordFailed = tx.CaptureRecordFailed || scope.RecordFailed; }
+                catch (Exception) { tx.CaptureRecordFailed = true; }
+
+                try { scope.Dispose(); }
+                catch (Exception) { tx.CaptureRecordFailed = true; }
+            }
+
+            if (openException != null)
+            {
                 FailTransaction(tx);
                 ArmPendingRetry();
-                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Open, ex.GetType().Name);
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Open, openException.GetType().Name);
+            }
+
+            // A normal return without the complete expected acquisition set cannot be
+            // verified or de-duplicated. Mark the provenance permanently incomplete
+            // BEFORE cleanup so the retained transaction can never report completion,
+            // then fail closed instead of recording a day the native dialog may not
+            // actually own.
+            if (!tx.CaptureExpectedMet)
+            {
+                tx.CaptureRecordFailed = true;
+                FailTransaction(tx);
+                ArmPendingRetry();
+                return Outcome(SermonPopupStatus.Failed, SermonPopupStage.Show, "capture-incomplete");
             }
 
             bool displayed;
             try
             {
-                displayed = VerifyDisplayed(window, data, title, body, confirm, tx.NativeClosed);
+                displayed = VerifyDisplayed(window, data, title, body, confirm, tx.NativeClosed, tx);
             }
             catch (Exception ex)
             {
@@ -542,8 +731,10 @@ namespace GK2.SermonReminder.Popup
                 return;
             }
 
-            // Cleanup is incomplete: retain ownership and bound the next attempt.
+            // Cleanup is incomplete: retain ownership and bound the next attempt. The
+            // unresolved owned cleanup is its own failure evidence until it resolves.
             ArmCleanupRetry();
+            cleanupFaulted = true;
         }
 
         private bool VerifyDisplayed(
@@ -552,9 +743,15 @@ namespace GK2.SermonReminder.Popup
             string title,
             string body,
             string confirm,
-            Action<UIDialogWindowData> expectedCallback)
+            Action<UIDialogWindowData> expectedCallback,
+            OwnedTransaction tx)
         {
             if (window == null || !window.IsShown)
+                return false;
+
+            // Incomplete capture must fail closed: a normal return without the exact
+            // expected acquisition set is never verifiable or de-duplicated.
+            if (tx == null || !tx.CaptureExpectedMet)
                 return false;
 
             // The shared data slot must be readable and still ours.
@@ -586,6 +783,11 @@ namespace GK2.SermonReminder.Popup
 
             UIDialogWindowButton button = activeButtons[0];
             if (button == null)
+                return false;
+
+            // The sole active button must be exactly the reference the native Open
+            // acquired for this attempt, never an unrelated lookalike.
+            if (tx.Buttons.Count != 1 || !ReferenceEquals(button, tx.Buttons[0].Button))
                 return false;
 
             var label = ButtonLabelField?.GetValue(button) as TextMeshProUGUI;
@@ -747,10 +949,12 @@ namespace GK2.SermonReminder.Popup
             {
                 transaction = null;
                 DisarmCleanupRetry();
+                ClearFailedTransactionEvidence();
             }
             else
             {
                 ArmCleanupRetry();
+                cleanupFaulted = true;
             }
         }
 
@@ -935,22 +1139,21 @@ namespace GK2.SermonReminder.Popup
         }
 
         /// <summary>
-        /// Return only buttons this window actually owns: the union of the frozen
-        /// active list and the attached children of this window's frozen
-        /// buttonsContent, excluding the original prefab. Each item is tracked
-        /// through Owned -> (Transferred | Uncertain) phases. Membership is checked
-        /// by reference identity before any mutation, an already returned item is
-        /// never touched, and an uncertain item is only re-checked read-only.
+        /// Return only buttons this attempt actually acquired, taken exclusively from
+        /// the captured native-acquisition ledger. Membership in the shared active
+        /// list or content hierarchy is deliberately NOT used: native Close leaves old
+        /// foreign buttons in the active list, so list membership is not proof of
+        /// acquisition by this attempt. An empty ledger after a genuine early native
+        /// Open failure therefore leaves every foreign button untouched. Each captured
+        /// item is tracked through Owned -> (Transferred | Uncertain) phases; membership
+        /// is checked by reference identity before any mutation, an already returned
+        /// item is never touched, and an uncertain item is only re-checked read-only. A
+        /// lost capture record quarantines the transaction by never reporting the
+        /// button stage complete.
         /// </summary>
         private ButtonProcessResult ProcessOwnedButtons(OwnedTransaction tx)
         {
-            // Discover the frozen candidates and ALWAYS track whatever was found,
-            // so a discovery failure never hides an already-known owned item.
-            bool discoverySucceeded = DiscoverOwnedButtons(tx, out List<UIDialogWindowButton> discovered);
-            foreach (UIDialogWindowButton candidate in discovered)
-                EnsureButtonState(tx, candidate);
-
-            bool allDone = discoverySucceeded;
+            bool allDone = !tx.CaptureRecordFailed;
 
             foreach (ButtonState state in tx.Buttons.ToArray())
             {
@@ -1095,115 +1298,6 @@ namespace GK2.SermonReminder.Popup
             return allDone ? ButtonProcessResult.Complete : ButtonProcessResult.Incomplete;
         }
 
-        private static bool DiscoverOwnedButtons(OwnedTransaction tx, out List<UIDialogWindowButton> discovered)
-        {
-            discovered = new List<UIDialogWindowButton>();
-            bool success = true;
-
-            List<UIDialogWindowButton> activeList = tx.ActiveList;
-            if (activeList == null)
-            {
-                success = false;
-            }
-            else
-            {
-                try
-                {
-                    foreach (UIDialogWindowButton button in activeList)
-                    {
-                        // Distinguish actual CLR null from Unity fake-null: a
-                        // destroyed managed reference must still be tracked so its
-                        // stale original active-list entry can be removed later.
-                        if (ReferenceEquals(button, null))
-                            continue;
-                        if (ReferenceEquals(button, tx.Prefab) || ContainsByIdentity(discovered, button))
-                            continue;
-                        discovered.Add(button);
-                    }
-                }
-                catch (Exception)
-                {
-                    success = false;
-                }
-            }
-
-            RectTransform content = tx.Content;
-            if (content == null)
-            {
-                success = false;
-            }
-            else
-            {
-                int count;
-                try
-                {
-                    count = content.childCount;
-                }
-                catch (Exception)
-                {
-                    count = -1;
-                }
-
-                if (count < 0)
-                {
-                    // Unknown orphan set: discovery did not complete.
-                    success = false;
-                }
-                else
-                {
-                    for (int i = 0; i < count; i++)
-                    {
-                        Transform child;
-                        try
-                        {
-                            child = content.GetChild(i);
-                        }
-                        catch (Exception)
-                        {
-                            success = false;
-                            continue;
-                        }
-
-                        if (child == null)
-                        {
-                            // Genuine destroyed child may end its ownership; an
-                            // unreadable live component below is not destroyed.
-                            continue;
-                        }
-
-                        UIDialogWindowButton button;
-                        try
-                        {
-                            button = child.GetComponent<UIDialogWindowButton>();
-                        }
-                        catch (Exception)
-                        {
-                            success = false;
-                            continue;
-                        }
-
-                        if (button == null || ReferenceEquals(button, tx.Prefab) || ContainsByIdentity(discovered, button))
-                            continue;
-
-                        discovered.Add(button);
-                    }
-                }
-            }
-
-            return success;
-        }
-
-        private static bool ContainsByIdentity(List<UIDialogWindowButton> list, UIDialogWindowButton button)
-        {
-            foreach (UIDialogWindowButton existing in list)
-            {
-                if (ReferenceEquals(existing, button))
-                    return true;
-            }
-
-            return false;
-        }
-
         private static ButtonOwner ClassifyOwnership(OwnedTransaction tx)
         {
             if (tx == null || tx.Window == null || tx.Data == null)
@@ -1227,6 +1321,29 @@ namespace GK2.SermonReminder.Popup
             }
 
             tx.Buttons.Add(new ButtonState { Button = button });
+        }
+
+        /// <summary>
+        /// Record one button the native Open actually acquired for this transaction.
+        /// Called only from the scoped provenance observer, before SetParent/Draw/list
+        /// registration, so a ref acquired by this attempt is ours even when the open
+        /// later fails or never attaches it. The original prefab is never owned.
+        /// </summary>
+        private static void RecordAcquiredButton(OwnedTransaction tx, UIDialogWindowButton button)
+        {
+            if (tx == null)
+                return;
+
+            // A CLR-null or the shared prefab is not a button this attempt owns.
+            // Mark the provenance incomplete instead of inserting a ledger entry that
+            // would fake count success; the prefab stays excluded from mutation.
+            if (ReferenceEquals(button, null) || ReferenceEquals(button, tx.Prefab))
+            {
+                tx.CaptureRecordFailed = true;
+                return;
+            }
+
+            EnsureButtonState(tx, button);
         }
 
         private static bool RemoveFromActiveList(OwnedTransaction tx, UIDialogWindowButton button)
@@ -1572,11 +1689,32 @@ namespace GK2.SermonReminder.Popup
             internal bool WindowsClosed;
             internal bool DataDetached;
 
+            // Provenance of this attempt's buttons. The ledger below is populated only
+            // via the native-acquisition observer; there is no hierarchy discovery.
+            internal int ExpectedAcquisitionCount;
+
+            // True when this attempt's acquisition provenance is known lost or
+            // ambiguous: the observer recorded no real owned button, the scope failed
+            // to unwind, or a normal return did not match the expected count exactly.
+            // It defaults false so a scope that never ran a native open still cleans
+            // its own preclaim normally.
+            internal bool CaptureRecordFailed;
+
             // A confirmed foreign takeover or genuine destruction is a distinct,
             // allowed ownership-end path that leaves only management cleanup.
             internal bool Relinquished;
 
             internal readonly List<ButtonState> Buttons = new List<ButtonState>();
+
+            /// <summary>
+            /// True only when the full expected acquisition set was captured exactly
+            /// and no record was lost. A normal native return without it fails closed
+            /// instead of writing de-duplication or declaring cleanup complete.
+            /// </summary>
+            internal bool CaptureExpectedMet =>
+                !CaptureRecordFailed
+                && ExpectedAcquisitionCount > 0
+                && Buttons.Count == ExpectedAcquisitionCount;
         }
 
         private readonly struct NativeSlotKey : IEquatable<NativeSlotKey>

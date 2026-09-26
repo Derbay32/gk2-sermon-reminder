@@ -163,6 +163,15 @@ namespace GK2.SermonReminder.Beacon
         internal string LastFailure => lastFailure;
 
         /// <summary>
+        /// True while a real fault episode is active: a concrete resource/binding
+        /// failure is recorded and recovery has not yet been observed. Backed by the
+        /// existing failed-episode flag, so it is preserved across ordinary Pending
+        /// holds and retry backoff and cleared only at a genuine Healthy, ineligible or
+        /// Reset boundary. It is independent of any logging or notice budget.
+        /// </summary>
+        internal bool HasActiveFailure => failed;
+
+        /// <summary>
         /// Advance the beacon once per LateUpdate.
         ///
         /// <paramref name="eligible"/> is the owner's business snapshot (gates open,

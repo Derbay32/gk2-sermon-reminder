@@ -12,10 +12,11 @@ using UnityEngine;
 namespace GK2.SermonReminder.Notifications
 {
     /// <summary>
-    /// Owns the two independent fault-notice categories: the necessary state read
-    /// and the corner HUD. Each category has exactly one display budget per genuine
-    /// load; a category only spends its budget after a real native notification is
-    /// verified as registered, active and actually rendering the localized text.
+    /// Owns four independent fault-notice categories: the necessary state read, the
+    /// corner HUD, the church beacon and the normal popup. Each category has exactly
+    /// one display budget per genuine load; a category only spends its budget after a
+    /// real native notification is verified as registered, active and actually
+    /// rendering the localized text.
     ///
     /// The class never derives a fault from ordinary loading, exit, a missing
     /// native HUD or the documented missing-key default. The shared owner invokes
@@ -42,6 +43,12 @@ namespace GK2.SermonReminder.Notifications
         /// <summary>Catalog semantic key for the corner-HUD failure notice.</summary>
         internal const string CornerHudStatusKey = "gksr.status.hudUnavailable";
 
+        /// <summary>Catalog semantic key for the church-beacon failure notice.</summary>
+        internal const string BeaconStatusKey = "gksr.status.beaconUnavailable";
+
+        /// <summary>Catalog semantic key for the normal-popup failure notice.</summary>
+        internal const string PopupStatusKey = "gksr.status.popupUnavailable";
+
         // Bounded retry for native display and cleanup failures, measured in
         // unscaled time so a paused game never spams native acquisition attempts.
         private const float RetryDelaySeconds = 2f;
@@ -59,6 +66,8 @@ namespace GK2.SermonReminder.Notifications
 
         private readonly CategoryState stateRead = new CategoryState(StateReadStatusKey);
         private readonly CategoryState cornerHud = new CategoryState(CornerHudStatusKey);
+        private readonly CategoryState beacon = new CategoryState(BeaconStatusKey);
+        private readonly CategoryState popup = new CategoryState(PopupStatusKey);
 
         // Active-load boundary: false until a genuine BeginLoad. A notice may never
         // be shown while inactive; retained cleanup may still be retried.
@@ -137,7 +146,7 @@ namespace GK2.SermonReminder.Notifications
         }
 
         /// <summary>
-        /// Genuine load transition. Opens the active-load boundary and resets both
+        /// Genuine load transition. Opens the active-load boundary and resets all four
         /// category budgets. An unresolved older transaction is deliberately kept:
         /// it must be cleaned before any new allocation, even across a reset.
         /// </summary>
@@ -148,6 +157,8 @@ namespace GK2.SermonReminder.Notifications
                 activeLoad = true;
                 ResetBudget(stateRead);
                 ResetBudget(cornerHud);
+                ResetBudget(beacon);
+                ResetBudget(popup);
                 TryAdvanceTransactionCleanup();
             }
             catch (Exception ex)
@@ -170,6 +181,8 @@ namespace GK2.SermonReminder.Notifications
                 activeLoad = false;
                 CancelQueue(stateRead);
                 CancelQueue(cornerHud);
+                CancelQueue(beacon);
+                CancelQueue(popup);
                 TryAdvanceTransactionCleanup();
             }
             catch (Exception ex)
@@ -180,12 +193,13 @@ namespace GK2.SermonReminder.Notifications
         }
 
         /// <summary>
-        /// Advance both categories for this tick. While no load is active the method
-        /// only retries retained cleanup and never shows; otherwise both flags are
-        /// processed every tick so a recovery cancels an undisplayed queue before a
+        /// Advance all four categories for this tick. While no load is active the
+        /// method only retries retained cleanup and never shows; otherwise every flag
+        /// is processed every tick so a recovery cancels an undisplayed queue before a
         /// later refault may display.
         /// </summary>
-        internal void Update(bool stateReadFailed, bool cornerHudFailed)
+        internal void Update(
+            bool stateReadFailed, bool cornerHudFailed, bool beaconFailed, bool popupFailed)
         {
             try
             {
@@ -196,6 +210,8 @@ namespace GK2.SermonReminder.Notifications
 
                 ProcessCategory(stateRead, stateReadFailed);
                 ProcessCategory(cornerHud, cornerHudFailed);
+                ProcessCategory(beacon, beaconFailed);
+                ProcessCategory(popup, popupFailed);
             }
             catch (Exception ex)
             {
@@ -421,26 +437,16 @@ namespace GK2.SermonReminder.Notifications
         }
 
         /// <summary>
-        /// Bounded, idempotent retry of the single owned transaction. It never
-        /// allocates and never drops the transaction before cleanup succeeds; a
-        /// genuinely destroyed item ends ownership.
+        /// Bounded, idempotent retry of the single owned transaction. Every retained
+        /// transaction, including one whose item was destroyed, is gated by the same
+        /// readable clock and deadline. It never allocates and never drops the
+        /// transaction before cleanup succeeds.
         /// </summary>
         private void TryAdvanceTransactionCleanup()
         {
             OwnedNotice owned = transaction;
             if (owned == null)
                 return;
-
-            if (owned.Item == null)
-            {
-                // Unity destroyed the object: nothing can be returned or mutated, but
-                // its stale entry must still be removed and the remaining notices
-                // repositioned when the notifier is still alive.
-                TryRemoveFromListOnly(owned);
-                TryRepositionRemaining(owned);
-                transaction = null;
-                return;
-            }
 
             if (!TryGetUnscaledTime(out float now))
                 return;
@@ -467,10 +473,6 @@ namespace GK2.SermonReminder.Notifications
         /// </summary>
         private bool TryCompleteCleanup(OwnedNotice owned)
         {
-            UISimpleTextNotification item = owned.Item;
-            if (item == null)
-                return true;
-
             // Already transferred: never mutate or re-release a possibly reused item.
             if (owned.ReturnPhase == PoolReturnPhase.Transferred)
                 return true;
@@ -478,7 +480,21 @@ namespace GK2.SermonReminder.Notifications
             // Uncertain: a release may already have pushed the item (push happens
             // first). Allow only bounded read-only identity/destruction checks.
             if (owned.ReturnPhase == PoolReturnPhase.Uncertain)
-                return TryResolveUncertainReturn(owned, item);
+                return TryResolveUncertainReturn(owned, owned.Item);
+
+            UISimpleTextNotification item = owned.Item;
+
+            // A Unity-destroyed item is never mutated or pool-returned. Its exact
+            // stale entry must still be removed and the remaining notices
+            // repositioned; when the original notifier is gone there is nothing left
+            // to repair.
+            if (item == null)
+            {
+                if (owned.Notificator == null)
+                    return true;
+
+                return TryRemoveFromList(owned) && TryRepositionRemaining(owned);
+            }
 
             // Before any item mutation, prove from the frozen pool whether a previous
             // attempt already transferred the item; that proof revokes ownership.
@@ -594,12 +610,6 @@ namespace GK2.SermonReminder.Notifications
             {
                 return false;
             }
-        }
-
-        private void TryRemoveFromListOnly(OwnedNotice owned)
-        {
-            try { RemoveFromList(owned); }
-            catch (Exception) { }
         }
 
         private static void RemoveFromList(OwnedNotice owned)

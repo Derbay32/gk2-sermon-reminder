@@ -32,6 +32,14 @@ namespace GK2.SermonReminder.Localization
         internal const string DiagnosticsReminderUnavailableKey = "gksr.diagnostics.reminderUnavailable";
         internal const string DiagnosticsHudUnavailableKey = "gksr.diagnostics.hudUnavailable";
 
+        // GKSA-15 beacon and popup fault-notice copy: the same approved status /
+        // diagnostics pairing as the state and corner categories. No fifth
+        // notifier category is introduced.
+        internal const string StatusBeaconUnavailableKey = "gksr.status.beaconUnavailable";
+        internal const string StatusPopupUnavailableKey = "gksr.status.popupUnavailable";
+        internal const string DiagnosticsBeaconUnavailableKey = "gksr.diagnostics.beaconUnavailable";
+        internal const string DiagnosticsPopupUnavailableKey = "gksr.diagnostics.popupUnavailable";
+
         private const string English = "en";
         private const string Chinese = "zh_cn";
 

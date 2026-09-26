@@ -76,6 +76,13 @@ namespace GK2.SermonReminder.Hud
         internal string LastFailure => lastFailure;
 
         /// <summary>
+        /// True while an unresolved failure episode is active, including a bounded
+        /// retry whose new request is still pending, so a caller can classify an
+        /// otherwise Pending poll as a real suspended fault.
+        /// </summary>
+        internal bool HasActiveFailure => failed;
+
+        /// <summary>
         /// Advance the request and return the current ownership state.
         ///
         /// When <paramref name="eligible"/> is false the owned handle and the whole
@@ -109,9 +116,9 @@ namespace GK2.SermonReminder.Hud
                     return new NativeCheckSpritePoll(NativeCheckSpriteStatus.Failed, null);
             }
 
-            // Retry window open (or first request): clear the stale failure so a
-            // successful request reports a clean recovery.
-            ClearEpisode();
+            // Retry window open (or first request): the retained failure episode stays
+            // active until PollOwned resolves a usable Sprite, so a pending retry is
+            // still reported as an active fault rather than a clean pending load.
             return Request();
         }
 
