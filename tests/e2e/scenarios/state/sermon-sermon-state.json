@@ -1,0 +1,455 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenReady"
+        }
+      ],
+      "id": "ready-zh",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值与角落文字。"
+      ],
+      "title": "布道日当天原生 sermon_ready>=1 显示简体中文 Ready 文案"
+    },
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "en",
+          "observation": "hud.text"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        }
+      ],
+      "id": "ready-en",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为英语。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值与角落文字。"
+      ],
+      "title": "布道日当天原生 sermon_ready>=1 显示英文 Ready 文案"
+    },
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spaceReservedWhenDone"
+        }
+      ],
+      "id": "done-zh",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+      ],
+      "title": "布道日当天原生 sermon_ready<1 显示简体中文 Done 文案"
+    },
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "en",
+          "observation": "hud.text"
+        },
+        {
+          "equals": 1,
+          "observation": "hud.cornerTextInstanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spaceReservedWhenDone"
+        }
+      ],
+      "id": "done-en",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "游戏语言为英语。",
+        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
+        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+      ],
+      "title": "布道日当天原生 sermon_ready<1 显示英文 Done 文案"
+    },
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.readyKeyAbsent"
+        },
+        {
+          "numberRange": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        }
+      ],
+      "id": "native-ready-accessor-default-zero",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生存档中不存在 sermon_ready 键。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "确认键缺失（不要求模组做键存在性检查或复制状态）。",
+        "观察角落文字是否按默认 0 显示 Done。"
+      ],
+      "title": "原生 sermon_ready 键缺失时按文档默认 0 判定为 Done"
+    },
+    {
+      "category": "sermon-state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfter",
+          "observation": "save.absoluteDayBefore"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "equalsObservation": "hud.textKeyAfter",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "equalsObservation": "hud.textAfter",
+          "observation": "hud.textBefore"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonDone",
+          "language": "zh-CN",
+          "observation": "hud.textAfter"
+        }
+      ],
+      "id": "done-persists-same-date",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，开始布道后原生 sermon_ready < 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "记录第一次观察的绝对日与角落文字。",
+        "在同一天内推进游戏时间。",
+        "记录第二次观察的绝对日与角落文字。"
+      ],
+      "title": "同一天内 Done 状态在剩余时间保持不变"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,144 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "routing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "outdoor",
+          "observation": "beacon.routeKind"
+        },
+        {
+          "equalsObservation": "native.routeEntryId",
+          "observation": "beacon.routeEntryId"
+        },
+        {
+          "equals": "gd_church_player_pray",
+          "observation": "beacon.finalTargetId"
+        }
+      ],
+      "id": "beacon-routing-outdoor-final-target",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "玩家位于教堂之外的室外区域。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在室外观察信标路由入口；预期路由类型为 outdoor；检查 beacon.routeKind=outdoor。",
+        "记录有效路由目标与途中入口；预期与原生一致；检查 beacon.effectiveTargetId 等于 native.referenceTargetId 且 beacon.routeEntryId 等于 native.routeEntryId。",
+        "核对最终目标；预期为教堂布道场景点；检查 beacon.finalTargetId=gd_church_player_pray。"
+      ],
+      "title": "室外引导沿用原生路由并把最终目标设为教堂布道场景点"
+    },
+    {
+      "category": "routing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "indoor-door",
+          "observation": "beacon.routeKind"
+        },
+        {
+          "equalsObservation": "native.routeEntryId",
+          "observation": "beacon.routeEntryId"
+        },
+        {
+          "equals": "gd_church_player_pray",
+          "observation": "beacon.finalTargetId"
+        }
+      ],
+      "id": "beacon-routing-indoor-entry-final-target",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "玩家位于需要经过门路由才能到达教堂的室内区域。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "在室内观察信标路由入口；预期路由类型为 indoor-door；检查 beacon.routeKind=indoor-door。",
+        "记录有效路由目标与途中入口；预期与原生门路由选择一致；检查 beacon.effectiveTargetId 等于 native.referenceTargetId 且 beacon.routeEntryId 等于 native.routeEntryId。",
+        "核对最终目标；预期为教堂布道场景点；检查 beacon.finalTargetId=gd_church_player_pray。"
+      ],
+      "title": "室内引导沿用原生门路由选择途中入口"
+    },
+    {
+      "category": "routing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsObservation": "native.referenceTargetId",
+          "observation": "beacon.effectiveTargetId"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.routeUpdatedAfterTransition"
+        },
+        {
+          "equalsObservation": "native.routeEntryId",
+          "observation": "beacon.routeEntryId"
+        },
+        {
+          "equals": "gd_church_player_pray",
+          "observation": "beacon.finalTargetId"
+        }
+      ],
+      "id": "beacon-routing-updates-after-transition",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "当前为布道日且原生 sermon_ready >= 1。",
+        "可在室内外之间移动或使用传送。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "记录移动前的路由入口；预期入口可读；检查 beacon.routeEntryId 等于 native.routeEntryId。",
+        "在室内外之间移动或传送；预期目标更新；检查 beacon.routeUpdatedAfterTransition=true。",
+        "核对移动后的有效目标与最终目标；预期与原生一致且仍指向教堂；检查 beacon.effectiveTargetId 等于 native.referenceTargetId 且 beacon.finalTargetId=gd_church_player_pray。"
+      ],
+      "title": "室内外移动或传送后更新引导目标"
+    }
+  ],
+  "schemaVersion": 2
+}

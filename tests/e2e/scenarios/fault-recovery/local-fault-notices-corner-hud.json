@@ -1,0 +1,269 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "corner-hud",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "hud.liveNativeHudPresent"
+        },
+        {
+          "equals": false,
+          "observation": "hud.requiredCornerResourcePresent"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "hud.unrelatedPresentationPreserved"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-resource-missing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
+        "原生 HUD 已在运行中存在。",
+        "测试设施可受控使角落文字必需资源缺失。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读且原生 HUD 已存在。检查：state.readable=true 且 hud.liveNativeHudPresent=true。",
+        "注入角落文字必需资源缺失。预期：仅抑制依赖呈现。检查：hud.dependentPresentationSuppressed=true 且 hud.unrelatedPresentationPreserved=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次且状态读取类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
+      ],
+      "title": "角落文字必需资源缺失时仅抑制依赖呈现"
+    },
+    {
+      "category": "corner-hud",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "hud.requiredTextResolved"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-text-missing",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
+        "当前语言及其英语回退均无法解析必需角落文案。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "使必需角落文案在当前语言与英语回退下均缺失。预期：仅抑制依赖呈现。检查：hud.requiredTextResolved=false 且 hud.dependentPresentationSuppressed=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
+      ],
+      "title": "必需本地化角落文案缺失时仅抑制依赖呈现"
+    },
+    {
+      "category": "corner-hud",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.componentLocalFailureIsolated"
+        },
+        {
+          "equals": false,
+          "observation": "hud.sharedComponentLoss"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "hud.unrelatedPresentationPreserved"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-local-failure-isolated",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
+        "测试设施可受控仅使角落文字组件局部故障。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "注入仅影响角落文字的局部故障。预期：故障被隔离且其他正常呈现保留。检查：hud.componentLocalFailureIsolated=true 且 hud.unrelatedPresentationPreserved=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
+      ],
+      "title": "角落文字组件局部故障隔离且保留其他正常提醒"
+    },
+    {
+      "category": "corner-hud",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.sharedComponentLoss"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "hud.componentLocalFailureIsolated"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-shared-component-loss",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "存档加载完成后必要状态可可靠读取。",
+        "测试设施可受控使影响多个依赖项的原生共享组件缺失。",
+        "信标与弹窗不在本票范围，本场景只观察角落文字。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读。检查：state.readable=true。",
+        "注入原生共享组件缺失。预期：停用依赖该组件的呈现。检查：hud.sharedComponentLoss=true 且 hud.dependentPresentationSuppressed=true。",
+        "观察消息计数。预期：角落文字类别消息显示一次。检查：notice.cornerHudDisplayedCount=1。"
+      ],
+      "title": "原生共享组件缺失时停用依赖该组件的呈现"
+    },
+    {
+      "category": "corner-hud",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": false,
+          "observation": "recovery.successMessageShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRecovery"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerHudBudgetConsumed"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleTextPresent"
+        }
+      ],
+      "id": "corner-resource-recovery-refailure-same-load",
+      "prerequisites": [
+        "角落文字必需资源缺失且角落文字类别消息已实际显示一次。",
+        "同一次存档载入内可再次使该资源失效。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "解除角落资源故障。预期：自动恢复呈现且无成功消息。检查：hud.visibleAfterRecovery=true 且 recovery.successMessageShown=false。",
+        "在同次载入内再次使角落资源失效。预期：不重复提示且已消耗机会保持。检查：notice.cornerHudDisplayedCount=1 且 notice.cornerHudBudgetConsumed=true。",
+        "观察残留与消息总数。预期：无残留文字且总显示次数为一。检查：hud.staleTextPresent=false 且 notice.totalDisplayedCount=1。"
+      ],
+      "title": "同次载入角落资源恢复后再次失效不重复消耗角落提示机会"
+    }
+  ],
+  "schemaVersion": 2
+}

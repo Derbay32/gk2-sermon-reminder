@@ -1,0 +1,593 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-sermon-consumed-done",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复共享状态但此时布道机会已消费；预期判定为已布道；检查 state.sermonReadyValue<1。",
+        "检查弹窗资格；预期不符合；检查 popup.eligibleOnRecovery=false、popup.recordAfterDisplay=false。",
+        "观察恢复后新增显示；预期零新增且不写记录；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、popup.chanceConsumed=false。"
+      ],
+      "title": "恢复时布道机会已消费则不补发弹窗"
+    },
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "save.dateChangedDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-next-non-sermon-day",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在故障排队期间跨日离开布道日；预期不再是布道日；检查 save.isSermonDay=false、save.dateChangedDuringDeferral=true。",
+        "恢复后重新检查；预期不符合；检查 popup.eligibleOnRecovery=false。",
+        "观察是否补发旧日弹窗；预期零新增；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、notice.staleNoticeAfterRecovery=false。"
+      ],
+      "title": "恢复时已跨入非布道日则不补发旧日弹窗"
+    },
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordBeforeDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-existing-normal-popup-record",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认同一次载入内已成功显示过一次正常弹窗；预期累计显示次数为 1；检查 popup.actualDisplaysBeforeRecovery=1、popup.recordBeforeDisplay=true。",
+        "恢复后重新检查；预期因已有记录不符合；检查 popup.eligibleOnRecovery=false。",
+        "观察恢复后新增显示；预期累计仍为 1 且零新增且不写新记录；检查 popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=0、dedup.recordRetainedAcrossRecovery=true。"
+      ],
+      "title": "恢复时已有同载入正常弹窗去重记录则不补发"
+    },
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthIndependentlyObserved"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupOffDeliberate"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentWhenPopupOff"
+        },
+        {
+          "equals": true,
+          "observation": "popup.componentAvailable"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-popup-off",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复时弹窗开关为关闭，且其余抑制条件均已移除（就绪、健康、原生安全、无记录、正确日期）；预期仅开关关闭生效；检查 settings.popupEnabled=false、state.readable=true、ui.safetyGateClear=true、ui.playerControllable=true、dedup.recordAbsentWhenPopupOff=true。",
+        "检查资格；预期因开关关闭不符合；检查 popup.eligibleOnRecovery=false。",
+        "确认关闭不产生弹窗故障消息且零新增显示；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0、notice.popupDisplayedCount=0、popup.componentAvailable=true。"
+      ],
+      "title": "恢复时弹窗开关关闭则不补发且关闭本身不是故障"
+    },
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-church-quest-gate-lost",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复时教堂开启门槛任务不再为 Completed；预期门槛丢失；检查 save.churchUnlocked=false、state.gatesSatisfied=false。",
+        "检查弹窗资格；预期不符合；检查 popup.eligibleOnRecovery=false。",
+        "观察恢复后新增显示；预期零新增；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0。"
+      ],
+      "title": "恢复时教堂门槛任务丢失则不补发"
+    },
+    {
+      "category": "catch-up-negative",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        }
+      ],
+      "id": "ineligible-catch-up-tutorial-quest-gate-lost",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日（除另有说明）。",
+        "共享状态或资源曾故障，随后恢复；恢复时该负向条件成立。",
+        "测试设施可受控使恢复时的资格条件不成立。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复时首次布道教学门槛任务不再为 Completed；预期门槛丢失；检查 save.tutorialCompleted=false、state.gatesSatisfied=false。",
+        "检查弹窗资格；预期不符合；检查 popup.eligibleOnRecovery=false。",
+        "观察恢复后新增显示；预期零新增；检查 popup.actualDisplaysAfterRecovery=0、popup.newDisplaysAfterRecovery=0。"
+      ],
+      "title": "恢复时教学门槛任务丢失则不补发"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,246 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "icon-isolation",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.loadPendingBeforeResolve"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spriteLoadedBeforeResolve"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresentBeforeResolve"
+        },
+        {
+          "equals": false,
+          "observation": "icon.staleReadyShownWhilePending"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKeyBeforeResolve"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeResolve"
+        },
+        {
+          "equals": true,
+          "observation": "hud.tmpTextClearedBeforeResolve"
+        },
+        {
+          "equals": true,
+          "observation": "icon.dependentPresentationSuppressed"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoadedAfterResolve"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresentAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRecovery"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKeyAfterRecovery"
+        }
+      ],
+      "id": "icon-pending-suppresses-done-no-notice",
+      "phaseNote": "待定阶段与恢复后阶段分开记录：待定快照使用 BeforeResolve 键，恢复后使用 AfterRecovery/AfterResolve 键，避免当前字段歧义。",
+      "prerequisites": [
+        "布道日当天处于 Done 状态（原生 sermon_ready < 1）且两个门槛任务均 Completed。",
+        "打勾图标异步加载可受控处于待定。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "使打勾图标加载处于待定。预期：业务状态仍为可读 Done，逻辑选定的业务键保持 Done。检查：state.readable=true 且 hud.selectedTextKeyBeforeResolve=gksr.hud.sermonDone。",
+        "记录待定阶段的实际呈现。预期：整个 Done 呈现被抑制且实际 TMP 文本已清空。检查：hud.visibleBeforeResolve=false 且 hud.tmpTextClearedBeforeResolve=true。",
+        "解除阻塞并记录恢复后阶段。预期：Done 与自有 Image 恢复。检查：icon.spriteLoadedAfterResolve=true 且 hud.visibleAfterRecovery=true。"
+      ],
+      "title": "打勾图标加载待定期间抑制 Done 呈现且不误报故障"
+    },
+    {
+      "category": "icon-isolation",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.loadFailedBeforeRetry"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spriteLoadedBeforeRetry"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresentBeforeRetry"
+        },
+        {
+          "equals": true,
+          "observation": "icon.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKeyBeforeRetry"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeRetry"
+        },
+        {
+          "equals": true,
+          "observation": "hud.tmpTextClearedBeforeRetry"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "icon.retryAttemptedAfterFailure"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoadedAfterRetry"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresentAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRecovery"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKeyAfterRecovery"
+        }
+      ],
+      "id": "icon-failed-suppresses-done-notice-once",
+      "phaseNote": "失败待重试阶段与恢复后阶段分开记录，避免 loadFailed/spriteLoaded/hud.visible 的当前值歧义。",
+      "prerequisites": [
+        "布道日当天处于 Done 状态（原生 sermon_ready < 1）且两个门槛任务均 Completed。",
+        "测试辅助可用：使打勾图标加载失败。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "注入打勾图标加载失败。预期：业务状态仍可读 Done，逻辑选定的业务键保持 Done。检查：state.readable=true 且 hud.selectedTextKeyBeforeRetry=gksr.hud.sermonDone。",
+        "记录重试前的实际呈现。预期：整个 Done 呈现被抑制且实际 TMP 文本已清空。检查：hud.visibleBeforeRetry=false 且 hud.tmpTextClearedBeforeRetry=true。",
+        "注入失败后重试并记录恢复后阶段。预期：角落文字类别消息显示一次且重试恢复。检查：notice.cornerHudDisplayedCount=1 且 icon.spriteLoadedAfterRetry=true。"
+      ],
+      "title": "打勾图标加载失败抑制整个 Done 呈现且归入角落文字类别一次"
+    },
+    {
+      "category": "icon-isolation",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.loadFailed"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "hud.readyCountdownSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "icon.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenReady"
+        }
+      ],
+      "id": "icon-irrelevant-failure-keeps-ready",
+      "prerequisites": [
+        "布道日当天处于 Ready 状态（原生 sermon_ready >= 1）。",
+        "测试设施可受控使打勾图标资源加载失败，但 Ready 不使用该图标。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在 Ready 状态下注入打勾图标资源加载失败。预期：图标失败但 Ready 不受影响。检查：icon.loadFailed=true 且 hud.readyCountdownSuppressed=false。",
+        "观察 Ready 呈现与图标空间。预期：Ready 正常显示且不预留图标空间。检查：hud.textKey=gksr.hud.sermonReminder 且 icon.spaceReservedWhenReady=false。"
+      ],
+      "title": "无关打勾图标故障不抑制 Ready 或倒计时"
+    }
+  ],
+  "schemaVersion": 2
+}

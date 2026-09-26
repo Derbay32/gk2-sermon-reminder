@@ -1,0 +1,493 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotOnLoadPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotOnLoadPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "settings.nextLoadCapturedValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledPhase1"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabledPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlockedPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompletedPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDayPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "state.readablePhase1"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValuePhase1"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyPhase1"
+        },
+        {
+          "equals": false,
+          "observation": "ui.safeControllablePhase1"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "settings.phase1GateHeldToAvoidSpend"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase1RecordAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "settings.returnedToMainMenuStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "ui.mainMenuReturn"
+        },
+        {
+          "equals": true,
+          "observation": "settings.modsPageOpenedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "settings.settingChangedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "settings.loadPerformedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameSlotDayAcrossLoads"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlockedPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompletedPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDayPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "state.readablePhase2"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValuePhase2"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safeControllablePhase2"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupOffDeliberate"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase2RecordAbsent"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        }
+      ],
+      "id": "settings-snapshot-on-to-off-next-load-prevents-popup",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 ON，且在任何首次合格显示机会之前即保持普通安全门以避免花费去重记录（故 ui.safeControllablePhase1=false），独立前置记录也在门保持下完成；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 OFF 且安全可操作，OFF 为唯一抑制条件。native ready 以 state.sermonReadyValuePhase1/2 按阶段独立记录。不使用实时菜单值，不虚构游戏内设置页。",
+      "prerequisites": [
+        "第一次载入（Phase1）该槽该日尚未显示、弹窗开关为 ON、两个门槛与原生布道日成立、资源健康。",
+        "Phase1 期间保持普通 UI 门以避免花费该槽该日去重记录，然后退出。",
+        "返回主菜单并在 Mods 设置页把弹窗开关改为 OFF。",
+        "随后再次载入同一槽同一实际游戏日（Phase2）。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "Phase1：载入后在任何首次合格正常弹窗机会之前立即保持普通安全门；预期门全程保持；检查 settings.phase1GateHeldToAvoidSpend=true、ui.safeControllablePhase1=false。",
+        "Phase1：在门保持下独立记录本载入的原生就绪与合格前置；预期两个门槛、原生布道日、可读状态与自有资源均已记录且该槽该日尚未显示；检查 save.churchUnlockedPhase1=true、save.tutorialCompletedPhase1=true、save.isSermonDayPhase1=true、state.readablePhase1=true、state.sermonReadyValuePhase1>=1、resource.nativeHealthyPhase1=true。",
+        "Phase1：在门保持下确认快照为 ON、尚未显示且该槽该日无记录；检查 settings.snapshotOnLoadPhase1=true、settings.popupEnabledPhase1=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysPhase1=0、popup.phase1RecordAbsent=true、settings.phase1GateHeldToAvoidSpend=true。",
+        "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
+        "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
+        "单独一步修改弹窗开关为 OFF；预期改为 OFF；检查 settings.settingChangedStepDone=true。",
+        "单独一步再次载入同一槽同日；预期下一次载入捕获到已改变的 OFF 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=false、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
+        "Phase2：独立记录本载入的原生就绪与合格前置；检查 save.churchUnlockedPhase2=true、save.tutorialCompletedPhase2=true、save.isSermonDayPhase2=true、state.readablePhase2=true、state.sermonReadyValuePhase2>=1、resource.nativeHealthyPhase2=true。",
+        "Phase2：使除 OFF 外一切条件合格且安全；预期 OFF 是唯一抑制条件、正常弹窗不显示且不产生弹窗故障消息；检查 settings.popupOffDeliberate=true、ui.safeControllablePhase2=true、ui.safetyGateClear=true、ui.playerControllable=true、popup.phase2RecordAbsent=true、popup.actualDisplaysAfterGateCleared=0、notice.popupDisplayedCount=0。"
+      ],
+      "title": "弹窗开关 ON 到 OFF 的跨真实载入快照改变下一次载入的弹窗资格"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotOnLoadPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotOnLoadPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "settings.nextLoadCapturedValue"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabledPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlockedPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompletedPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDayPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "state.readablePhase1"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValuePhase1"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safeControllablePhase1"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase1RecordAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "popup.phase2RecordAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "settings.returnedToMainMenuStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "ui.mainMenuReturn"
+        },
+        {
+          "equals": true,
+          "observation": "settings.modsPageOpenedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "settings.settingChangedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "settings.loadPerformedStepDone"
+        },
+        {
+          "equals": true,
+          "observation": "save.sameSlotDayAcrossLoads"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlockedPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompletedPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDayPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "state.readablePhase2"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValuePhase2"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyPhase2"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safeControllablePhase2"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        }
+      ],
+      "id": "settings-snapshot-off-to-on-next-load-allows-popup",
+      "phaseNote": "阶段含义：Phase1=第一次载入快照 OFF（不花费该槽该日记录，累计显示次数 popup.actualDisplaysPhase1 为第一次载入退出主菜单前的累计值 0）；之后单独执行返回主菜单、打开 Mods、修改开关、再次载入；Phase2=下一次载入快照 ON，且其原生就绪/合格前置与显示前记录缺失均在允许实际显示一次之前先行记录。native ready 以 state.sermonReadyValuePhase1/2 按阶段独立记录。同一未花费槽同日可复用。",
+      "prerequisites": [
+        "第一次载入（Phase1）弹窗开关为 OFF，两个门槛与原生布道日成立、资源健康。",
+        "返回主菜单并在 Mods 设置页把弹窗开关改为 ON。",
+        "随后再次载入同一未花费的槽与同一实际游戏日（Phase2），OFF 载入不会花费该去重记录。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "Phase1：先独立记录本载入的原生就绪与合格前置；预期两个门槛、原生布道日、可读状态与资源均已记录，且 OFF 且尚未显示；检查 settings.popupEnabledPhase1=false、settings.snapshotOnLoadPhase1=true、save.churchUnlockedPhase1=true、save.tutorialCompletedPhase1=true、save.isSermonDayPhase1=true、state.readablePhase1=true、state.sermonReadyValuePhase1>=1、resource.nativeHealthyPhase1=true、popup.actualDisplaysPhase1=0、popup.phase1RecordAbsent=true。",
+        "单独一步返回主菜单；预期到达主菜单；检查 settings.returnedToMainMenuStepDone=true、ui.mainMenuReturn=true。",
+        "单独一步打开 Mods 设置页；预期页面打开；检查 settings.modsPageOpenedStepDone=true。",
+        "单独一步修改弹窗开关为 ON；预期改为 ON；检查 settings.settingChangedStepDone=true。",
+        "单独一步再次载入同一未花费槽同日；预期下一次载入捕获到已改变的 ON 值且同槽同日；检查 settings.loadPerformedStepDone=true、settings.popupEnabledPhase2=true、settings.snapshotOnLoadPhase2=true、settings.nextLoadCapturedValue=true、save.sameSlotDayAcrossLoads=true。",
+        "Phase2：在实际显示一次之前先独立记录本载入的原生就绪、合格前置与显示前记录缺失；检查 save.churchUnlockedPhase2=true、save.tutorialCompletedPhase2=true、save.isSermonDayPhase2=true、state.readablePhase2=true、state.sermonReadyValuePhase2>=1、resource.nativeHealthyPhase2=true、popup.phase2RecordAbsent=true。",
+        "Phase2：在安全时机使条件合格并观察；预期正常弹窗恰好显示一次并写入记录；检查 ui.safeControllablePhase2=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.recordAfterDisplay=true。"
+      ],
+      "title": "弹窗开关 OFF 到 ON 的跨真实载入快照在下一载入允许一次弹窗"
+    },
+    {
+      "category": "settings",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotOnLoadPhase1"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabledAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotUnchangedBeforeAfter"
+        },
+        {
+          "equals": true,
+          "observation": "settings.snapshotRetainedWithinActiveLoad"
+        }
+      ],
+      "id": "settings-snapshot-retained-within-active-load",
+      "phaseNote": "阶段含义：BeforeFault=活动载入快照 ON 与初始资源故障、AfterRecovery=同一载入内恢复资源并清空门后正常弹窗显示一次；不离开载入、不打开游戏内设置页、不修改配置、不虚构游戏内实时切换。",
+      "prerequisites": [
+        "某活动载入已捕获弹窗开关快照 ON，该槽该日合格且尚未显示。",
+        "不离开该载入、不修改任何配置；仅在同一载入内受控注入并恢复正常弹窗资源故障。",
+        "恢复判定仍应使用该载入的快照。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取该载入快照与初始故障；预期快照 ON 且注入前正常弹窗未显示；检查 settings.popupEnabledBeforeRecovery=true、settings.snapshotOnLoadPhase1=true、ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前注入受控正常弹窗资源故障；预期通道停用；检查 popup.available=false。",
+        "在同一载入内受控恢复该资源故障并清空安全门；预期正常弹窗按当前资格恰好显示一次且快照值未变；检查 recovery.autoRecovered=true、ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、settings.popupEnabledAfterRecovery=true、settings.snapshotUnchangedBeforeAfter=true、settings.snapshotRetainedWithinActiveLoad=true。"
+      ],
+      "title": "同一活动载入内沿用该载入快照而非实时菜单值"
+    }
+  ],
+  "schemaVersion": 2
+}

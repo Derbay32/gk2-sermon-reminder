@@ -1,0 +1,230 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "icon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.loadFailed"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spriteLoaded"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": true,
+          "observation": "icon.dependentPresentationSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": true,
+          "observation": "icon.retryAttemptedAfterFailure"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoadedAfterRetry"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRecovery"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresentAfterRecovery"
+        }
+      ],
+      "id": "icon-load-failure-isolation-retry",
+      "prerequisites": [
+        "Done 状态且可受控使图标加载失败。",
+        "Ready/倒计时的无关可见性可在独立场景验证。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "注入图标加载失败，观察整个依赖的 Done 呈现（文字与图标）是否被抑制。",
+        "确认业务状态仍可读（Done），且无可见 Ready/Done。",
+        "解除故障后确认重试成功并恢复可见 Done 与自有 Image。"
+      ],
+      "title": "图标加载失败时抑制整个依赖的 Done 呈现且可重试恢复"
+    },
+    {
+      "category": "icon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.addressablesReady"
+        },
+        {
+          "equals": true,
+          "observation": "icon.loadPending"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spriteLoaded"
+        },
+        {
+          "equals": true,
+          "observation": "icon.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "icon.staleReadyShownWhilePending"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoadedAfterResolve"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRecovery"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresentAfterRecovery"
+        }
+      ],
+      "id": "icon-load-pending-no-stale-state",
+      "prerequisites": [
+        "Done 状态且图标异步加载可受控处于待定。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "使图标加载处于待定状态。",
+        "确认业务状态仍为可读 Done，且无可见 Ready/Done 呈现（整个依赖呈现被抑制）。",
+        "解除阻塞后确认加载完成并显示图标与 Done 文字。"
+      ],
+      "title": "图标加载待定期间隐藏依赖的 Done 呈现且完成后恢复"
+    },
+    {
+      "category": "icon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.loadFailed"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonReminder",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenReady"
+        }
+      ],
+      "id": "icon-failure-does-not-affect-ready",
+      "prerequisites": [
+        "布道日当天处于 Ready 状态（原生 sermon_ready >= 1）。",
+        "可受控使图标资源加载失败，但 Ready 不使用该图标。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "在 Ready 状态下注入图标资源加载失败。",
+        "确认图标确实已失败，并观察 Ready 文字是否仍正常显示且业务状态可读。"
+      ],
+      "title": "无关图标故障不改变 Ready 呈现与可读业务状态"
+    }
+  ],
+  "schemaVersion": 2
+}

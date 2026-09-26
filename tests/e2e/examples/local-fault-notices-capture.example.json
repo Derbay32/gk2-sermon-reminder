@@ -1,0 +1,166 @@
+{
+  "capturePurpose": "example",
+  "captureVersion": 2,
+  "environment": {
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "bepinex.version": "5.4.23.5",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "evidenceFiles": {
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/state-unreadable-hides-dependent.png": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.sermonWeekday": 2,
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "game.version": "REPLACE",
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "plugin.loaded": true,
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "proton.version": "REPLACE",
+    "resolution.height": 1080,
+    "resolution.width": 1920,
+    "uiScale": 1.0
+  },
+  "kind": "gksr-e2e-capture",
+  "manifestId": "gksr-full-mod",
+  "manifestSha256": "06b1123bd831eda833eaf37ff6c550eeedb38524a9c46a7099a2bfec7374726c",
+  "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
+  "observations": {
+    "cancelled-queue-preserves-budget-for-refailure": {
+      "notice.queuePendingAfterCancellation": false,
+      "notice.queuePendingBefore": true,
+      "notice.staleNoticeAfterRecovery": false,
+      "notice.stateReadBudgetConsumed": true,
+      "notice.stateReadBudgetConsumedAfterCancellation": false,
+      "notice.stateReadBudgetConsumedBefore": false,
+      "notice.stateReadDisplayedCountAfterRefault": 1,
+      "notice.stateReadDisplayedCountBefore": 0,
+      "notice.surfaceAvailableBefore": false,
+      "notice.surfaceAvailableBeforeRefault": true,
+      "ui.safetyGateClearBeforeRefault": true
+    },
+    "icon-failed-suppresses-done-notice-once": {
+      "hud.selectedTextKeyBeforeRetry": "gksr.hud.sermonDone",
+      "hud.tmpTextClearedBeforeRetry": true,
+      "hud.visibleBeforeRetry": false,
+      "icon.dependentPresentationSuppressed": true,
+      "icon.loadFailedBeforeRetry": true,
+      "icon.ownImagePresentBeforeRetry": false,
+      "icon.spriteLoadedBeforeRetry": false,
+      "notice.cornerHudDisplayedCount": 1,
+      "notice.stateReadDisplayedCount": 0,
+      "state.readable": true,
+      "state.sermonReadyValue": 0
+    },
+    "independent-category-budgets": {
+      "notice.causalOrderRespected": true,
+      "notice.cornerEvaluatedOnlyAfterStateRecovered": true,
+      "notice.cornerHudDisplayedCount": 1,
+      "notice.stateReadDisplayedCount": 1,
+      "notice.totalDisplayedCount": 2
+    },
+    "normal-load-hud-pending-no-fault": {
+      "fault.reported": false,
+      "fault.reportedBefore": false,
+      "hud.displayEligibleAfter": true,
+      "hud.liveNativeHudPresentAfter": true,
+      "hud.liveNativeHudPresentBefore": false,
+      "hud.nativeHudAppearedAfterLoad": true,
+      "hud.pendingAfter": false,
+      "hud.pendingBefore": true,
+      "hud.visibleBefore": false,
+      "notice.totalDisplayedCount": 0
+    },
+    "notice-copy-zh": {
+      "language.active": "zh_cn",
+      "notice.autoDismiss": true,
+      "notice.category": "state-read",
+      "notice.confirmControlPresent": false,
+      "notice.iconPresent": false,
+      "notice.nativeLifetime": true,
+      "notice.text": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。",
+      "notice.textKey": "gksr.status.reminderUnavailable",
+      "notice.titlePresent": false
+    },
+    "recovery-before-display-cancels-queue": {
+      "notice.queueCountAfterFaultRecovery": 0,
+      "notice.queueCountBefore": 1,
+      "notice.queuePendingAfterFaultRecovery": false,
+      "notice.queuePendingBefore": true,
+      "notice.stateReadBudgetConsumed": false,
+      "notice.surfaceAvailableAfterFaultRecovery": false,
+      "notice.surfaceAvailableAfterRestore": true,
+      "notice.surfaceAvailableBefore": false,
+      "notice.totalDisplayedCount": 0
+    },
+    "state-unreadable-hides-dependent": {
+      "fault.defaultValueUsed": false,
+      "fault.staleValueReused": false,
+      "hud.selectedTextKeyPresent": false,
+      "hud.tmpTextCleared": true,
+      "hud.visible": false,
+      "language.active": "zh_cn",
+      "notice.cornerHudDisplayedCount": 0,
+      "notice.stateReadDisplayedCount": 1,
+      "notice.totalDisplayedCount": 1,
+      "save.sermonWeekday": 2,
+      "state.defaultValueUsed": false,
+      "state.readable": false,
+      "state.readinessObservedBeforeInjection": true,
+      "state.staleDateReused": false
+    }
+  },
+  "results": [
+    {
+      "evidence": {
+        "log": "logs/BepInEx-load.log",
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed."
+      },
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed.",
+      "scenarioId": "state-unreadable-hides-dependent",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "log": "logs/BepInEx-load.log",
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed notice text and the absence of title, icon and confirm control."
+      },
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "notice-copy-zh",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "log": "logs/BepInEx-load.log",
+        "screenshot": "screenshots/state-unreadable-hides-dependent.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed icon failure isolation, cleared TMP text and corner-hud notice count."
+      },
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "icon-failed-suppresses-done-notice-once",
+      "status": "unexecuted"
+    }
+  ],
+  "unexecuted": true
+}

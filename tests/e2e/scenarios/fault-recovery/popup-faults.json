@@ -1,0 +1,237 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.componentAvailable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnUnavailable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnUnavailable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.otherRemindersUnaffected"
+        }
+      ],
+      "id": "component-unavailable-retains-chance",
+      "prerequisites": [
+        "测试设施受控使弹窗组件不可用，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "注入受控组件不可用并载入存档；预期组件不可用；检查 popup.componentAvailable 为 false。",
+        "读取弹窗与去重结果；预期不显示、不消耗、不写记录；检查 popup.shown、popup.chanceConsumedOnUnavailable、popup.dedupRecordedOnUnavailable。",
+        "检查其他提醒；预期未受影响；检查 popup.otherRemindersUnaffected 为 true。"
+      ],
+      "title": "弹窗组件不可用时停用正常弹窗且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.createSucceeded"
+        },
+        {
+          "equals": true,
+          "observation": "popup.showFailed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnFailedShow"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnFailedShow"
+        },
+        {
+          "equals": true,
+          "observation": "popup.retryEligible"
+        }
+      ],
+      "id": "show-failure-isolation-retains-chance",
+      "prerequisites": [
+        "测试设施受控使弹窗显示调用失败，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "注入受控显示失败并触发；预期创建成功但显示失败；检查 popup.createSucceeded 为 true 与 popup.showFailed 为 true。",
+        "读取机会与去重结果；预期不消耗、不写记录且可重试；检查 popup.chanceConsumedOnFailedShow、popup.dedupRecordedOnFailedShow、popup.retryEligible。"
+      ],
+      "title": "弹窗创建或显示失败时隔离故障且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.createSucceeded"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnCreateFailure"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnCreateFailure"
+        },
+        {
+          "equals": true,
+          "observation": "popup.retryEligible"
+        },
+        {
+          "equals": true,
+          "observation": "popup.otherRemindersUnaffected"
+        }
+      ],
+      "id": "create-failure-isolation-retains-chance",
+      "prerequisites": [
+        "测试设施受控使原生提示框创建失败，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "注入受控创建失败并触发；预期创建失败；检查 popup.createSucceeded 为 false。",
+        "读取机会与去重结果；预期不消耗、不写记录且可重试、不影响其他提醒；检查 popup.chanceConsumedOnCreateFailure、popup.dedupRecordedOnCreateFailure、popup.retryEligible、popup.otherRemindersUnaffected。"
+      ],
+      "title": "弹窗创建失败时隔离故障且不消耗提示机会"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.resourceMissingInitially"
+        },
+        {
+          "equals": true,
+          "observation": "popup.chanceRetainedWhileMissing"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownWhileMissing"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedBeforeActualDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recovered"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupRecordedAfterActualDisplay"
+        }
+      ],
+      "id": "resource-recovery-retains-chance-until-display",
+      "prerequisites": [
+        "测试设施受控使弹窗资源初始缺失，随后恢复，存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在资源缺失时观察；预期保留机会且不显示、不写记录；检查 popup.resourceMissingInitially、popup.chanceRetainedWhileMissing、popup.shownWhileMissing、popup.dedupRecordedBeforeActualDisplay。",
+        "恢复资源后观察；预期恢复并实际显示；检查 popup.recovered 与 popup.shownAfterRecovery 为 true。",
+        "读取显示后记录；预期此时才写入；检查 popup.dedupRecordedAfterActualDisplay 为 true。"
+      ],
+      "title": "资源缺失时保留提示机会直至弹窗实际显示"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileOtherModal"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOtherModalActive"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalUnaffected"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalClosedBeforeDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterOtherModalClosed"
+        }
+      ],
+      "id": "native-modal-coexistence",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立时存在另一个原生模态窗口。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在另一个原生模态活动时观察；预期延后且不显示；检查 ui.otherNativeModalActive、popup.deferredWhileOtherModal、popup.displayedWhileOtherModalActive。",
+        "检查原生模态；预期未受影响；检查 ui.otherNativeModalUnaffected 为 true。",
+        "关闭原生模态后观察；预期先关闭原生模态再显示本模组弹窗；检查 ui.otherNativeModalClosedBeforeDisplay 与 popup.displayedAfterOtherModalClosed。"
+      ],
+      "title": "弹窗与其他原生模态共存时延后且不冲突"
+    }
+  ],
+  "schemaVersion": 2
+}

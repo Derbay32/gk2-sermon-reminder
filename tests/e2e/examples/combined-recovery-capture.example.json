@@ -1,0 +1,93 @@
+{
+  "capturePurpose": "example",
+  "captureVersion": 2,
+  "environment": {
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "bepinex.version": "5.4.23.5",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "evidenceFiles": {
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/unexecuted-example.png": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.sermonWeekday": 2,
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "game.version": "REPLACE",
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "plugin.loaded": true,
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "proton.version": "REPLACE",
+    "resolution.height": 1080,
+    "resolution.width": 1920,
+    "uiScale": 1.0
+  },
+  "kind": "gksr-e2e-capture",
+  "manifestId": "gksr-full-mod",
+  "manifestSha256": "06b1123bd831eda833eaf37ff6c550eeedb38524a9c46a7099a2bfec7374726c",
+  "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
+  "observations": {
+    "healthy-reference-setup": {
+      "notice.beaconDisplayedCount": 0,
+      "notice.cornerHudDisplayedCount": 0,
+      "notice.popupDisplayedCount": 0,
+      "notice.stateReadDisplayedCount": 0,
+      "notice.totalDisplayedCount": 0,
+      "popup.actualDisplaysAfterGateCleared": 1,
+      "resource.nativeHealthIndependentlyObserved": true,
+      "resource.nativeHealthyAtBaseline": true,
+      "resource.nativeVisiblyObservedAtBaseline": true,
+      "save.sermonWeekday": 2,
+      "state.readable": true,
+      "state.sermonReadyValue": 1
+    },
+    "localization-status-copy-beacon-zh": {
+      "language.active": "zh_cn",
+      "notice.category": "beacon",
+      "notice.text": "[布道提醒] 教堂信标点不可用。",
+      "notice.textKey": "gksr.status.beaconUnavailable"
+    }
+  },
+  "results": [
+    {
+      "evidence": {
+        "log": [
+          "logs/BepInEx-load.log"
+        ],
+        "screenshot": [
+          "screenshots/unexecuted-example.png"
+        ]
+      },
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed.",
+      "scenarioId": "healthy-reference-setup",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "log": [
+          "logs/BepInEx-load.log"
+        ],
+        "screenshot": [
+          "screenshots/unexecuted-example.png"
+        ]
+      },
+      "notes": "REPLACE with the observed notice text; never mark an unexecuted scenario as passed.",
+      "scenarioId": "localization-status-copy-beacon-zh",
+      "status": "unexecuted"
+    }
+  ],
+  "unexecuted": true
+}

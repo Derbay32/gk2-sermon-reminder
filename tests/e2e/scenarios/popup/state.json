@@ -1,0 +1,54 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "state",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBefore"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueAfterConfirm"
+        },
+        {
+          "equalsObservation": "state.sermonReadyValueBefore",
+          "observation": "state.sermonReadyValueAfterConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.confirmChangedSermonState"
+        },
+        {
+          "equals": false,
+          "observation": "popup.confirmCountedAsSermonHeld"
+        }
+      ],
+      "id": "confirm-does-not-change-state",
+      "prerequisites": [
+        "存档满足全部门槛，布道日机会未消费（原生 sermon_ready 大于等于 1），弹窗已显示。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取确认前原生机会值；预期未消费；检查 state.sermonReadyValueBefore 不小于 1。",
+        "仅用确认关闭弹窗且不做其他操作；预期弹窗关闭；检查 popup.confirmChangedSermonState 为 false。",
+        "读取确认后原生机会值；预期不变且未记作已布道；检查 state.sermonReadyValueAfterConfirm 等于确认前值且 popup.confirmCountedAsSermonHeld 为 false。"
+      ],
+      "title": "确认弹窗不改变游戏布道状态"
+    }
+  ],
+  "schemaVersion": 2
+}

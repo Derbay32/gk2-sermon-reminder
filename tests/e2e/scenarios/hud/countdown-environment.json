@@ -1,0 +1,40 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "environment",
+      "evidence": {
+        "log": true,
+        "measurement": false,
+        "screenshot": false
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "plugin.loaded"
+        },
+        {
+          "equals": true,
+          "observation": "framework.loaded"
+        }
+      ],
+      "id": "plugin-load-proton-countdown",
+      "prerequisites": [
+        "CachyOS x86-64 PC 上的 Steam Proton 环境。",
+        "BepInEx 5.4.23.5 Windows x64 Unity Mono 加载路线。",
+        "可重复构建的插件工程与 GK2 Mod Framework 发布包。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "记录游戏、Proton、BepInEx、框架与插件的版本与指纹。",
+        "启动真实游戏并载入存档。",
+        "保留 BepInEx 日志中证明插件实际加载的记录。"
+      ],
+      "title": "在目标 Proton 环境证明插件实际加载"
+    }
+  ],
+  "schemaVersion": 2
+}

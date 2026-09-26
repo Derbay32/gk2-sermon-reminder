@@ -1,0 +1,8 @@
+{
+  "kind": "gksr-e2e-manifest",
+  "manifestId": "gksr-full-mod",
+  "manifestVersion": 2,
+  "profilesFile": "profiles.json",
+  "scenarioRoot": "scenarios",
+  "title": "GK2 Sermon Reminder aggregated E2E specification"
+}

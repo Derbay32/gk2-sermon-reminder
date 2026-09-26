@@ -1,0 +1,262 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.processWideDedup"
+        }
+      ],
+      "id": "repeated-failure-after-notice-no-extra",
+      "prerequisites": [
+        "状态读取故障已实际显示一次状态读取类别消息。",
+        "同类故障随后持续存在。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "保持同类故障持续存在。预期：不重复提示。检查：notice.stateReadDisplayedCount=1。",
+        "观察总数与去重方式。预期：无额外提示且非进程级去重。检查：notice.totalDisplayedCount=1 且 notice.processWideDedup=false。"
+      ],
+      "title": "同类故障实际提示后持续或复发不再增加提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "recovery-refailure-same-load-no-extra",
+      "prerequisites": [
+        "状态读取故障已实际显示一次状态读取类别消息。",
+        "状态随后恢复可读并再次失效。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "使必要状态恢复可读。预期：自动恢复。检查：recovery.autoRecovered=true。",
+        "再次使必要状态不可读。预期：不重复提示。检查：notice.stateReadDisplayedCount=1 且 notice.totalDisplayedCount=1。"
+      ],
+      "title": "同次载入恢复后再次失效不重复提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.readException"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "changed-failure-details-same-category-no-extra",
+      "prerequisites": [
+        "状态读取类别消息已实际显示一次。",
+        "同一状态读取功能的底层错误细节发生变化。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在状态读取类别已提示后把底层错误细节从缺失变为异常。预期：归入同类且不重复提示。检查：state.readException=true 且 notice.stateReadDisplayedCount=1。",
+        "观察总数。预期：总显示次数不变。检查：notice.totalDisplayedCount=1。"
+      ],
+      "title": "同一功能的不同底层错误归入同类且不重复提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 2,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.causalOrderRespected"
+        },
+        {
+          "equals": true,
+          "observation": "notice.cornerEvaluatedOnlyAfterStateRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        }
+      ],
+      "id": "independent-category-budgets",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "状态读取与角落文字故障可在同次载入内按先后顺序注入。",
+        "角落文字故障仅在共享状态恢复可读后才注入。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "先注入必要状态读取故障。预期：状态读取类别消息显示一次。检查：notice.stateReadDisplayedCount=1。",
+        "恢复必要状态可读。预期：业务状态可读。检查：state.readable=true。",
+        "随后在同次载入内注入角落文字组件故障。预期：角落文字类别消息显示一次且顺序正确。检查：notice.cornerHudDisplayedCount=1 且 notice.cornerEvaluatedOnlyAfterStateRecovered=true。"
+      ],
+      "title": "两个故障类别各有独立提示机会且按因果顺序评估"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.processWideDedup"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuedNoticeCarriedToNextLoad"
+        }
+      ],
+      "id": "reload-fresh-budget",
+      "prerequisites": [
+        "上一次载入已实际提示过一次同类故障。",
+        "重新载入同一存档后同类故障仍然存在。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "重新载入同一存档并等待加载完成。预期：识别为重载。检查：load.transition=reload。",
+        "确认同类故障可在新载入内重新显示一次。预期：新载入新预算。检查：notice.stateReadDisplayedCount=1 且 notice.processWideDedup=false。",
+        "确认排队消息未被带入。预期：无跨载入残留。检查：notice.queuedNoticeCarriedToNextLoad=false。"
+      ],
+      "title": "重新载入存档后重新计算故障消息次数且不做进程级去重"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "equals": false,
+          "observation": "notice.queuedNoticeCarriedToNextLoad"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeInNextSave"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "switch-save-fresh-budget",
+      "prerequisites": [
+        "存档 A 已产生待显示故障消息或已提示。",
+        "存档 B 需要重新判定且角落文字故障仍然存在。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "切换到存档 B 并等待加载完成。预期：识别为切档。检查：load.transition=switch-save。",
+        "确认旧存档排队消息未被带入。预期：无跨存档残留。检查：notice.queuedNoticeCarriedToNextLoad=false 且 notice.staleNoticeInNextSave=false。",
+        "记录存档 B 内两个类别显示次数。预期：角落类别显示一次、状态类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
+      ],
+      "title": "切换存档后丢弃旧排队消息并重新计算提示机会"
+    }
+  ],
+  "schemaVersion": 2
+}

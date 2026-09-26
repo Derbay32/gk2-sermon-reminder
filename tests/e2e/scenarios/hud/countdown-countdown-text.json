@@ -1,0 +1,214 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "countdown-text",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "single-day"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": 6,
+          "observation": "save.daysInWeek"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonCountdown.one",
+          "language": "zh-CN",
+          "observation": "hud.text"
+        }
+      ],
+      "id": "countdown-one-day-zh",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "相对日期条件：读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday，取自 ConstDef.Get(\"day_wrath\").IntValue），并选择当前星期编号使 (T - 当前 + 6) % 6 = 1；不写死 T，也不修改游戏内 day_wrath 定义。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.absoluteDay（绝对日）与 save.dayOfWeek（星期编号）以及 save.sermonWeekday。",
+        "读取左上角时钟下方的倒计时文字。"
+      ],
+      "title": "简体中文剩余 1 天显示无参数字数的完整定稿句式"
+    },
+    {
+      "category": "countdown-text",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "single-day"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": 6,
+          "observation": "save.daysInWeek"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "finalTextKey": "gksr.hud.sermonCountdown.one",
+          "language": "en",
+          "observation": "hud.text"
+        }
+      ],
+      "id": "countdown-one-day-en",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "游戏语言为英语。",
+        "相对日期条件：读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday，取自 ConstDef.Get(\"day_wrath\").IntValue），并选择当前星期编号使 (T - 当前 + 6) % 6 = 1；不写死 T，也不修改游戏内 day_wrath 定义。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.absoluteDay（绝对日）与 save.dayOfWeek（星期编号）以及 save.sermonWeekday。",
+        "读取左上角时钟下方的倒计时文字。"
+      ],
+      "title": "英语剩余 1 天显示无参数字数的完整定稿句式"
+    },
+    {
+      "category": "countdown-text",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh-CN",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        }
+      ],
+      "id": "countdown-multi-day-zh",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "游戏语言为简体中文。",
+        "相对日期条件：读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday，取自 ConstDef.Get(\"day_wrath\").IntValue），并选择当前星期编号使 (T - 当前 + 6) % 6 ∈ 2..5；不写死 T，也不修改游戏内 day_wrath 定义。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.absoluteDay（绝对日）、save.dayOfWeek（星期编号）与 save.sermonWeekday。",
+        "读取左上角时钟下方的倒计时文字与已显示的整数天数。"
+      ],
+      "title": "简体中文多天倒计时使用大于 1 的整数 {days} 参数"
+    },
+    {
+      "category": "countdown-text",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "en",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        }
+      ],
+      "id": "countdown-multi-day-en",
+      "prerequisites": [
+        "教堂开启任务与首次布道教学任务均为 Completed。",
+        "游戏语言为英语。",
+        "相对日期条件：读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday，取自 ConstDef.Get(\"day_wrath\").IntValue），并选择当前星期编号使 (T - 当前 + 6) % 6 ∈ 2..5；不写死 T，也不修改游戏内 day_wrath 定义。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录 save.absoluteDay（绝对日）、save.dayOfWeek（星期编号）与 save.sermonWeekday。",
+        "读取左上角时钟下方的倒计时文字与已显示的整数天数。"
+      ],
+      "title": "英语多天倒计时使用大于 1 的整数 {days} 参数"
+    }
+  ],
+  "schemaVersion": 2
+}

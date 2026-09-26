@@ -1,0 +1,212 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "icon",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.addressablesReady"
+        },
+        {
+          "equals": "4d1c67d72f3e6c8419b24e8c275d101e",
+          "observation": "icon.requestedGuid"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoaded"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "icon-addressables-load",
+      "prerequisites": [
+        "Done 状态且原生 HUD 可用。",
+        "游戏 Addressables 已初始化。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "确认 Addressables 已初始化。",
+        "记录请求的 Sprite GUID 与实际是否返回可用 Sprite。",
+        "确认自有 Image 已挂载。"
+      ],
+      "title": "Addressables 初始化后请求图标 GUID 并返回 Sprite"
+    },
+    {
+      "category": "icon",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": true,
+          "observation": "icon.underNativeHudBeforeDoneText"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteColorCopied"
+        },
+        {
+          "equals": true,
+          "observation": "icon.tintWhite"
+        },
+        {
+          "equals": false,
+          "observation": "icon.raycastTarget"
+        },
+        {
+          "equals": true,
+          "observation": "icon.heightBasedOnTextLineHeight"
+        },
+        {
+          "equals": true,
+          "observation": "icon.uiScaleFollowsNative"
+        },
+        {
+          "equals": false,
+          "observation": "icon.hardcodedPixelHeightUsed"
+        },
+        {
+          "measuredRatio": {
+            "denominator": "icon.measuredHeightPx",
+            "numerator": "icon.measuredWidthPx"
+          },
+          "observation": "icon.measuredWidthPx"
+        },
+        {
+          "numberRange": {
+            "min": 0
+          },
+          "observation": "icon.textLineHeightPx"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "icon-visual-style",
+      "prerequisites": [
+        "Done 状态且图标已成功加载。",
+        "可记录实测宽高与原生文字行高。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "测量图标宽度、高度与原生文字行高。",
+        "确认使用原 Sprite 颜色、白色 tint、无 raycastTarget。",
+        "确认高度基于行高且随原生画布缩放。"
+      ],
+      "title": "Done 图标颜色、20:18 比例、行高尺寸与 UI 缩放"
+    },
+    {
+      "category": "icon",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenCountdown"
+        },
+        {
+          "equals": false,
+          "observation": "icon.phantomGapCountdown"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenReady"
+        },
+        {
+          "equals": false,
+          "observation": "icon.phantomGapReady"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spaceReservedWhenDone"
+        }
+      ],
+      "id": "icon-space-per-state",
+      "prerequisites": [
+        "可分别观察倒计时、Ready 与 Done 三种状态。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "在倒计时状态确认未预留图标空间且无空位。",
+        "在 Ready 状态确认未预留图标空间且无空位。",
+        "在 Done 状态确认预留了图标空间。"
+      ],
+      "title": "仅在 Done 状态预留图标空间且倒计时与 Ready 无空位"
+    },
+    {
+      "category": "icon",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.addressablesReady"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spriteLoaded"
+        },
+        {
+          "equals": 1,
+          "observation": "icon.asyncHandleCount"
+        },
+        {
+          "equals": 0,
+          "observation": "icon.perFrameRequestsIssued"
+        },
+        {
+          "equals": false,
+          "observation": "icon.syncWaitForCompletionUsed"
+        }
+      ],
+      "id": "icon-single-flight-request",
+      "prerequisites": [
+        "Done 状态且图标正在加载或已使用。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "记录加载/使用期间的异步句柄数量。",
+        "确认未逐帧重复请求且未使用同步 WaitForCompletion。"
+      ],
+      "title": "图标加载保持单一异步句柄且不逐帧请求不同步等待"
+    }
+  ],
+  "schemaVersion": 2
+}

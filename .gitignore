@@ -62,3 +62,10 @@ $RECYCLE.BIN/
 # Coding Agents
 /.pi
 /.agents
+
+# Python environment, bytecode and tool caches
+.venv
+__pycache__
+*.py[cod]
+.ruff_cache
+.pytest_cache

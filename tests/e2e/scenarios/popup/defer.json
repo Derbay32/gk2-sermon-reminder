@@ -1,0 +1,236 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.busyGateActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileBusy"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileBusy"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-busy-menu-cutscene",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在满足资格的时机进入菜单、对话或过场等占用界面。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在占用界面活动时观察；预期延后且不抢先显示；检查 ui.busyGateActive、popup.deferredWhileBusy 与 popup.displayedWhileBusy。",
+        "读取待显示计数；预期恰好一个待显示；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "菜单对话或过场占用界面时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhilePlayerNotControllable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhilePlayerNotControllable"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-player-not-controllable",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立的时机玩家处于不可操作状态（如受控的脚本化场景）。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在玩家不可操作时观察；预期延后且不显示；检查 ui.playerControllable 为 false、popup.deferredWhilePlayerNotControllable 与 popup.displayedWhilePlayerNotControllable。",
+        "读取待显示计数；预期恰好一个；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "玩家不可操作时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceActiveAtEligibility"
+        },
+        {
+          "equals": true,
+          "observation": "popup.deferredWhileOtherPause"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedWhileOtherPauseActive"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceUnaffected"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.pendingCountDuringDeferral"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "defer-existing-pause",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "在资格成立的时机已存在由其他系统发起的暂停。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在既有暂停期间观察；预期延后且不显示；检查 pause.otherPauseSourceActiveAtEligibility、popup.deferredWhileOtherPause 与 popup.displayedWhileOtherPauseActive。",
+        "检查既有暂停是否受影响；预期未受影响；检查 pause.otherPauseSourceUnaffected 为 true。",
+        "读取待显示计数；预期恰好一个；检查 popup.pendingCountDuringDeferral 为 1 且 popup.shown 为 false。"
+      ],
+      "title": "已存在其他暂停来源时延后显示弹窗"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.busyGateActiveAtEligibility"
+        },
+        {
+          "equals": false,
+          "observation": "ui.busyGateActiveAfterClear"
+        },
+        {
+          "integerGreaterThan": 0,
+          "observation": "ui.safetyGateTransitionCount"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownWhileGateActive"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownOnlyAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterGateClearedAndEligible"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        }
+      ],
+      "id": "defer-busy-gate-race",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "资格成立时正处于占用界面，随后占用界面被关闭。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取资格成立时的安全门状态；预期活动；检查 ui.busyGateActiveAtEligibility 为 true。",
+        "读取安全门清空后的状态与转换次数；预期已清空且发生过转换；检查 ui.busyGateActiveAfterClear 为 false 与 ui.safetyGateTransitionCount 为正整数。",
+        "观察弹窗；预期仅在清空后显示一次；检查 popup.shownWhileGateActive 为 false、popup.shownOnlyAfterGateCleared 与 popup.displayedAfterGateClearedAndEligible。"
+      ],
+      "title": "占用界面安全门在资格成立后清空时只在清空后显示一次"
+    },
+    {
+      "category": "defer",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRecheckedAfterGate"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityStillMet"
+        },
+        {
+          "equals": true,
+          "observation": "popup.displayedAfterRecheck"
+        }
+      ],
+      "id": "defer-recheck-after-gate-cleared",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "弹窗曾在占用界面期间被延后，随后界面恢复可操作。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "待安全门真正清空后重新检查资格；预期已清空并重查；检查 ui.safetyGateClear 与 popup.eligibilityRecheckedAfterGate。",
+        "读取资格与显示结果；预期仍满足并显示；检查 popup.eligibilityStillMet 与 popup.displayedAfterRecheck。"
+      ],
+      "title": "恢复可操作画面后重新检查资格并在仍满足时显示"
+    }
+  ],
+  "schemaVersion": 2
+}

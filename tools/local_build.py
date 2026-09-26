@@ -33,6 +33,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 PINNED_SDK_VERSION = "8.0.425"
 
@@ -56,6 +57,24 @@ PROHIBITED_OUTPUT_BASENAMES = (
 INFORMATIONAL_VERSION_RE = re.compile(rb"(\d+\.\d+\.\d+(?:-[0-9A-Za-z.\-]+)?\+[0-9a-f]{40})")
 
 
+class NativeReference(TypedDict):
+    """One resolved native/third-party reference input."""
+
+    identity: str
+    hintPath: str
+    private: str | None
+    exists: bool
+    sha256: str | None
+
+
+class OutputFileEntry(TypedDict):
+    """One file in the produced build output directory."""
+
+    relativePath: str
+    sizeBytes: int
+    sha256: str
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -64,23 +83,23 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def run_capture(command, cwd, env) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        command, cwd=str(cwd), env=env, capture_output=True, text=False, check=False
-    )
+def run_capture(command: list[str], cwd: Path, env: dict[str, str]) -> subprocess.CompletedProcess[bytes]:
+    return subprocess.run(command, cwd=str(cwd), env=env, capture_output=True, text=False, check=False)
 
 
-def git(root: Path, *args) -> str:
+def git(root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(root), *args],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     return result.stdout.strip()
 
 
-def resolve_dotnet(dotnet_arg: str) -> tuple:
+def resolve_dotnet(dotnet_arg: str) -> tuple[Path | None, Path | None, list[str]]:
     """Return (executable_path, dotnet_root, errors)."""
-    errors = []
+    errors: list[str] = []
     candidate = Path(dotnet_arg)
     if candidate.is_file():
         exe = candidate
@@ -98,7 +117,7 @@ def resolve_dotnet(dotnet_arg: str) -> tuple:
     return exe, exe.parent, errors
 
 
-def parse_getitem(output: str) -> tuple:
+def parse_getitem(output: str) -> tuple[list[object], list[str]]:
     """Parse the JSON emitted by `dotnet build -getItem:Reference`."""
     text = output.strip()
     if not text:
@@ -108,37 +127,48 @@ def parse_getitem(output: str) -> tuple:
     if start < 0:
         return [], ["-getItem:Reference output had no JSON object"]
     try:
-        data = json.loads(text[start:])
+        data: object = json.loads(text[start:])
     except json.JSONDecodeError as exc:
         return [], [f"cannot parse -getItem:Reference JSON: {exc}"]
 
-    items = data.get("Items", {}).get("Reference", [])
-    if not isinstance(items, list):
+    if not isinstance(data, dict):
+        return [], ["-getItem:Reference output was not a JSON object"]
+    items_container = data.get("Items")
+    reference_items: object = {}
+    if isinstance(items_container, dict):
+        reference_items = items_container.get("Reference", [])
+    if not isinstance(reference_items, list):
         return [], ["-getItem:Reference Items.Reference was not a list"]
-    return items, []
+    return reference_items, []
 
 
-def collect_native_inputs(root: Path, project: Path, env, dotnet: Path, properties: list, configuration: str) -> tuple:
+def collect_native_inputs(
+    root: Path,
+    project: Path,
+    env: dict[str, str],
+    dotnet: Path,
+    properties: list[str],
+    configuration: str,
+) -> tuple[list[NativeReference], list[str]]:
     """Resolve the actual reference inputs and hash the native ones.
 
     Uses the same configuration as the real build so the resolved reference set
     is the one the build will actually use.
     """
     command = [
-        str(dotnet), "build", str(project), "-c", configuration,
+        str(dotnet),
+        "build",
+        str(project),
+        "-c",
+        configuration,
         *properties,
         "-getItem:Reference",
     ]
-    result = subprocess.run(
-        command, cwd=str(root), env=env, capture_output=True, text=True, check=False
-    )
+    result = subprocess.run(command, cwd=str(root), env=env, capture_output=True, text=True, check=False)
 
-    errors = []
+    errors: list[str] = []
     if result.returncode != 0:
-        errors.append(
-            f"reference resolution failed with exit code {result.returncode} "
-            f"(command: {' '.join(command)})"
-        )
+        errors.append(f"reference resolution failed with exit code {result.returncode} (command: {' '.join(command)})")
 
     items, parse_errors = parse_getitem(result.stdout)
     errors.extend(parse_errors)
@@ -148,22 +178,25 @@ def collect_native_inputs(root: Path, project: Path, env, dotnet: Path, properti
             "an unresolved project as buildable"
         )
 
-    references = []
-    seen = set()
+    references: list[NativeReference] = []
+    seen: set[str] = set()
     for item in items:
+        if not isinstance(item, dict):
+            errors.append(f"resolved reference entry is not a JSON object: {item!r}")
+            continue
         identity = str(item.get("Identity", ""))
         hint = str(item.get("HintPath", "") or "")
         private = str(item.get("Private", "") or "").lower()
         path = Path(hint) if hint else None
         exists = bool(path and path.is_file())
-        entry = {
+        entry: NativeReference = {
             "identity": identity,
             "hintPath": hint,
             "private": private or None,
             "exists": exists,
             "sha256": None,
         }
-        if exists and str(path) not in seen:
+        if path is not None and exists and str(path) not in seen:
             seen.add(str(path))
             entry["sha256"] = sha256_file(path)
         references.append(entry)
@@ -183,21 +216,23 @@ def informational_version(dll: Path) -> str:
     return match.group(1).decode("ascii") if match else ""
 
 
-def output_files(output_dir: Path) -> list:
-    files = []
+def output_files(output_dir: Path) -> list[OutputFileEntry]:
+    files: list[OutputFileEntry] = []
     if not output_dir.is_dir():
         return files
     for path in sorted(output_dir.rglob("*")):
         if path.is_file():
-            files.append({
-                "relativePath": path.relative_to(output_dir).as_posix(),
-                "sizeBytes": path.stat().st_size,
-                "sha256": sha256_file(path),
-            })
+            files.append(
+                {
+                    "relativePath": path.relative_to(output_dir).as_posix(),
+                    "sizeBytes": path.stat().st_size,
+                    "sha256": sha256_file(path),
+                }
+            )
     return files
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="GKSA-10 local build helper.")
     parser.add_argument("--dotnet", required=True, help="explicit dotnet executable")
     parser.add_argument("--game-dir", required=True)
@@ -222,10 +257,7 @@ def main(argv=None) -> int:
         "assertion": "local-build-only",
         "hostedCiResult": False,
         "gameE2eVerdict": None,
-        "note": (
-            "Local build provenance only. Not a hosted CI result and not a game "
-            "execution/E2E acceptance result."
-        ),
+        "note": ("Local build provenance only. Not a hosted CI result and not a game execution/E2E acceptance result."),
         "ok": False,
         "verifiedNamedCommit": None,
         "source": {},
@@ -272,15 +304,12 @@ def main(argv=None) -> int:
     head_is_valid = bool(re.match(r"^[0-9a-f]{40}$", head))
     report["source"]["headValid"] = head_is_valid
     if not head_is_valid:
-        report["errors"].append(
-            f"cannot read a valid HEAD commit id (got {head!r}); no commit will be attributed"
-        )
+        report["errors"].append(f"cannot read a valid HEAD commit id (got {head!r}); no commit will be attributed")
     if dirty:
         # A dirty tree may still build, but the result must never be presented
         # as verifying the named commit.
         report["warnings"].append(
-            f"source tree is dirty ({len(dirty_paths)} changed path(s)); this build does "
-            f"NOT verify commit {head}"
+            f"source tree is dirty ({len(dirty_paths)} changed path(s)); this build does NOT verify commit {head}"
         )
 
     # 2. Explicit dotnet + pinned SDK.
@@ -301,15 +330,18 @@ def main(argv=None) -> int:
     env["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1"
 
     sdk_result = subprocess.run(
-        [str(dotnet), "--version"], cwd=str(root), env=env,
-        capture_output=True, text=True, check=False,
+        [str(dotnet), "--version"],
+        cwd=str(root),
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     reported_sdk = sdk_result.stdout.strip()
     report["sdk"]["reported"] = reported_sdk
     if reported_sdk != PINNED_SDK_VERSION:
         report["errors"].append(
-            f"SDK version mismatch: global.json pins {PINNED_SDK_VERSION}, dotnet reported "
-            f"{reported_sdk!r}"
+            f"SDK version mismatch: global.json pins {PINNED_SDK_VERSION}, dotnet reported {reported_sdk!r}"
         )
 
     # 3. Explicit reference roots must exist before an actionable build failure.
@@ -344,7 +376,11 @@ def main(argv=None) -> int:
 
     # 5. Real build against the real references.
     command = [
-        str(dotnet), "build", str(project), "-c", args.configuration,
+        str(dotnet),
+        "build",
+        str(project),
+        "-c",
+        args.configuration,
         *reference_properties,
     ]
     report["command"] = command
@@ -382,6 +418,7 @@ def main(argv=None) -> int:
         "pluginDll": str(dll.relative_to(root)),
         "sha256": sha256_file(dll),
         "informationalVersion": informational_version(dll),
+        "informationalVersionMatchesHead": False,
     }
     report["outputFileList"] = output_files(output_dir)
 
@@ -389,9 +426,7 @@ def main(argv=None) -> int:
     # build cannot be attributed to the named commit.
     informational = report["output"]["informationalVersion"] or ""
     expected_suffix = "+" + head
-    report["output"]["informationalVersionMatchesHead"] = (
-        head_is_valid and informational.endswith(expected_suffix)
-    )
+    report["output"]["informationalVersionMatchesHead"] = head_is_valid and informational.endswith(expected_suffix)
     if head_is_valid and not informational.endswith(expected_suffix):
         report["errors"].append(
             f"produced DLL informational version {informational!r} does not end with "
@@ -404,9 +439,7 @@ def main(argv=None) -> int:
         if lowered in PROHIBITED_OUTPUT_BASENAMES:
             report["errors"].append(f"native reference copied into output: {entry['relativePath']}")
         if entry["sha256"] in native_hashes:
-            report["errors"].append(
-                f"output file duplicates a native reference input: {entry['relativePath']}"
-            )
+            report["errors"].append(f"output file duplicates a native reference input: {entry['relativePath']}")
 
     report["ok"] = not report["errors"]
 
