@@ -27,7 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UV_PYTHON_DOWNLOADS: never
-      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
     steps:
       # Full history is required: the frozen migration oracle reads the six
       # legacy manifests from the exact base commit and must never derive a
@@ -41,6 +40,12 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: '3.13.11'
+
+      # runner.temp is not an allowed context at job level, so the bytecode
+      # cache prefix is exported from a step: it applies to every later Python
+      # invocation in this job through the runner's environment file.
+      - name: Configure Python bytecode cache
+        run: printf 'PYTHONPYCACHEPREFIX=%s/pycache\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Install pinned uv
         run: python -m pip install --disable-pip-version-check uv==0.12.19
