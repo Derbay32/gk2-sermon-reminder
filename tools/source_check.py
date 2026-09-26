@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GKSA-14 source and resource guard.
+"""GKSA-13 source and resource guard.
 
 Structural / source inspection only. This helper never installs or runs the
 game, never compiles native code, and never asserts a game E2E verdict. It is
@@ -82,9 +82,9 @@ REQUIRED_HUD_KEYS = (
 )
 
 # Default accepted manifest used as the finalText source of truth. The latest
-# implemented specification is GKSA-14; ``--manifest`` overrides it (for example
-# to guard an earlier ticket explicitly).
-DEFAULT_MANIFEST = "tests/e2e/gksa14.json"
+# integrated specification is GKSA-13; ``--manifest`` overrides it (for example
+# to guard an earlier or adjacent ticket explicitly).
+DEFAULT_MANIFEST = "tests/e2e/gksa13.json"
 
 # Narrow technical-registration-metadata exception, scoped to the one plugin file
 # that declares the BepInEx plugin registration. See the module docstring.
@@ -672,7 +672,7 @@ def find_sentences_in_cs(root: Path, files: list, manifest_text: dict) -> list:
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="GKSA-14 source/resource guard.")
+    parser = argparse.ArgumentParser(description="GKSA-13 source/resource guard.")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--project", default="src/GK2.SermonReminder/GK2.SermonReminder.csproj")
     parser.add_argument(
@@ -680,12 +680,12 @@ def main(argv=None) -> int:
         default=DEFAULT_MANIFEST,
         help=(
             "Accepted ticket manifest used as the finalText source of truth. "
-            "Defaults to the latest implemented specification (GKSA-14); pass "
-            "another ticket's manifest explicitly to guard that ticket instead. "
-            "The only documented technical-metadata exception is the one canonical "
-            "BepInEx PluginName value literal in the plugin registration file, "
-            "recognised as real code (never a comment or string) and masked by its "
-            "exact span only."
+            "Defaults to the latest integrated specification (GKSA-13); pass "
+            "another ticket's manifest explicitly to guard an earlier or adjacent "
+            "ticket instead. The only documented technical-metadata exception is the "
+            "one canonical BepInEx PluginName value literal in the plugin "
+            "registration file, recognised as real code (never a comment or string) "
+            "and masked by its exact span only."
         ),
     )
     parser.add_argument("--output", required=True)

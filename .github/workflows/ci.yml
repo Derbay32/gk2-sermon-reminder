@@ -1,6 +1,7 @@
 name: ci
 
-# Repository source/structural CI for GKSA-10, GKSA-11, GKSA-12 and GKSA-14.
+# Repository source/structural CI for GKSA-10, GKSA-11, GKSA-12, GKSA-13 and
+# GKSA-14.
 #
 # This workflow only runs Python-standard-library source, manifest/structure and
 # negative CLI checks on hosted runners. It does NOT build native code, does NOT
@@ -287,40 +288,41 @@ jobs:
           )
           PY
 
-      # The guard default is the latest implemented specification (GKSA-14), but the
-      # metadata and settings coverage from GKSA-12 stays explicit: both manifests
-      # are checked so a regression in either ticket's finalText or catalog pairing
-      # fails. ``--manifest`` overrides the default per invocation.
-      - name: Source and resource guard (GKSA-12 and GKSA-14 manifests)
+      # The guard default is the newly integrated specification (GKSA-13), and the
+      # adjacent metadata and settings coverage from GKSA-12 and GKSA-14 stays
+      # explicit: all three manifests are checked so a regression in any ticket's
+      # finalText or catalog pairing fails. ``--manifest`` overrides the default per
+      # invocation.
+      - name: Source and resource guard (GKSA-12, GKSA-13 and GKSA-14 manifests)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for ticket in gksa12 gksa14; do
+          for ticket in gksa12 gksa13 gksa14; do
             python3 tools/source_check.py \
               --repo-root . \
               --manifest "tests/e2e/${ticket}.json" \
               --output "artifacts/ci/source-check-${ticket}.json"
           done
 
-      - name: Manifest structural check (GKSA-10, GKSA-11, GKSA-12 and GKSA-14)
+      - name: Manifest structural check (GKSA-10, GKSA-11, GKSA-12, GKSA-13 and GKSA-14)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for ticket in gksa10 gksa11 gksa12 gksa14; do
+          for ticket in gksa10 gksa11 gksa12 gksa13 gksa14; do
             python3 tests/e2e/verify.py \
               --manifest "tests/e2e/${ticket}.json" \
               --check-manifest \
               --output "artifacts/ci/manifest-${ticket}.json"
           done
 
-      - name: Negative check - missing capture is rejected (four tickets)
+      - name: Negative check - missing capture is rejected (five tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for ticket in gksa10 gksa11 gksa12 gksa14; do
+          for ticket in gksa10 gksa11 gksa12 gksa13 gksa14; do
             capture="tests/e2e/no-such-capture-${ticket}.json"
             test ! -e "$capture"
             set +e
@@ -335,12 +337,12 @@ jobs:
             python3 -c "import json,sys; d=json.load(open('artifacts/ci/reject-missing-${ticket}.json')); sys.exit(0 if d.get('ok') is False else 1)"
           done
 
-      - name: Negative check - example capture is rejected (four tickets)
+      - name: Negative check - example capture is rejected (five tickets)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
-          for pair in "gksa10 capture.example.json" "gksa11 capture.gksa11.example.json" "gksa12 capture.gksa12.example.json" "gksa14 capture.gksa14.example.json"; do
+          for pair in "gksa10 capture.example.json" "gksa11 capture.gksa11.example.json" "gksa12 capture.gksa12.example.json" "gksa13 capture.gksa13.example.json" "gksa14 capture.gksa14.example.json"; do
             set -- $pair
             ticket=$1
             example=$2
@@ -362,24 +364,25 @@ jobs:
       # kind would be rejected as unsupported, which would not exercise the ticket
       # mismatch, so the other ticket's real kind is used deliberately, and the
       # assertion requires the specific ticket-mismatch diagnostic rather than any
-      # error. All twelve ordered pairs among GKSA-10/11/12/14 are covered. The inputs
-      # live outside the uploaded report paths, are explicitly labelled negative-only,
-      # and model no game execution whatsoever.
-      - name: Negative check - cross-ticket capture is rejected (twelve ordered pairs)
+      # error. All twenty ordered pairs among GKSA-10/11/12/13/14 are covered. The
+      # inputs live outside the uploaded report paths, are explicitly labelled
+      # negative-only, and model no game execution whatsoever.
+      - name: Negative check - cross-ticket capture is rejected (twenty ordered pairs)
         env:
           PYTHONPYCACHEPREFIX: ${{ runner.temp }}/pycache
         run: |
           set -euo pipefail
           negative_dir="artifacts/ci/negative-inputs"
           mkdir -p "$negative_dir"
-          for source in gksa10 gksa11 gksa12 gksa14; do
+          for source in gksa10 gksa11 gksa12 gksa13 gksa14; do
             python3 -c "import json,sys; json.dump({'kind': sys.argv[1] + '-e2e-capture', 'captureVersion': 1, '_note': 'NEGATIVE CLI CHECK ONLY - intentionally malformed opposite-ticket capture; proves ticket binding and describes no game execution'}, open(sys.argv[2], 'w'), indent=2, sort_keys=True)" "$source" "${negative_dir}/negative-${source}.json"
           done
           for pair in \
-            "gksa10 gksa11" "gksa10 gksa12" "gksa10 gksa14" \
-            "gksa11 gksa10" "gksa11 gksa12" "gksa11 gksa14" \
-            "gksa12 gksa10" "gksa12 gksa11" "gksa12 gksa14" \
-            "gksa14 gksa10" "gksa14 gksa11" "gksa14 gksa12"; do
+            "gksa10 gksa11" "gksa10 gksa12" "gksa10 gksa13" "gksa10 gksa14" \
+            "gksa11 gksa10" "gksa11 gksa12" "gksa11 gksa13" "gksa11 gksa14" \
+            "gksa12 gksa10" "gksa12 gksa11" "gksa12 gksa13" "gksa12 gksa14" \
+            "gksa13 gksa10" "gksa13 gksa11" "gksa13 gksa12" "gksa13 gksa14" \
+            "gksa14 gksa10" "gksa14 gksa11" "gksa14 gksa12" "gksa14 gksa13"; do
             set -- $pair
             target=$1
             source=$2
@@ -399,33 +402,45 @@ jobs:
       - name: Upload structural reports (not a game pass)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: gksa10-gksa11-gksa12-gksa14-source-structure-reports
+          name: gksa10-gksa11-gksa12-gksa13-gksa14-source-structure-reports
           path: |
             artifacts/ci/source-check-matrix.json
             artifacts/ci/source-check-gksa12.json
+            artifacts/ci/source-check-gksa13.json
             artifacts/ci/source-check-gksa14.json
             artifacts/ci/manifest-gksa10.json
             artifacts/ci/manifest-gksa11.json
             artifacts/ci/manifest-gksa12.json
+            artifacts/ci/manifest-gksa13.json
             artifacts/ci/manifest-gksa14.json
             artifacts/ci/reject-missing-gksa10.json
             artifacts/ci/reject-missing-gksa11.json
             artifacts/ci/reject-missing-gksa12.json
+            artifacts/ci/reject-missing-gksa13.json
             artifacts/ci/reject-missing-gksa14.json
             artifacts/ci/reject-example-gksa10.json
             artifacts/ci/reject-example-gksa11.json
             artifacts/ci/reject-example-gksa12.json
+            artifacts/ci/reject-example-gksa13.json
             artifacts/ci/reject-example-gksa14.json
             artifacts/ci/reject-cross-gksa10-from-gksa11.json
             artifacts/ci/reject-cross-gksa10-from-gksa12.json
+            artifacts/ci/reject-cross-gksa10-from-gksa13.json
             artifacts/ci/reject-cross-gksa10-from-gksa14.json
             artifacts/ci/reject-cross-gksa11-from-gksa10.json
             artifacts/ci/reject-cross-gksa11-from-gksa12.json
+            artifacts/ci/reject-cross-gksa11-from-gksa13.json
             artifacts/ci/reject-cross-gksa11-from-gksa14.json
             artifacts/ci/reject-cross-gksa12-from-gksa10.json
             artifacts/ci/reject-cross-gksa12-from-gksa11.json
+            artifacts/ci/reject-cross-gksa12-from-gksa13.json
             artifacts/ci/reject-cross-gksa12-from-gksa14.json
+            artifacts/ci/reject-cross-gksa13-from-gksa10.json
+            artifacts/ci/reject-cross-gksa13-from-gksa11.json
+            artifacts/ci/reject-cross-gksa13-from-gksa12.json
+            artifacts/ci/reject-cross-gksa13-from-gksa14.json
             artifacts/ci/reject-cross-gksa14-from-gksa10.json
             artifacts/ci/reject-cross-gksa14-from-gksa11.json
             artifacts/ci/reject-cross-gksa14-from-gksa12.json
+            artifacts/ci/reject-cross-gksa14-from-gksa13.json
           if-no-files-found: error
