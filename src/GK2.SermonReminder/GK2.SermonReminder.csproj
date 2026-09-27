@@ -34,12 +34,12 @@
     <Description>Sermon-day Ready/Done corner text and a non-sermon-day integer countdown shown beneath the native Graveyard Keeper 2 clock.</Description>
 
     <!--
-      Explicit reference roots. Local verification passes these on the command
-      line; the defaults target a default Windows Steam install.
+      Reference roots are explicitly supplied on the command line. -p:GameDir
+      derives the game data and managed paths; -p:GameDataDir and
+      -p:GameManagedDir remain accepted as direct overrides.
     -->
-    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Graveyard Keeper 2</GameDir>
-    <GameDataDir Condition="'$(GameDataDir)' == ''">$(GameDir)/GraveyardKeeper2_Data</GameDataDir>
-    <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GameDataDir)/Managed</GameManagedDir>
+    <GameDataDir Condition="'$(GameDataDir)' == '' and '$(GameDir)' != ''">$(GameDir)/GraveyardKeeper2_Data</GameDataDir>
+    <GameManagedDir Condition="'$(GameManagedDir)' == '' and '$(GameDataDir)' != ''">$(GameDataDir)/Managed</GameManagedDir>
     <BepInExDir Condition="'$(BepInExDir)' == ''">$(GameDir)/BepInEx</BepInExDir>
     <FrameworkDir Condition="'$(FrameworkDir)' == ''">$(BepInExDir)/plugins</FrameworkDir>
     <FrameworkDll Condition="'$(FrameworkDll)' == ''">$(FrameworkDir)/GK2.Framework.dll</FrameworkDll>
@@ -50,6 +50,8 @@
     the compiler reports an opaque unresolved-reference error.
   -->
   <Target Name="GK2ValidateNativeReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(GameManagedDir)' == ''"
+           Text="GK2 Sermon Reminder: game reference root is not configured. Pass -p:GameDir=&lt;install root&gt;, -p:GameDataDir=&lt;data folder&gt;, or -p:GameManagedDir=&lt;managed folder&gt;." />
     <Error Condition="!Exists('$(GameManagedDir)/Assembly-CSharp.dll')"
            Text="GK2 Sermon Reminder: native game assembly not found at '$(GameManagedDir)/Assembly-CSharp.dll'. Pass -p:GameDir=&lt;install root&gt; (the folder containing GraveyardKeeper2_Data/Managed)." />
     <Error Condition="!Exists('$(GameManagedDir)/LazyBearTechnology.dll')"
