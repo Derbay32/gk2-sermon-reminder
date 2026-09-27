@@ -77,17 +77,38 @@
         {
           "equals": true,
           "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDay"
         }
       ],
       "id": "consumption-before-animation-end",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "布道日当天，原生 sermon_ready >= 1（Ready 状态）。",
+        "布道日当天处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），原生 sermon_ready >= 1（Ready 状态）。",
         "可记录帧号与动画/奖励结束帧。正确处理允许消耗后第一个 LateUpdate 与消耗发生在同一帧。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "记录开始布道消耗机会的帧号 timing.consumptionFrame。",

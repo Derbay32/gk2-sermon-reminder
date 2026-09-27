@@ -87,17 +87,34 @@
         {
           "equals": true,
           "observation": "popup.stayedUntilConfirmed"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "popup-shown-when-enabled",
       "prerequisites": [
         "存档满足教堂与教学两个精确门槛。",
-        "当前为布道日且原生 sermon_ready 大于等于 1。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且原生 sermon_ready 大于等于 1。",
         "弹窗开关为开启，游戏语言为简体中文。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
@@ -169,17 +186,34 @@
             "language": "en"
           },
           "observation": "popup.confirmLabel"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "popup-shown-en",
       "prerequisites": [
         "存档满足教堂与教学两个精确门槛。",
-        "当前为布道日且原生 sermon_ready 大于等于 1。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且原生 sermon_ready 大于等于 1。",
         "弹窗开关为开启，游戏语言为英语。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
@@ -232,16 +266,33 @@
         {
           "equals": 1,
           "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "popup-cross-into-sermon-day",
       "prerequisites": [
         "存档满足两个门槛且弹窗开关为开启，当前处于布道日前一天。",
-        "跨入布道日前后原生 sermon_ready 均大于等于 1。"
+        "跨入布道日后的资格评估处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），跨入前后原生 sermon_ready 均大于等于 1。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "在布道日前一天进入可操作画面；预期不出现弹窗；检查 popup.shown 为 false。",
@@ -293,16 +344,33 @@
         {
           "equals": 1,
           "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "popup-mid-load-sermon-day",
       "prerequisites": [
         "存档满足两个门槛且弹窗开关为开启。",
-        "当前为布道日机会未消费状态，本进程尚未提示该保存槽该具体游戏日。"
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）机会未消费状态，本进程尚未提示该保存槽该具体游戏日。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "确认载入前该槽该日尚无去重记录；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",

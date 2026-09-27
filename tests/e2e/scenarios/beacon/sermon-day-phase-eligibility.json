@@ -1,0 +1,180 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.iconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "beacon-preopen-ready-not-eligible",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，信标开关为开启。",
+        "当前为布道日当天、sermon_ready 规则尚未当日执行且 sermon_lock 尚未当日执行。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读、门槛满足且处于开启前阶段。",
+        "记录显示文字与原生日；预期 Ready 文字且原生 ready<1、无完成图标。",
+        "记录资格与信标；预期 ReminderEligible=false 且信标停用，即便目标点、图标与组件健康。"
+      ],
+      "title": "开启前阶段显示 Ready 文字但不显示信标且不合适提醒"
+    },
+    {
+      "category": "eligibility",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "beacon-locked-hidden-not-eligible",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，信标开关为开启。",
+        "当前为布道日当天、sermon_lock 规则当日已执行，原生残留有限 sermon_ready>=1。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读、门槛满足且已锁定。",
+        "记录显示；预期隐藏且无完成图标。",
+        "记录资格与信标；预期 ReminderEligible=false 且信标停用，且不报故障。"
+      ],
+      "title": "sermon_lock 当日执行后显示隐藏且不显示信标，即使残留 ready>=1"
+    }
+  ],
+  "schemaVersion": 2
+}

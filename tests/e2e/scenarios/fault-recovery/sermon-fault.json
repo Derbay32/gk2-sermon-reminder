@@ -40,16 +40,33 @@
         {
           "equals": true,
           "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "native-state-not-mutated",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "Done 状态且图标已加载或已尝试加载。"
+        "布道日开启窗口内 Done 状态（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且图标已加载或已尝试加载。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "确认共享 Sprite 与材质未被修改。",
@@ -181,16 +198,29 @@
         {
           "equals": false,
           "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
         }
       ],
       "id": "nonfinite-native-ready-unreadable",
       "prerequisites": [
-        "两个门槛任务均为 Completed 的存档。",
+        "两个门槛任务均为 Completed 且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）的存档。",
         "测试设施可受控使原生 sermon_ready 返回非有限值。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "注入原生 ready 非有限值。",

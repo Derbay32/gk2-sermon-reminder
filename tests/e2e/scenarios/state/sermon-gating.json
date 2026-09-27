@@ -28,6 +28,18 @@
         {
           "notEquals": "gksr.hud.sermonDone",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "gates-church-quest-incomplete",
@@ -37,7 +49,8 @@
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "在真实 Proton 环境加载完整模组并载入该存档。",
@@ -77,6 +90,18 @@
         {
           "notEquals": "gksr.hud.sermonDone",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "gates-sermon-quest-incomplete",
@@ -86,7 +111,8 @@
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成。",

@@ -52,17 +52,26 @@
         {
           "equals": false,
           "observation": "icon.phantomGapCountdown"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayBeforeCrossing"
         }
       ],
       "id": "next-day-after-done",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "布道日当天处于 Done 状态。",
+        "布道日当天处于开启窗口内的 Done 状态（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）。",
         "跨日前星期编号等于观察到的 T。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "记录跨日前 Done 文字与跨日后绝对日、星期编号、倒计时与文字。",
@@ -116,17 +125,26 @@
         {
           "equals": true,
           "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayBeforeCrossing"
         }
       ],
       "id": "next-day-after-missed",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "布道日当天始终处于 Ready 状态（未开始布道）。",
+        "布道日当天处于开启窗口且未开始布道（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行，原生 ready>=1）。",
         "跨日前星期编号等于观察到的 T。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "记录跨日前 Ready 文字与跨日后绝对日、星期编号、倒计时与文字。",
@@ -240,6 +258,18 @@
         {
           "notEquals": "gksr.hud.sermonDone",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "stale-ready-flag-nonsermon-day",
@@ -249,7 +279,8 @@
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "记录当前星期编号、绝对日与原生 ready 数值。",
