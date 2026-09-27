@@ -42,6 +42,30 @@ project for property queries and fixture project/source files for canaries.
 Inherited configuration files are not part of that hash evidence. The artifact carries ``e2eVerdict: null`` and
 ``scope: quality-gate-canaries-only``: analyzer canaries, not game simulations,
 with NO production semantic check.
+
+GKSA-27 explicit game reference root (property/validation probes only)
+----------------------------------------------------------------------
+Five bounded real-CLI probes run against the REAL plugin project under a
+reference-clean environment: every ``GameDir``/``GameDataDir``/``GameManagedDir``/
+``BepInExDir``/``FrameworkDir``/``FrameworkDll`` variable is removed
+case-insensitively so a leaked Windows-style variable cannot impersonate explicit
+input. No directory is created, no native assembly is resolved and no build runs:
+  g1  with no reference input, ``-getProperty:GameDir,GameDataDir,
+      GameManagedDir`` does not exit 0 with JSON, or any of the three values is
+      non-empty (the hardcoded Windows default leaks)          -> FAIL. An empty
+      ``-p:GameDir=`` global property is deliberately NOT passed: it would
+      override and hide the very default under test.
+  g2  ``-target:GK2ValidateNativeReferences`` does not exit nonzero, does not
+      carry the exact ``game reference root is not configured`` message, or the
+      message omits any of ``-p:GameDir`` / ``-p:GameDataDir`` /
+      ``-p:GameManagedDir`` (e.g. it is the older missing-DLL error) -> FAIL.
+  g3  an explicit ``-p:GameDir=<absolute path with a space>`` is not preserved,
+      or the derived GameDataDir/GameManagedDir is not
+      ``<GameDir>/GraveyardKeeper2_Data[/Managed]`` (separators normalised only
+      for comparison, never to hide an empty value)              -> FAIL.
+  g4  an explicit ``-p:GameDataDir=<path>`` is not preserved, or the derived
+      GameManagedDir is not ``<GameDataDir>/Managed``            -> FAIL.
+  g5  an explicit ``-p:GameManagedDir=<path>`` is not preserved -> FAIL.
 """
 
 from __future__ import annotations
@@ -68,6 +92,15 @@ EXPECTED_PLUGIN_PROPERTIES = (
     ("TreatWarningsAsErrors", "true"),
     ("GenerateDocumentationFile", "true"),
     ("CopyDocumentationFileToOutputDirectory", "false"),
+)
+
+# GKSA-27: explicit game reference root contract, probed under a reference-clean environment.
+G27_ARTIFACTS_REL = "artifacts/gksa27-tests"
+GAME_REFERENCE_PROPERTIES = ("GameDir", "GameDataDir", "GameManagedDir")
+ROOT_MESSAGE = "game reference root is not configured"
+ROOT_OPTIONS = ("-p:GameDir", "-p:GameDataDir", "-p:GameManagedDir")
+REFERENCE_ENV_KEYS = frozenset(
+    {"gamedir", "gamedatadir", "gamemanageddir", "bepinexdir", "frameworkdir", "frameworkdll"}
 )
 
 FIXTURE_CSPROJ = """<Project Sdk="Microsoft.NET.Sdk">
@@ -198,6 +231,76 @@ def _xml_copy_verdict(proc: subprocess.CompletedProcess[str] | None, directory: 
     return (bool(obj_xml) and not bin_xml, actual)
 
 
+def _get_properties(proc: subprocess.CompletedProcess[str] | None) -> dict[str, str] | None:
+    """Effective properties from a successful ``msbuild -getProperty`` JSON probe.
+
+    ``None`` means the process did not run, exited nonzero, or did not emit the
+    expected JSON shape; an undefined or empty requested property comes back as an
+    empty string and is therefore distinguishable from a missing JSON key.
+    """
+    if proc is None or proc.returncode != 0:
+        return None
+    try:
+        data: object = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or not isinstance(data.get("Properties"), dict):
+        return None
+    return {str(key): str(value) for key, value in data["Properties"].items()}
+
+
+def _norm_path(value: str) -> str:
+    """Normalise separators for comparison only; never used to hide an empty value."""
+    return value.replace("\\", "/")
+
+
+def _expected_game_chain(game_dir: str) -> tuple[str, str, str]:
+    data_dir = f"{game_dir}/GraveyardKeeper2_Data"
+    return game_dir, data_dir, f"{data_dir}/Managed"
+
+
+def _g1_verdict(proc: subprocess.CompletedProcess[str] | None) -> tuple[bool, str]:
+    props = _get_properties(proc)
+    if props is None:
+        return False, f"{_exit_code(proc)}; no JSON properties"
+    shown = ", ".join(f"{name}={props.get(name) or '<empty>'}" for name in GAME_REFERENCE_PROPERTIES)
+    ok = all(name in props and props[name] == "" for name in GAME_REFERENCE_PROPERTIES)
+    return ok, f"{_exit_code(proc)}; {shown}"
+
+
+def _g2_verdict(proc: subprocess.CompletedProcess[str] | None) -> tuple[bool, str]:
+    if proc is None:
+        return False, "subprocess could not start (OSError/TimeoutExpired)"
+    lowered = _combined(proc).lower()
+    marker = ROOT_MESSAGE in lowered
+    options = [option for option in ROOT_OPTIONS if option.lower() in lowered]
+    ok = proc.returncode != 0 and marker and len(options) == len(ROOT_OPTIONS)
+    counted = f"{len(options)}/{len(ROOT_OPTIONS)}"
+    return ok, f"{_exit_code(proc)}; root-message={'present' if marker else 'absent'}; options={counted}"
+
+
+def _derived_property_verdict(expected: dict[str, str]) -> Verdict:
+    """Pass only when each expected property is non-empty and equal after separator normalisation."""
+
+    def verdict(proc: subprocess.CompletedProcess[str] | None) -> tuple[bool, str]:
+        props = _get_properties(proc)
+        if props is None:
+            return False, f"{_exit_code(proc)}; no JSON properties"
+        shown = ", ".join(f"{name}={props.get(name) or '<empty>'}" for name in expected)
+        ok = all(
+            name in props and props[name] != "" and _norm_path(props[name]) == _norm_path(value)
+            for name, value in expected.items()
+        )
+        return ok, f"{_exit_code(proc)}; {shown}"
+
+    return verdict
+
+
+def _without_reference_env(env: dict[str, str]) -> dict[str, str]:
+    """Drop every reference-related variable case-insensitively (Windows env names are case-insensitive)."""
+    return {key: value for key, value in env.items() if key.lower() not in REFERENCE_ENV_KEYS}
+
+
 def _base_env(run_dir: Path) -> dict[str, str]:
     env = dict(os.environ)
     env.update(
@@ -250,9 +353,10 @@ class Runner:
         inputs: list[Path],
         verdict: Verdict,
         detail: str,
+        env: dict[str, str] | None = None,
     ) -> CheckResult:
         before = _hash_files(inputs)
-        proc = _run(cmd, self.repo, self.env)
+        proc = _run(cmd, self.repo, self.env if env is None else env)
         after = _hash_files(inputs)
         log_path = self.log_dir / f"{check_id}.log"
         log_path.write_text(_log_body(cmd, proc), encoding="utf-8")
@@ -305,6 +409,76 @@ def _plugin_property_checks(runner: Runner, dotnet: str, repo: Path, env: dict[s
             detail="effective value from dotnet msbuild -getProperty on the real plugin",
         )
         for name, expected in EXPECTED_PLUGIN_PROPERTIES
+    ]
+
+
+def _game_reference_checks(runner: Runner, dotnet: str, repo: Path, clean_env: dict[str, str]) -> list[CheckResult]:
+    """Five bounded real-CLI probes of the explicit game reference root contract.
+
+    Property queries and the validation target only: no build, no native assembly
+    resolution, no game execution and no filesystem creation. The explicit paths
+    live under the ignored ``G27_ARTIFACTS_REL`` tree but are never created; only
+    the real plugin project is hashed as input, exactly like the c1 property probe.
+    """
+    plugin = repo / PLUGIN_REL
+    probe = [dotnet, "msbuild", str(plugin), f"-getProperty:{','.join(GAME_REFERENCE_PROPERTIES)}"]
+    game_root = str(repo / G27_ARTIFACTS_REL / "Game Root With Space")
+    data_root = str(repo / G27_ARTIFACTS_REL / "Explicit Data Root")
+    managed_root = str(repo / G27_ARTIFACTS_REL / "Explicit Managed Root")
+    _, derived_data, derived_managed = _expected_game_chain(game_root)
+    return [
+        runner.run(
+            "g1",
+            "game reference properties stay empty without explicit input",
+            "exit 0; GameDir, GameDataDir and GameManagedDir all empty",
+            probe,
+            [plugin],
+            _g1_verdict,
+            "reference-clean environment; no empty -p:GameDir global property, which would hide the default",
+            env=clean_env,
+        ),
+        runner.run(
+            "g2",
+            "missing game reference root fails with configuration guidance",
+            f"nonzero exit; error contains {ROOT_MESSAGE!r} and all three -p: option names",
+            [dotnet, "msbuild", str(plugin), "-target:GK2ValidateNativeReferences"],
+            [plugin],
+            _g2_verdict,
+            "validation target only; no build, native resolution or game execution",
+            env=clean_env,
+        ),
+        runner.run(
+            "g3",
+            "explicit GameDir is preserved and derives data/managed roots",
+            "GameDir preserved; GameDataDir=<GameDir>/GraveyardKeeper2_Data; GameManagedDir=.../Managed",
+            [*probe, f"-p:GameDir={game_root}"],
+            [plugin],
+            _derived_property_verdict(
+                {"GameDir": game_root, "GameDataDir": derived_data, "GameManagedDir": derived_managed}
+            ),
+            "absolute path with a space under the ignored gksa27-tests artifacts; never created on disk",
+            env=clean_env,
+        ),
+        runner.run(
+            "g4",
+            "explicit GameDataDir is preserved and derives managed root",
+            "GameDataDir preserved; GameManagedDir=<GameDataDir>/Managed",
+            [*probe, f"-p:GameDataDir={data_root}"],
+            [plugin],
+            _derived_property_verdict({"GameDataDir": data_root, "GameManagedDir": f"{data_root}/Managed"}),
+            "explicit data path; does not assert GameDir (g1 covers default removal)",
+            env=clean_env,
+        ),
+        runner.run(
+            "g5",
+            "explicit GameManagedDir is preserved",
+            "GameManagedDir preserved exactly",
+            [*probe, f"-p:GameManagedDir={managed_root}"],
+            [plugin],
+            _derived_property_verdict({"GameManagedDir": managed_root}),
+            "explicit managed path; no new GameDir requirement and no filesystem creation",
+            env=clean_env,
+        ),
     ]
 
 
@@ -411,6 +585,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
 
+    checks.extend(_game_reference_checks(runner, dotnet, repo, _without_reference_env(env)))
+
     failures = [check for check in checks if check.status == FAILED]
     ok = not failures
     report: dict[str, object] = {
@@ -438,7 +614,11 @@ def main(argv: list[str] | None = None) -> int:
             "Quality-gate canaries only: effective plugin properties via dotnet msbuild -getProperty, "
             "netstandard2.1 fixtures inheriting the REAL ancestor Directory.Build.props/.editorconfig, "
             "proving IDE0005/CA1822/CA1001/whitespace enforcement. No game execution, no native build, "
-            "no production semantic check, no E2E verdict; missing configuration is orderly RED."
+            "no production semantic check, no E2E verdict; missing configuration is orderly RED. "
+            "Five GKSA-27 probes (g1-g5) query the real plugin under a reference-clean environment: "
+            "property emptiness without explicit input, the GK2ValidateNativeReferences configuration "
+            "error, and preservation/derivation of -p:GameDir/-p:GameDataDir/-p:GameManagedDir. "
+            "Property/validation only: never a native semantic build or game acceptance."
         ),
     }
     _write_report(output, report)
