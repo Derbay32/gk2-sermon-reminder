@@ -1,8 +1,7 @@
-# Python tooling for the GKSA-23 source/structure guard, E2E verifier and the
-# frozen acceptance matrices. This project is a virtual (non-package) uv
-# project: it pins the interpreter and the dev-only quality tools, but it never
-# builds or distributes a Python package. The mod itself ships from C#; the
-# pinned tools below are development-only and are never part of the plugin.
+# Python tooling for source checks and the game E2E evidence verifier.
+# This project is a virtual (non-package) uv project: it pins the interpreter
+# and the development-only quality tools. It never builds or distributes a Python package.
+# The mod ships from C#; these tools are not included in the plugin.
 [project]
 name = "gksa-tooling"
 version = "0.0.0"

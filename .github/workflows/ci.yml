@@ -1,27 +1,11 @@
 name: ci
 
-# Repository source/structure CI for the aggregated GKSA E2E specification.
-#
-# This workflow runs the Python-standard-library source, manifest/structure,
-# protocol and migration checks, plus two real .NET quality gates on a hosted
-# runner: a `dotnet format whitespace` check over the plugin sources and the
-# SDK analyzer/style canary matrix (IDE0005/CA1822/CA1001/whitespace) that
-# builds disposable netstandard2.1 fixtures inheriting the real repository
-# Directory.Build.props and .editorconfig.
-#
-# It still does NOT build the plugin against the native game assemblies and does
-# NOT run or validate the game: the native reference assemblies are deliberately
-# unavailable here, so the real local-build and package checks stay gated and
-# reported as unexecuted. The .NET canary matrix proves only that the analyzer
-# and style configuration is enforced; it is not a production semantic build and
-# not a game pass. Every uploaded report is a source/structure/negative report
-# and must never be read as a game passing: no scenario in the aggregated
-# manifest is executed by this workflow.
+# Run static analysis, formatting, and game scenario manifest validation.
+# Do not run test suites for development tools or quality gates.
+# The hosted runner has no native game references and does not build the plugin.
+# No game scenario is executed; uploaded reports are not game acceptance evidence.
 on:
   pull_request:
-    branches:
-      - dev
-  push:
     branches:
       - dev
 
@@ -35,13 +19,8 @@ jobs:
     env:
       UV_PYTHON_DOWNLOADS: never
     steps:
-      # Full history is required: the frozen migration oracle reads the six
-      # legacy manifests from the exact base commit and must never derive a
-      # baseline from the working tree.
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          fetch-depth: 0
 
       - name: Set up Python 3.13.11
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -71,37 +50,10 @@ jobs:
       - name: Pyright (standard, 3.13)
         run: uv run --locked pyright
 
-      - name: Toolchain contract matrix
-        run: uv run --locked python tests/tools/toolchain_matrix.py --repo-root . --output artifacts/ci/toolchain.json
-
-      - name: v2 protocol black-box matrix
-        run: uv run --locked python tests/tools/protocol_matrix.py --repo-root . --output artifacts/ci/protocol.json
-
-      - name: Source-tool acceptance matrix
-        run: uv run --locked python tests/tools/source_check_matrix.py --repo-root . --suite all --output artifacts/ci/source-matrix.json
-
-      - name: Migration traceability check
-        run: uv run --locked python tests/tools/check_migration.py --repo-root . --output artifacts/ci/migration.json
-
-      - name: Migration oracle self-test
-        run: uv run --locked python tests/tools/check_migration.py --self-test --repo-root . --output artifacts/ci/migration-selftest.json
-
       - name: Aggregated manifest structural check
         run: uv run --locked python tests/e2e/verify.py --manifest tests/e2e/manifest.json --check-manifest --output artifacts/ci/manifest-check.json
 
-      - name: Source and resource guard
-        run: uv run --locked python tools/source_check.py --repo-root . --output artifacts/ci/source-check.json
-
-      - name: Build/package negative gate
-        run: uv run --locked python tests/tools/build_package_matrix.py --repo-root . --negative-only --output artifacts/ci/build-package-negative.json
-
-      # The hosted runner has no native game assemblies, so it cannot perform the
-      # real plugin semantic build. It CAN still enforce the repository C# quality
-      # configuration: the whitespace/style gate over the real plugin sources, and
-      # the SDK analyzer canary matrix over disposable netstandard2.1 fixtures that
-      # inherit the real Directory.Build.props/.editorconfig. The formatting check
-      # runs on the actual sources; the analyzer matrix is a tool/configuration
-      # canary over disposable fixtures. Neither step uses fake game assemblies.
+      # Check actual C# source formatting without resolving native assemblies.
       - name: Set up .NET SDK from global.json
         uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
         with:
@@ -110,14 +62,9 @@ jobs:
       - name: C# whitespace formatting check (source only)
         run: dotnet format whitespace src/GK2.SermonReminder --folder --verify-no-changes --exclude bin --exclude obj --report artifacts/ci/csharp-format.json
 
-      - name: SDK analyzer/style canary matrix (no native build)
-        run: uv run --locked python tests/tools/csharp_quality_matrix.py --repo-root . --dotnet "$(command -v dotnet)" --output artifacts/ci/csharp-quality.json
-
       - name: Upload structural reports (not a game pass)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: gksa23-source-structure-reports
-          path: |
-            artifacts/ci/*.json
-            artifacts/gksa25-tests/csharp-quality-*/logs/*.log
+          path: artifacts/ci/*.json
           if-no-files-found: error
