@@ -44,7 +44,7 @@ namespace GK2.SermonReminder.Hud
     /// stale UI.
     ///
     /// Every native asset access is contained here: an unexpected Addressables
-    /// failure releases the owned handle and degrades to <see cref="Failed"/>
+    /// failure releases the owned handle and degrades to <see cref="NativeCheckSpriteStatus.Failed"/>
     /// instead of escaping into the caller's tick, so an unrelated failure can
     /// never tear down a healthy Ready/countdown presentation. An unreadable
     /// unscaled clock is treated the same way as a controlled resource failure and

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using BepInEx;
 using BepInEx.Configuration;
@@ -46,6 +47,13 @@ namespace GK2.SermonReminder
     /// Owns the sermon-corner lifecycle: readiness, a fresh per-tick state read,
     /// the single mod-owned display, and the owned native icon request.
     /// </summary>
+    [SuppressMessage(
+        "Design",
+        "CA1001:Types that own disposable fields should be disposable",
+        Justification = "The framework disable/shutdown lifecycle invokes SafeCleanup, which " +
+            "performs an owner-scoped harmony?.UnpatchSelf() - equivalent to Harmony's " +
+            "IDisposable.Dispose - and the existing contained cleanup is intentionally preserved " +
+            "instead of adding an IDisposable lifecycle.")]
     internal sealed class SermonReminderMod : Gk2ModBase
     {
         internal static SermonReminderMod Active { get; private set; }
@@ -60,7 +68,6 @@ namespace GK2.SermonReminder
         private const string PopupKey = "EnabledSermonPopup";
 
         private readonly IReadOnlyList<Gk2ModDependency> dependencies;
-        private readonly SermonStateReader reader = new SermonStateReader();
         private readonly SermonHudAdapter hud = new SermonHudAdapter();
         private readonly NativeCheckSprite checkSprite = new NativeCheckSprite();
         private readonly ChurchBeacon beacon = new ChurchBeacon();
@@ -288,7 +295,7 @@ namespace GK2.SermonReminder
             // Bind the existing Harmony owner for the popup provenance install. A
             // failure here is contained and never disables lifecycle hooks, HUD or
             // beacon; the popup itself fails closed until the observer is available.
-            try { popup.ConfigureHarmony(harmony); }
+            try { SermonPopup.ConfigureHarmony(harmony); }
             catch (Exception) { }
 
             try
@@ -727,7 +734,7 @@ namespace GK2.SermonReminder
 
             try
             {
-                snapshot = reader.Read(activeSave);
+                snapshot = SermonStateReader.Read(activeSave);
             }
             catch (Exception ex)
             {
@@ -1090,7 +1097,7 @@ namespace GK2.SermonReminder
 
             // Drop the provenance configuration; UnpatchSelf above already removed the
             // transpiler for this owner, so a re-enable must re-verify registration.
-            try { popup.ClearHarmonyConfiguration(); }
+            try { SermonPopup.ClearHarmonyConfiguration(); }
             catch (Exception) { }
 
             // Disable/shutdown is a genuine lifecycle boundary: close the notice load

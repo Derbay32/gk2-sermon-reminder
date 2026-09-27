@@ -575,7 +575,7 @@ namespace GK2.SermonReminder.Notifications
         /// proves return, a destroyed item ends ownership, and anything else keeps the
         /// quarantine for a later bounded retry. The item is never mutated here.
         /// </summary>
-        private bool TryResolveUncertainReturn(OwnedNotice owned, UISimpleTextNotification item)
+        private static bool TryResolveUncertainReturn(OwnedNotice owned, UISimpleTextNotification item)
         {
             if (item == null)
             {
@@ -599,7 +599,7 @@ namespace GK2.SermonReminder.Notifications
             return false;
         }
 
-        private bool TryRemoveFromList(OwnedNotice owned)
+        private static bool TryRemoveFromList(OwnedNotice owned)
         {
             try
             {
