@@ -1,0 +1,220 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "pause.usedNativePause"
+        },
+        {
+          "equals": false,
+          "observation": "pause.timeScaleChangedByMod"
+        },
+        {
+          "equals": false,
+          "observation": "pause.unpauseAllInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "input.playerMovedDuringPopup"
+        },
+        {
+          "equals": false,
+          "observation": "input.gameplayInputLeakedDuringPopup"
+        }
+      ],
+      "id": "native-pause-integrity",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "触发弹窗并读取暂停状态；预期使用原生暂停；检查 popup.shown、popup.pausedWhileShown、pause.usedNativePause。",
+        "读取时间缩放与全局解除暂停调用；预期模组均未使用；检查 pause.timeScaleChangedByMod 与 pause.unpauseAllInvoked 为 false。",
+        "检查移动与输入；预期无泄漏；检查 input.playerMovedDuringPopup 与 input.gameplayInputLeakedDuringPopup 为 false。"
+      ],
+      "title": "弹窗使用原生暂停且不强制重置时间缩放或不加区分地解除暂停"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedUntilConfirmed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedOpenBeforeConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.autoClosedWithoutInput"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.autoCloseTimeoutSeconds"
+        }
+      ],
+      "id": "stays-until-confirmed",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "触发弹窗后不做任何输入并等待；预期保持显示且不自动关闭；检查 popup.stayedUntilConfirmed、popup.stayedOpenBeforeConfirm、popup.autoClosedWithoutInput。",
+        "读取自动关闭超时；预期不存在自动关闭；检查 popup.autoCloseTimeoutSeconds 为 0。"
+      ],
+      "title": "弹窗保持显示直至玩家确认且不自动关闭"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseIntroducedAfterPopupShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "popup.openAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherNativeModalRemainsOpenAfterClose"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseStillActiveAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.modForcedUnpauseOnClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.ownershipStolenFromOtherSystem"
+        },
+        {
+          "equals": true,
+          "observation": "pause.nativeOnWindowClosedChecksModalStack"
+        }
+      ],
+      "id": "other-pause-preserved",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "本模组弹窗触发前不存在由其他系统发起的暂停。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在无其他暂停时触发弹窗；预期安全显示并暂停；检查 popup.shown 与 popup.pausedWhileShown 为 true。",
+        "在弹窗显示后引入第二个原生模态暂停来源；预期已引入；检查 pause.otherPauseIntroducedAfterPopupShown 为 true。",
+        "仅关闭本模组弹窗；预期本模组弹窗关闭；检查 popup.closedByConfirm 为 true 与 popup.openAfterClose 为 false。",
+        "读取第二个原生模态与暂停；预期仍打开且暂停仍生效；检查 pause.otherNativeModalRemainsOpenAfterClose 与 pause.otherPauseStillActiveAfterClose。",
+        "检查模组是否强制解除暂停或抢占；预期均未发生；检查 pause.modForcedUnpauseOnClose 与 pause.ownershipStolenFromOtherSystem 为 false。",
+        "核对原生解除暂停路径的共存行为；预期以 MainGame.OnWindowClosed 在解除前检查模态栈的方式共存；检查 pause.nativeOnWindowClosedChecksModalStack 为 true。"
+      ],
+      "title": "本模组弹窗先安全显示，随后引入的第二原生模态暂停在只关闭本模组弹窗后仍保留"
+    },
+    {
+      "category": "pause",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.closedByConfirm"
+        },
+        {
+          "equals": false,
+          "observation": "pause.stuckPauseAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.ownershipStolenFromOtherSystem"
+        },
+        {
+          "equals": false,
+          "observation": "input.gameplayInputLeakedDuringPopup"
+        }
+      ],
+      "id": "no-stuck-pause-after-close",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已显示。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "用确认关闭弹窗并继续游玩；预期无卡住暂停与所有权抢占；检查 popup.closedByConfirm、pause.stuckPauseAfterClose、pause.ownershipStolenFromOtherSystem。",
+        "读取游戏输入；预期未泄漏；检查 input.gameplayInputLeakedDuringPopup 为 false。"
+      ],
+      "title": "关闭弹窗后不出现卡住的暂停或暂停所有权抢占"
+    }
+  ],
+  "schemaVersion": 2
+}

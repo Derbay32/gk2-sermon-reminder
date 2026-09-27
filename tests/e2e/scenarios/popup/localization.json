@@ -1,0 +1,90 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "localization",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "fr",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "language.fallbackUsed"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "en"
+          },
+          "observation": "popup.titleText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.body",
+            "language": "en"
+          },
+          "observation": "popup.bodyText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "en"
+          },
+          "observation": "popup.confirmLabel"
+        }
+      ],
+      "id": "popup-fallback-language",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。",
+        "游戏当前语言为未提供模组译文的其他语言（例如 fr）。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取门槛与语言；预期门槛完成且语言无对应译文；检查 save.churchUnlocked、save.tutorialCompleted 与 language.active 为 fr。",
+        "载入存档并进入可操作画面；预期弹窗按英语兜底显示；检查 language.fallbackUsed 与 popup.shown 为 true。",
+        "读取弹窗文案；预期英语兜底文案；检查 popup.titleText/bodyText/confirmLabel 使用 en 文案。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "当前语言无对应译文时弹窗显示英语兜底文案"
+    }
+  ],
+  "schemaVersion": 2
+}

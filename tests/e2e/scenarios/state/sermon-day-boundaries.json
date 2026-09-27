@@ -1,0 +1,1872 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDayBefore",
+            "countdown": "countdown.beforeDays",
+            "dayOfWeek": "save.priorDayOfWeek",
+            "mode": "single-day"
+          }
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.dayAdvanced"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDayBefore"
+        },
+        {
+          "equals": "gksr.hud.sermonCountdown.one",
+          "observation": "hud.textKeyDayBefore"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyPreOpen"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyPreOpen"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1,
+            "min": 0
+          },
+          "observation": "state.sermonReadyValuePreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligiblePreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresentPreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabledPreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownPreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.recordWrittenPreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "phase.openRanTodayPreOpen"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayPreOpen"
+        },
+        {
+          "notEqualsObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDayPreOpen"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyOpen"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueOpen"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligibleOpen"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresentOpen"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.enabledOpen"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownOpen"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordWrittenOpen"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanTodayOpen"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayOpen"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDayOpen"
+        },
+        {
+          "observation": "save.elapsedAbsoluteDays",
+          "equals": 1
+        },
+        {
+          "observation": "timing.prematureDoneBeforeConsumption",
+          "equals": false
+        }
+      ],
+      "id": "sermon-day-boundary-natural-rollover",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "跨日前为非布道日且 delta=1，跨日后为布道日。",
+        "跨日后先处于开启前阶段（原生 ready<1），随后 sermon_ready 规则于当日执行进入开启窗口。",
+        "信标与弹窗开关均为开启，以便核对开启后才真正可触发提醒。",
+        "原生 HUD、目标点、信仰图标与弹窗组件健康。",
+        "进入开放窗口后的弹窗安全门已清空。",
+        "本进程该槽该日尚无弹窗去重记录。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前非布道日的绝对日、星期编号与单日倒计时；检查 dateCheck single-day 通过。",
+        "记录跨日后布道日的绝对日与星期编号；检查 dateCheck sermon-day 通过且 save.dayAdvanced=true。",
+        "记录开启前阶段文字、原生 ready 与阶段日；预期显示 Ready 文字、无完成图标、ready<1、不具备提醒资格、sermon_ready 条目尚未当日执行。",
+        "记录开启窗口阶段文字、原生 ready 与阶段日；预期显示 Ready、ready>=1、具备提醒资格、信标与弹窗可触发且已写去重记录、sermon_ready 条目当日已执行而 sermon_lock 尚未。",
+        "连续记录从单日倒计时到开放后 Ready 的画面；预期不存在任何中间 Done 帧；检查连续录像与 timing.prematureDoneBeforeConsumption=false。",
+        "计算实测绝对日的差值 save.absoluteDay-save.absoluteDayBefore；预期仅经过一个游戏日；记录 save.elapsedAbsoluteDays=1，并附两次原生日读取值供复核。"
+      ],
+      "title": "自然跨入布道日后由开启前 Ready 进入开启窗口 Ready 且不提前 Done"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenReady"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.recordWritten"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "sermon-day-boundary-preopen-direct-load-stale-ready",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "当前为布道日当天，sermon_ready 规则尚未当日执行，存档残留有限 sermon_ready>=1。",
+        "信标与弹窗开关均为开启。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期有效读取门槛与阶段。",
+        "记录阶段日与显示；预期开启前阶段且显示 Ready。",
+        "记录原生 ready 与提醒资格；预期残留 ready>=1 但 ReminderEligible=false 且无完成图标、无信标或弹窗。"
+      ],
+      "title": "直接载入开启前同日存档且残留有限 ready>=1 时仍显示 Ready 且不合适提醒"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonLockRuleLastExecDay"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.visibleCornerTextCount"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.recordWrittenDuringLock"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "observation": "icon.addressableReferencesHeld",
+          "equals": 0
+        },
+        {
+          "observation": "hud.visibleBeforeLock",
+          "equals": true
+        },
+        {
+          "observation": "icon.referencesBeforeLock",
+          "equals": 1
+        },
+        {
+          "observation": "phase.openRanToday",
+          "equals": true
+        },
+        {
+          "observation": "phase.sermonReadyRuleLastExecDay",
+          "equalsObservation": "save.absoluteDay"
+        }
+      ],
+      "id": "sermon-day-boundary-locked-preached-hidden",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "在同一次载入的原生开放窗口内实际开始布道，已显示 Done 与完成图标。",
+        "信标与弹窗开关均为开启。",
+        "使用原生确认操作关闭先前实际显示的弹窗。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录同次载入中开放窗口内的 Done 画面；预期完成图标与自有引用存在；检查 hud.visibleBeforeLock=true 与 icon.referencesBeforeLock=1。",
+        "自然推进至原生日末关闭规则执行；预期两个规则均已于当天执行；检查 phase.openRanToday、phase.lockRanToday 与两个 lastExecDay 的原生记录。",
+        "记录显示与提醒；预期隐藏、无完成图标、不具备提醒资格、无新信标弹窗或新增去重记录，且不报故障。",
+        "读取已隐藏的角落文字与图标资源；预期没有可见文字且自有完成图标引用已释放；检查 hud.visibleCornerTextCount=0 与 icon.addressableReferencesHeld=0，允许保留不活动的文字绑定。",
+        "记录进入锁定阶段后的弹窗去重写入；预期没有新增记录；检查 dedup.recordWrittenDuringLock=false，不要求抹除先前实际显示产生的记录。"
+      ],
+      "title": "实际布道后 sermon_lock 当日执行时业务状态可读但显示隐藏"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonLockRuleLastExecDay"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.visibleCornerTextCount"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.recordWrittenDuringLock"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "observation": "icon.addressableReferencesHeld",
+          "equals": 0
+        },
+        {
+          "observation": "phase.openRanToday",
+          "equals": true
+        },
+        {
+          "observation": "phase.sermonReadyRuleLastExecDay",
+          "equalsObservation": "save.absoluteDay"
+        }
+      ],
+      "id": "sermon-day-boundary-locked-missed-stale-ready-hidden",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "布道日当天未开启布道，sermon_lock 规则当日已执行，原生残留有限 sermon_ready>=1。",
+        "信标与弹窗开关均为开启。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读且门槛满足。",
+        "记录阶段日；预期 sermon_lock 当日已执行。",
+        "记录显示与提醒；预期隐藏、不合格、无新信标弹窗或新增去重记录，且不因残留 ready 恢复 Ready 或报故障。",
+        "读取已隐藏的角落文字与图标资源；预期没有可见文字且自有完成图标引用已释放；检查 hud.visibleCornerTextCount=0 与 icon.addressableReferencesHeld=0，允许保留不活动的文字绑定。",
+        "记录进入锁定阶段后的弹窗去重写入；预期没有新增记录；检查 dedup.recordWrittenDuringLock=false，不要求抹除先前实际显示产生的记录。"
+      ],
+      "title": "未开启或错过布道后 sermon_lock 当日执行且残留 ready>=1 时仍隐藏"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdownAfter": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "mode": "after-sermon-day"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligibleBeforeCrossing"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValueBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listReadAfterCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "sermon-day-boundary-next-day-after-locked-preached",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "布道日当天已实际布道，sermon_lock 当日已执行且显示隐藏。",
+        "跨日后绝对日 = 跨日前绝对日 + 1，跨日前星期编号等于观察到的 T。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前锁定阶段的阶段日、显示与原生 ready；预期已锁定、隐藏、不具备提醒资格且 ready<1。",
+        "推进到下一游戏日；预期状态回到非布道日并显示倒计时。",
+        "检查 dateCheck after-sermon-day 通过且跨日后不读取阶段列表。"
+      ],
+      "title": "实际布道并在 sermon_lock 后显示隐藏，次日回到下一次布道倒计时"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdownAfter": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "mode": "after-sermon-day"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligibleBeforeCrossing"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValueBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listReadAfterCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "sermon-day-boundary-next-day-after-locked-missed",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "布道日当天未实际布道，sermon_lock 当日已执行且显示隐藏，原生残留有限 ready>=1。",
+        "跨日后绝对日 = 跨日前绝对日 + 1，跨日前星期编号等于观察到的 T。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前锁定阶段的阶段日、显示与原生 ready；预期已锁定、隐藏、不具备提醒资格且残留 ready>=1。",
+        "推进到下一游戏日；预期状态回到非布道日并显示倒计时。",
+        "检查 dateCheck after-sermon-day 通过且跨日后不读取阶段列表。"
+      ],
+      "title": "错过布道并在 sermon_lock 后显示隐藏，次日回到下一次布道倒计时"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "observation": "phase.listPresent",
+          "equals": false
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        }
+      ],
+      "id": "sermon-day-boundary-gates-closed-no-phase-read",
+      "prerequisites": [
+        "当前存档的教堂任务尚未 Completed。",
+        "受控地使本次内存中的原生阶段规则列表不可用；记录实际方法，不保存此故障状态。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛不满足且状态可读。",
+        "观察显示；预期隐藏且不显示 Ready 或 Done。",
+        "记录阶段读取；预期未读取阶段列表且不报故障。"
+      ],
+      "title": "关闭解锁门槛时隐藏且完全不读取阶段列表"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "multi-day"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "observation": "phase.listPresent",
+          "equals": false
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        }
+      ],
+      "id": "sermon-day-boundary-offday-no-phase-read",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "当前非布道日且 (T - 当前星期编号 + 6) % 6 在 2..5。",
+        "受控地使本次内存中的原生阶段规则列表不可用；记录实际方法，不保存此故障状态。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读且为非布道日。",
+        "记录倒计时；预期显示多日倒计时且信标停用。",
+        "记录阶段读取；预期未读取阶段列表且不报故障。"
+      ],
+      "title": "非布道日显示倒计时且完全不读取阶段列表"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanTodayBeforeReload"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeReload"
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": false,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        }
+      ],
+      "id": "sermon-day-boundary-reload-rollback-preopen",
+      "prerequisites": [
+        "同一进程先前处于该布道日的锁定隐藏阶段。",
+        "存在同一绝对日的开启前存档（sermon_ready 与 sermon_lock 规则均未当日执行）。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录重载前阶段；预期已锁定且隐藏。",
+        "重载同一绝对日的开启前存档；预期识别为 reload。",
+        "记录重载后阶段与显示；预期开启前 Ready、不具备提醒资格、未沿用先前规则日期。"
+      ],
+      "title": "重载同日开启前存档后按该存档规则日期恢复 Ready 而非沿用先前锁定日期"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "switch-save",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "icon.spaceReservedWhenDone"
+        }
+      ],
+      "id": "sermon-day-boundary-switch-save-open-consumed",
+      "prerequisites": [
+        "存在存档 A：处于开启前阶段或不同阶段。",
+        "存在存档 B：同一布道日、开启窗口内且原生 ready<1（机会已消费）。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "从存档 A 切换到存档 B 并等待加载完成；预期识别为 switch-save。",
+        "记录切换后阶段；预期开启窗口且 sermon_lock 尚未当日执行、未沿用先前规则日期。",
+        "记录显示与资格；预期 Done、不具备提醒资格、预留完成图标空间。"
+      ],
+      "title": "切换到已消费机会的存档后按该存档规则日期显示 Done 而非沿用先前规则日期"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdown": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "mode": "cycle-wrap",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown",
+            "visible": "hud.visible"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligibleBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listReadAfterCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "sermon-day-boundary-cycle-wrap-after-locked",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "布道日当天 sermon_lock 当日已执行且显示隐藏；跨日前星期编号为 6、跨日后为 1、跨日后绝对日 = 跨日前绝对日 + 1。",
+        "读取真实布道日星期编号 T；本场景仅在实测 T 等于周期最后一天时执行，不修改或硬编码 day_wrath。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前锁定阶段的阶段日与显示；预期已锁定、隐藏且不具备提醒资格。",
+        "跨越六日周期边界并记录跨日后绝对日与星期编号（应为 1）。",
+        "读取跨日后倒计时可见性与整数天数；helper 按观察到的 T 推导期望值，且跨日后不读取阶段列表。"
+      ],
+      "title": "锁定阶段跨越六日周期边界时按观察到的 T 得到正确倒计时"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "restart",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        }
+      ],
+      "id": "sermon-day-boundary-restart-open-unconsumed",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "存在同一布道日、开启窗口内且原生 ready>=1（机会未消费）的存档。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "重启游戏进程并载入该存档；预期识别为 restart。",
+        "记录重启后阶段；预期开启窗口且 sermon_lock 尚未当日执行、未沿用先前规则日期。",
+        "记录显示与资格；预期 Ready、具备提醒资格且不显示完成图标。"
+      ],
+      "title": "进程重启后载入开启窗口未消费存档时按该存档规则日期显示 Ready 且合适提醒"
+    },
+    {
+      "category": "day-boundary",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": "reload",
+          "observation": "load.transition"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "icon.ownImagePresent"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "observation": "phase.openRanToday",
+          "equals": true
+        },
+        {
+          "observation": "phase.sermonReadyRuleLastExecDay",
+          "equalsObservation": "save.absoluteDay"
+        }
+      ],
+      "id": "sermon-day-boundary-reload-closed-snapshot",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed。",
+        "存在同一布道日、sermon_lock 规则当日已执行的存档，原生残留有限 ready>=1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "重载该锁定存档；预期识别为 reload。",
+        "记录重载后阶段；预期已锁定、不具备提醒资格、未沿用先前规则日期。",
+        "记录显示；预期隐藏且无完成图标且不报故障。"
+      ],
+      "title": "重载同一日锁定存档后按该存档规则日期显示隐藏而非沿用先前规则日期"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "missing-list",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listPresent"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-missing-list",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（缺失阶段列表）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "missing-rule",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "equals": false,
+          "observation": "phase.sermonReadyRulePresent"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-missing-rule",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（缺失必需阶段条目）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "duplicate-id",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "phase.sermonReadyRulePresent"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-duplicate-id",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（必需阶段 ID 重复）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "negative-day",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 0
+          },
+          "observation": "phase.sermonReadyRuleLastExecDay"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-negative-day",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（阶段执行日为负数）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "future-day",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "greaterThanObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDay"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-future-day",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（阶段执行日为未来）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "lock-newer-than-open",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "greaterThanObservation": "phase.sermonReadyRuleLastExecDay",
+          "observation": "phase.sermonLockRuleLastExecDay"
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-lock-newer-than-open",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "非法阶段输入（lock 执行日晚于 open 执行日）时不可读、抑制输出并按当前存档重新读取恢复"
+    },
+    {
+      "category": "phase-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": "null-rule",
+          "observation": "phase.invalidInputKind"
+        },
+        {
+          "observation": "phase.injectionRecorded",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.readableDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "phase.usedPreviousRuleDates"
+        },
+        {
+          "equals": true,
+          "observation": "phase.repairedFromFreshRead"
+        },
+        {
+          "equals": true,
+          "observation": "state.readableAfterRepair"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visibleAfterRepair"
+        },
+        {
+          "observation": "phase.nullEntryPresent",
+          "equals": true
+        }
+      ],
+      "id": "sermon-day-boundary-invalid-null-rule",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，且注入前已成功读取一次就绪状态。",
+        "该布道日修复后处于可显示阶段（开启前或开启窗口），因此修复后角落文字应重新可见。",
+        "信标与弹窗开关均为开启，以便核对输出被抑制。",
+        "操作者以受控方式在当前存档的原生游戏逻辑数据上构造该非法输入，并记录实际注入方法。",
+        "在规则列表中保留一个空条目，区别于移除条目造成必要规则缺失。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期门槛满足且已读取一次就绪状态。",
+        "注入受控非法阶段输入；预期状态不可读、显示与提醒输出被抑制且不沿用旧状态。",
+        "移除非法输入并按当前存档重新读取；预期恢复可读且未沿用旧状态。"
+      ],
+      "title": "原生阶段规则列表含空条目时不复用旧状态且可恢复"
+    }
+  ],
+  "schemaVersion": 2
+}

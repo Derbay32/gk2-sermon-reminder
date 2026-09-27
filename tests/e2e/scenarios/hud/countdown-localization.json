@@ -1,0 +1,84 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "en",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "notEquals": "en",
+          "observation": "language.active"
+        },
+        {
+          "observation": "hud.style.missingRenderedGlyphCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.materialAtlasMatchesFont",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.unsupportedOutlineAccessCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.nativeAssetsUnchanged",
+          "equals": true
+        }
+      ],
+      "id": "language-unsupported-fallback",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "游戏语言不是简体中文也不是英语。",
+        "相对日期条件：当前为非布道日，且 (T - 当前 + 6) % 6 ∈ 2..5（距离下一布道日大于 1 天）；读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday，取自 ConstDef.Get(\"day_wrath\").IntValue），不写死 T。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10",
+        "GKSA-29"
+      ],
+      "steps": [
+        "将游戏语言设为受支持之外的语言。",
+        "载入该存档并等待加载完成。",
+        "记录 save.absoluteDay（绝对日）、save.dayOfWeek（星期编号）与 save.sermonWeekday。",
+        "读取左上角时钟下方的倒计时文字与实际选用的文案键。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。",
+        "采集当前 HUD 文本的字形覆盖与渲染字符；预期所有非空白字符可见；检查 missingRenderedGlyphCount=0，不固定译文措辞。",
+        "检查实际字体与材质纹理；预期材质使用对应字体图集；检查 materialAtlasMatchesFont=true。",
+        "观察 HUD 稳定显示期间的 Unity 日志；预期没有模组引起的不支持描边属性访问；检查 unsupportedOutlineAccessCount=0。",
+        "对比显示前后的原生字体、材质与回退列表；预期共享资源未被模组修改；检查 nativeAssetsUnchanged=true。"
+      ],
+      "title": "游戏语言缺少译文时倒计时回退为英语"
+    }
+  ],
+  "schemaVersion": 2
+}

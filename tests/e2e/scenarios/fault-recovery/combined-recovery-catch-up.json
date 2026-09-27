@@ -1,0 +1,285 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "catch-up",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRechecked"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterFurtherTicks"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.duplicateNoticeCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "save.sermonProgressWriteCount"
+        },
+        {
+          "equals": false,
+          "observation": "state.nativeProgressModified"
+        }
+      ],
+      "id": "catch-up-shared-state-recovery-once-no-duplicate-ticks",
+      "phaseNote": "阶段含义：DuringFault=故障阶段正常弹窗累计显示次数、AfterRecovery=恢复后累计显示次数、AfterFurtherTicks=后续多帧累计显示次数；popup.newDisplaysAfterRecovery 为恢复区间增量。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "共享状态曾故障且恢复后仍为同一存档同一游戏日，开关开启、资源健康、安全门清空且尚未显示。",
+        "观察区间跨多个后续帧。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认故障阶段正常弹窗未显示；检查 popup.actualDisplaysBeforeRecovery=0。",
+        "恢复共享状态并重新建立合格条件；预期自动恢复且重查资格；检查 recovery.autoRecovered=true、state.readable=true、popup.eligibilityRechecked=true、popup.eligibleOnRecovery=true、ui.safetyGateClear=true、ui.playerControllable=true。",
+        "观察补发；预期恰好一次并写入去重；检查 popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=1、popup.recordAfterDisplay=true、popup.chanceConsumed=true。",
+        "跨后续多帧观察；预期不重复；检查 popup.actualDisplaysAfterFurtherTicks=1、notice.duplicateNoticeCount=0、notice.recoveryToastShown=false。",
+        "核对游戏布道进度未被修改；预期未修改；检查 save.sermonProgressWriteCount=0、state.nativeProgressModified=false。"
+      ],
+      "title": "共享状态恢复后在仍符合资格时补发一次且后续帧不重复"
+    },
+    {
+      "category": "catch-up",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByCornerFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "save.sermonProgressWriteCount"
+        },
+        {
+          "equals": false,
+          "observation": "state.nativeProgressModified"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        }
+      ],
+      "id": "catch-up-beacon-resource-recovery-once",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "信标通道曾故障且已显示一次信标类别故障消息。",
+        "恢复后仍为同一存档同一游戏日且角落与弹窗保持健康。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复信标资源；预期自动恢复且信标重新可见；检查 recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。",
+        "观察信标与弹窗；预期信标恢复且弹窗不被抑制；检查 beacon.suppressedByCornerFault=false、popup.suppressedByCornerFault=false。",
+        "确认游戏布道进度未被修改；预期未修改；检查 save.sermonProgressWriteCount=0、state.nativeProgressModified=false。",
+        "确认无恢复成功提示；预期无；检查 notice.recoveryToastShown=false、notice.successMessageShown=false。"
+      ],
+      "title": "信标资源恢复后在仍符合资格时恢复显示且不重复"
+    }
+  ],
+  "schemaVersion": 2
+}

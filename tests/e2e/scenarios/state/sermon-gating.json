@@ -1,0 +1,125 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "gates-church-quest-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 不是 Completed。",
+        "本场景验证 GKSA-11 复用 GKSA-10 的解锁门槛。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "在真实 Proton 环境加载完整模组并载入该存档。",
+        "等待存档加载完成并进入可操作画面。",
+        "记录两个门槛任务的完成状态与角落文字区域。"
+      ],
+      "title": "教堂开启任务未完成时不显示 Ready 或 Done"
+    },
+    {
+      "category": "gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "gates-sermon-quest-incomplete",
+      "prerequisites": [
+        "当前存档中任务 19_base_ceremony_church 为 Completed。",
+        "当前存档中任务 19_base_ceremony_sermon 不是 Completed。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。",
+        "记录两个门槛任务的完成状态与角落文字区域。"
+      ],
+      "title": "首次布道教学任务未完成时不显示 Ready 或 Done"
+    }
+  ],
+  "schemaVersion": 2
+}

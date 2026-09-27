@@ -1,0 +1,203 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.instanceCount"
+        }
+      ],
+      "id": "loading-menu-unload-hidden",
+      "prerequisites": [
+        "同一进程内至少有一个可载入的存档。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "返回主菜单观察是否存在残留文字。",
+        "再次载入存档过程中观察是否存在残留文字。",
+        "卸载存档返回菜单后观察显示实例数量。"
+      ],
+      "title": "主菜单、正常加载或卸载时隐藏文字"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.tutorialWasCompletedEarlier"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleTextFromPreviousSave"
+        }
+      ],
+      "id": "old-save-rollback",
+      "prerequisites": [
+        "同一进程先前已载入过教学已完成并显示倒计时的存档。",
+        "待载入的存档首次布道教学尚未完成。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在已显示倒计时的存档中确认文字存在。",
+        "载入教学未完成的旧存档并等待加载完成。",
+        "观察是否残留先前文字。"
+      ],
+      "title": "读取教学完成前旧存档后重新隐藏文字"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "save.previousSaveTutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "hud.textFromPreviousSavePresent"
+        }
+      ],
+      "id": "switch-saves",
+      "prerequisites": [
+        "存档 A：解锁与教学条件满足，显示倒计时。",
+        "存档 B：解锁条件满足但教学未完成。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "载入存档 A 并确认倒计时可见。",
+        "切换到存档 B 并等待加载完成。",
+        "观察是否按存档 B 隐藏且无旧文字残留。"
+      ],
+      "title": "切换存档后按目标存档重新判定且不残留旧文字"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": 1,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "localizedText": {
+            "daysObservation": "hud.countdownDays",
+            "keyObservation": "hud.textKey",
+            "keysAnyOf": [
+              "gksr.hud.sermonCountdown.one",
+              "gksr.hud.sermonCountdown.other"
+            ],
+            "language": "zh_cn"
+          },
+          "observation": "hud.text"
+        }
+      ],
+      "id": "hud-rebuild-uniqueness",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。",
+        "统计模组倒计时显示实例数量并读取文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "HUD 重建后重新绑定唯一显示实例"
+    },
+    {
+      "category": "lifecycle",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "hud.trackedResourcesReleased"
+        }
+      ],
+      "id": "exit-cleanup",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "当前为非布道日，倒计时可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在倒计时可见状态下退出存档返回主菜单。",
+        "统计模组显示实例数量并观察残留资源。"
+      ],
+      "title": "退出存档后清理模组显示实例"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,123 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "timing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.consumptionFrame"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.firstLateUpdateFrameAfterConsumption"
+        },
+        {
+          "equalsObservation": "timing.firstLateUpdateFrameAfterConsumption",
+          "observation": "timing.doneShownFrame"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.doneShownFrame"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "timing.framesUntilDone"
+        },
+        {
+          "greaterThanObservation": "timing.doneShownFrame",
+          "observation": "timing.animationEndFrame"
+        },
+        {
+          "equals": false,
+          "observation": "timing.animationFinishedWhenDoneShown"
+        },
+        {
+          "equals": false,
+          "observation": "timing.prematureDoneBeforeConsumption"
+        },
+        {
+          "equals": false,
+          "observation": "timing.waitedForAnimationEnd"
+        },
+        {
+          "equals": false,
+          "observation": "state.ownPersistenceWritten"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDay"
+        }
+      ],
+      "id": "consumption-before-animation-end",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），原生 sermon_ready >= 1（Ready 状态）。",
+        "可记录帧号与动画/奖励结束帧。正确处理允许消耗后第一个 LateUpdate 与消耗发生在同一帧。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录开始布道消耗机会的帧号 timing.consumptionFrame。",
+        "记录消耗后第一个 LateUpdate 帧号 timing.firstLateUpdateFrameAfterConsumption 与 Done 首次显示的帧号 timing.doneShownFrame。",
+        "记录动画结束帧 timing.animationEndFrame，确认它晚于 Done 显示帧。",
+        "确认消耗前未提前显示 Done，且 Done 显示时动画尚未结束；保留追踪日志以定位消耗→首个 LateUpdate→可见 Done。"
+      ],
+      "title": "开始布道消耗机会后在消耗后第一个 LateUpdate 内显示 Done 且早于动画结束"
+    }
+  ],
+  "schemaVersion": 2
+}

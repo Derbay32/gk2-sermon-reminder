@@ -1,0 +1,264 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "gksr.status.reminderUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        },
+        {
+          "equals": false,
+          "observation": "notice.titlePresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.iconPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.confirmControlPresent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeLifetime"
+        },
+        {
+          "equals": true,
+          "observation": "notice.autoDismiss"
+        }
+      ],
+      "id": "notice-copy-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "确认无标题无图标无确认控件且沿用原生时长与自动消失。预期：全部满足。检查：notice.titlePresent=false 且 notice.nativeLifetime=true。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化状态读取故障消息并保持无标题无图标"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "gksr.status.reminderUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        },
+        {
+          "equals": false,
+          "observation": "notice.titlePresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.iconPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.confirmControlPresent"
+        }
+      ],
+      "id": "notice-copy-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "确认无标题无图标无确认控件。预期：全部满足。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化状态读取故障消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "notEquals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "notEquals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "notice-fallback-unsupported-language",
+      "prerequisites": [
+        "游戏语言不是简体中文也不是英语。",
+        "存档加载完成后必要状态读取故障已使状态读取类别消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "把游戏语言设为受支持之外的语言。预期：确为非受支持语言。检查：language.active 不等于 zh_cn 与 en。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "缺少当前语言译文的消息回退为英语"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "corner-hud",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.hudUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-notice-copy-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "角落文字组件故障已使角落文字类别消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在简体中文下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
+        "确认两个类别独立。预期：状态读取类别为零。检查：notice.stateReadDisplayedCount=0。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化角落文字故障消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.hudUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "corner-hud-notice-copy-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "角落文字组件故障已使角落文字类别消息实际显示。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在英语下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
+        "确认沿用原生无标题无图标形式。预期：全部满足。检查：notice.titlePresent=false 且 notice.iconPresent=false。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化角落文字故障消息"
+    }
+  ],
+  "schemaVersion": 2
+}

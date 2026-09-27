@@ -1,0 +1,140 @@
+{
+  "capturePurpose": "example",
+  "captureVersion": 2,
+  "environment": {
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "bepinex.version": "5.4.23.5",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "evidenceFiles": {
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/beacon-eligible-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/beacon-off-corner-text-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/beacon-slot-native-compare.png": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.sermonWeekday": 2,
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "game.version": "REPLACE",
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "plugin.loaded": true,
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "proton.version": "REPLACE",
+    "resolution.height": 1080,
+    "resolution.width": 1920,
+    "uiScale": 1.0
+  },
+  "kind": "gksr-e2e-capture",
+  "manifestId": "gksr-full-mod",
+  "manifestSha256": "84c0767dc6aea1803448137bd4a22f8e769b11701e6186d211c5f42c4f27d257",
+  "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
+  "observations": {
+    "beacon-eligible-sermon-day-unconsumed": {
+      "beacon.componentAvailable": true,
+      "beacon.enabled": true,
+      "beacon.iconAvailable": true,
+      "beacon.targetAvailable": true,
+      "beacon.underNativeHud": true,
+      "beacon.visibleNormal": true,
+      "hud.textKey": "gksr.hud.sermonReminder",
+      "hud.visible": true,
+      "native.hudVisibleNormal": true,
+      "save.absoluteDay": 8,
+      "save.churchUnlocked": true,
+      "save.dayOfWeek": 2,
+      "save.daysInWeek": 6,
+      "save.isSermonDay": true,
+      "save.sermonWeekday": 2,
+      "save.tutorialCompleted": true,
+      "settings.beacon.enabled": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 1
+    },
+    "beacon-off-keeps-corner-text": {
+      "beacon.enabled": false,
+      "hud.text": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "hud.textKey": "gksr.hud.sermonReminder",
+      "hud.visible": true,
+      "i18n.hud.text.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.hud.text.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.hud.text.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "language.active": "zh_cn",
+      "save.isSermonDay": true,
+      "save.sermonWeekday": 2,
+      "settings.beacon.enabled": false,
+      "state.readable": true,
+      "state.sermonReadyValue": 1
+    },
+    "beacon-slot-and-pointer-match-native": {
+      "beacon.effectiveTargetId": "REPLACE_WITH_OBSERVED_EFFECTIVE_TARGET",
+      "beacon.enabled": true,
+      "beacon.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID",
+      "beacon.slotHeightLocal": 36,
+      "beacon.slotWidthLocal": 40,
+      "native.pointerSpriteId": "REPLACE_WITH_OBSERVED_NATIVE_POINTER_ID",
+      "native.referenceTargetId": "REPLACE_WITH_OBSERVED_EFFECTIVE_TARGET",
+      "native.slotHeightLocal": 36,
+      "native.slotWidthLocal": 40,
+      "save.sermonWeekday": 2
+    }
+  },
+  "results": [
+    {
+      "evidence": {
+        "screenshot": "screenshots/beacon-eligible-zh.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE with the observed run note; never mark an unexecuted scenario as passed.",
+        "values": {
+          "beacon.slotHeightLocal": 36,
+          "beacon.slotWidthLocal": 40
+        }
+      },
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "beacon-eligible-sermon-day-unconsumed",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/beacon-off-corner-text-zh.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE: beacon hidden while corner reminder text stays visible."
+      },
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "beacon-off-keeps-corner-text",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/beacon-slot-native-compare.png"
+      },
+      "measurement": {
+        "operatorObservation": "REPLACE: measure the ACTUAL OWNED iconImage.rectTransform.sizeDelta AFTER native Draw and compare it with the untouched original native prefab slot in LOCAL units, not cached source dimensions, for the same effective target.",
+        "values": {
+          "beacon.slotHeightLocal": 36,
+          "beacon.slotWidthLocal": 40,
+          "native.slotHeightLocal": 36,
+          "native.slotWidthLocal": 40
+        }
+      },
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "beacon-slot-and-pointer-match-native",
+      "status": "unexecuted"
+    }
+  ],
+  "unexecuted": true
+}

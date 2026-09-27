@@ -1,0 +1,165 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "pending",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.pendingBefore"
+        },
+        {
+          "equals": false,
+          "observation": "hud.liveNativeHudPresentBefore"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visibleBefore"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reportedBefore"
+        },
+        {
+          "equals": false,
+          "observation": "hud.pendingAfter"
+        },
+        {
+          "equals": true,
+          "observation": "hud.liveNativeHudPresentAfter"
+        },
+        {
+          "equals": true,
+          "observation": "hud.displayEligibleAfter"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nativeHudAppearedAfterLoad"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "log.cornerHudChannelPresent"
+        }
+      ],
+      "id": "normal-load-hud-pending-no-fault",
+      "phaseNote": "本场景明确分两个阶段：待定阶段（原生 HUD 未出现）与已出现阶段（加载完成）。先前版本用当前字段混用两阶段，此处改为阶段专用键。",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "处于正常加载过程且原生 HUD 尚未出现。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "记录加载中的原生 HUD 阶段。预期：待定而非故障。检查：hud.pendingBefore=true 且 hud.liveNativeHudPresentBefore=false。",
+        "等待加载完成并记录原生 HUD 已出现阶段。预期：原生 HUD 自然出现、受影响显示具备条件且无故障报告。检查：hud.liveNativeHudPresentAfter=true 且 hud.displayEligibleAfter=true。"
+      ],
+      "title": "正常加载期间原生 HUD 尚未出现属于待定而非故障"
+    },
+    {
+      "category": "pending",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "hud.liveNativeHudPresent"
+        },
+        {
+          "equals": false,
+          "observation": "hud.pending"
+        },
+        {
+          "equals": true,
+          "observation": "hud.livePhaseObserved"
+        },
+        {
+          "equals": false,
+          "observation": "hud.requiredCornerResourcePresent"
+        },
+        {
+          "equals": true,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        }
+      ],
+      "id": "live-hud-missing-component-failure",
+      "phaseNote": "活动绑定失败无需先观察到 Pending 阶段，因此不再要求 hud.pendingPhaseObserved。",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "原生 HUD 已在运行中存在。",
+        "测试辅助可用：使必需角落组件缺失。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待原生 HUD 出现。预期：已存在阶段且非待定。检查：hud.liveNativeHudPresent=true 且 hud.pending=false。",
+        "注入必需角落组件缺失。预期：判为故障并显示角落文字类别消息一次。检查：fault.reported=true 且 notice.cornerHudDisplayedCount=1。"
+      ],
+      "title": "HUD 已存在但缺少必需组件属于故障"
+    },
+    {
+      "category": "pending",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "log.cornerHudChannelPresent"
+        }
+      ],
+      "id": "native-hud-natural-hide-no-fault",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "打开菜单或触发原生 HUD 正常隐藏。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：已存在阶段。检查：hud.livePhaseObserved=true。",
+        "使原生 HUD 按原生规则自然隐藏。预期：不误报故障。检查：fault.reported=false 且 notice.totalDisplayedCount=0。"
+      ],
+      "title": "原生 HUD 正常隐藏时不误报角落文字故障"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,107 @@
+{
+  "capturePurpose": "example",
+  "captureVersion": 2,
+  "environment": {
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "bepinex.version": "5.4.23.5",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "evidenceFiles": {
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/church-locked.png": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.sermonWeekday": 2,
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "game.version": "REPLACE",
+    "inputDevices": [
+      "keyboard",
+      "mouse"
+    ],
+    "os": "CachyOS x86-64",
+    "plugin.loaded": true,
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "proton.version": "REPLACE",
+    "resolution.height": 1080,
+    "resolution.width": 1920,
+    "uiScale": 1.0
+  },
+  "kind": "gksr-e2e-capture",
+  "manifestId": "gksr-full-mod",
+  "manifestSha256": "84c0767dc6aea1803448137bd4a22f8e769b11701e6186d211c5f42c4f27d257",
+  "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
+  "observations": {
+    "church-locked": {
+      "hud.visible": false,
+      "language.active": "zh_cn",
+      "save.churchUnlocked": false
+    },
+    "countdown-one-day-zh": {
+      "hud.countdownDays": 1,
+      "hud.text": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "hud.visible": true,
+      "i18n.hud.text.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.hud.text.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.hud.text.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "language.active": "zh_cn",
+      "save.absoluteDay": 7,
+      "save.dayOfWeek": 1,
+      "save.daysInWeek": 6,
+      "save.sermonWeekday": 2
+    },
+    "cycle-wrap": {
+      "hud.countdownDays": 1,
+      "hud.text": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "hud.textKey": "gksr.hud.sermonCountdown.one",
+      "hud.visible": true,
+      "i18n.hud.text.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.hud.text.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.hud.text.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "save.absoluteDayAfter": 13,
+      "save.absoluteDayBefore": 12,
+      "save.dayOfWeek": 1,
+      "save.daysInWeek": 6,
+      "save.priorDayOfWeek": 6,
+      "save.sermonWeekday": 2
+    }
+  },
+  "results": [
+    {
+      "evidence": {
+        "screenshot": "screenshots/church-locked.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed.",
+      "scenarioId": "church-locked",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/countdown-one-day-zh.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "countdown-one-day-zh",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/cycle-wrap.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "cycle-wrap",
+      "status": "unexecuted"
+    }
+  ],
+  "unexecuted": true
+}

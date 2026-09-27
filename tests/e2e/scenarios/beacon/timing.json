@@ -1,0 +1,192 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "timing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "done.iconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "done.presentationHealthy"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.consumptionFrame"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.firstLateUpdateFrameAfterConsumption"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.beaconClearedFrame"
+        },
+        {
+          "equalsObservation": "timing.firstLateUpdateFrameAfterConsumption",
+          "observation": "timing.beaconClearedFrame"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "timing.framesUntilBeaconCleared"
+        },
+        {
+          "greaterThanObservation": "timing.beaconClearedFrame",
+          "observation": "timing.animationEndFrame"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "beacon-cleared-first-lateupdate-after-consumption",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生 sermon_ready >= 1（Ready 状态，信标显示）。",
+        "Done 文字与图标资源均健康可用（done.iconAvailable=true 且 done.presentationHealthy=true）。",
+        "可记录帧号与动画/奖励结束帧。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "记录开始布道消耗机会的帧号；预期消耗发生；检查 timing.consumptionFrame >= 0。",
+        "记录消耗后首个 LateUpdate 帧号；预期存在且不早于消耗帧；检查 timing.firstLateUpdateFrameAfterConsumption >= timing.consumptionFrame。",
+        "记录信标清除帧号；预期与首个 LateUpdate 同帧（允许同帧）；检查 timing.beaconClearedFrame 等于 timing.firstLateUpdateFrameAfterConsumption。",
+        "核对 Done 角落文字；预期信标清除后 Done 仍可见；检查 hud.textKey=gksr.hud.sermonDone 且 hud.visible=true。"
+      ],
+      "title": "开始布道消耗机会后在消耗后第一个 LateUpdate 内清除信标且保留 Done 文字"
+    },
+    {
+      "category": "timing",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "maxExclusive": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "done.iconPending"
+        },
+        {
+          "equals": false,
+          "observation": "done.iconFailed"
+        },
+        {
+          "equals": false,
+          "observation": "done.iconAvailable"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.consumptionFrame"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.firstLateUpdateFrameAfterConsumption"
+        },
+        {
+          "integerGreaterThan": -1,
+          "observation": "timing.beaconClearedFrame"
+        },
+        {
+          "equalsObservation": "timing.firstLateUpdateFrameAfterConsumption",
+          "observation": "timing.beaconClearedFrame"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "timing.framesUntilBeaconCleared"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.enabled"
+        },
+        {
+          "equals": true,
+          "observation": "done.textSuppressedWhileUnhealthy"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "beacon-cleared-first-lateupdate-done-icon-pending",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天，原生 sermon_ready >= 1（Ready 状态，信标显示）。",
+        "测试设施可受控使 Done 图标加载处于待定（done.iconPending=true 且 done.iconFailed=false）。"
+      ],
+      "profileId": "church-beacon",
+      "requirements": [
+        "GKSA-12"
+      ],
+      "steps": [
+        "注入 Done 图标待定；预期图标处于待定且未失败；检查 done.iconPending=true 与 done.iconFailed=false。",
+        "在待定状态下开始布道并消耗机会；预期机会被消耗；检查 timing.consumptionFrame>=0 且 state.sermonReadyValue<1。",
+        "记录消耗后首个 LateUpdate 帧号与信标清除帧号；预期均为非负整数且同帧（允许同帧）；检查 timing.firstLateUpdateFrameAfterConsumption>=timing.consumptionFrame、timing.beaconClearedFrame 等于 timing.firstLateUpdateFrameAfterConsumption 且 timing.framesUntilBeaconCleared 在 0..1。",
+        "核对 Done 呈现；预期图标不健康时整个 Done 呈现被抑制且业务状态可读；检查 done.textSuppressedWhileUnhealthy=true、done.iconAvailable=false、hud.visible=false 与 state.readable=true。",
+        "确认本场景选定的逻辑状态仍为 Done；预期状态为 Done；检查 state.sermonReadyValue<1。"
+      ],
+      "title": "Done 图标待定时信标仍在消耗后首个 LateUpdate 清除且 Done 仍被抑制"
+    }
+  ],
+  "schemaVersion": 2
+}

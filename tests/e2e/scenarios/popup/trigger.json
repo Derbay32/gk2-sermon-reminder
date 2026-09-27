@@ -1,0 +1,384 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "zh_cn"
+          },
+          "observation": "popup.titleText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.body",
+            "language": "zh_cn"
+          },
+          "observation": "popup.bodyText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "zh_cn"
+          },
+          "observation": "popup.confirmLabel"
+        },
+        {
+          "equals": true,
+          "observation": "popup.stayedUntilConfirmed"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        }
+      ],
+      "id": "popup-shown-when-enabled",
+      "prerequisites": [
+        "存档满足教堂与教学两个精确门槛。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且原生 sermon_ready 大于等于 1。",
+        "弹窗开关为开启，游戏语言为简体中文。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13",
+        "GKSA-30"
+      ],
+      "steps": [
+        "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "载入已就绪的布道日存档；预期进入可操作画面且资格满足；检查门槛、state.sermonReadyValue 与 settings.popupEnabled。",
+        "读取语言与弹窗内容；预期显示一次简体中文弹窗；检查 popup.shown、popup.displayCountWithinLoad、popup.titleText/bodyText/confirmLabel。",
+        "不进行任何输入并观察；预期弹窗保持；检查 popup.stayedUntilConfirmed 为 true。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "满足全部门槛且开关开启时在可操作画面显示一次简体中文弹窗"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "en"
+          },
+          "observation": "popup.titleText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.body",
+            "language": "en"
+          },
+          "observation": "popup.bodyText"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "en"
+          },
+          "observation": "popup.confirmLabel"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        }
+      ],
+      "id": "popup-shown-en",
+      "prerequisites": [
+        "存档满足教堂与教学两个精确门槛。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且原生 sermon_ready 大于等于 1。",
+        "弹窗开关为开启，游戏语言为英语。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13",
+        "GKSA-30"
+      ],
+      "steps": [
+        "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "载入已就绪的布道日存档并进入可操作画面；预期弹窗按英文显示一次；检查 language.active 为 en 与 popup.displayCountWithinLoad 为 1。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "满足全部门槛且开关开启时显示一次英文弹窗"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.crossedIntoASermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityCheckedOnCrossing"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        }
+      ],
+      "id": "popup-cross-into-sermon-day",
+      "prerequisites": [
+        "存档满足两个门槛且弹窗开关为开启，当前处于布道日前一天。",
+        "跨入布道日后的资格评估处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），跨入前后原生 sermon_ready 均大于等于 1。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13",
+        "GKSA-30"
+      ],
+      "steps": [
+        "在布道日前一天进入可操作画面；预期不出现弹窗；检查 popup.shown 为 false。",
+        "正常度过跨日进入布道日；预期跨日并检查资格；检查 save.crossedIntoASermonDay 与 popup.eligibilityCheckedOnCrossing。",
+        "进入可操作画面并观察；预期显示一次弹窗；检查 popup.shown 为 true 且 popup.displayCountWithinLoad 为 1。"
+      ],
+      "title": "正常游玩跨入布道日时检查资格并显示一次弹窗"
+    },
+    {
+      "category": "trigger",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.midLoadIntoASermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityCheckedOnLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 1,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        }
+      ],
+      "id": "popup-mid-load-sermon-day",
+      "prerequisites": [
+        "存档满足两个门槛且弹窗开关为开启。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）机会未消费状态，本进程尚未提示该保存槽该具体游戏日。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13",
+        "GKSA-30"
+      ],
+      "steps": [
+        "确认载入前该槽该日尚无去重记录；预期无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在布道日中途载入该存档；预期载入时检查资格；检查 save.midLoadIntoASermonDay 与 popup.eligibilityCheckedOnLoad。",
+        "进入可操作画面并观察；预期显示一次弹窗；检查 popup.shown 与 popup.displayCountWithinLoad。"
+      ],
+      "title": "中途载入布道日存档且本进程未提示该槽该日时显示一次弹窗"
+    }
+  ],
+  "schemaVersion": 2
+}

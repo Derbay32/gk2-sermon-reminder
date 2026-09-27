@@ -1,0 +1,1981 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "state-read",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.reminderUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-state-read-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使状态读取类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为状态读取类别；检查 notice.category=state-read。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化状态读取不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "state-read",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.reminderUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-state-read-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使状态读取类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为状态读取类别；检查 notice.category=state-read。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化状态读取不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.hudUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-corner-hud-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使角落文字类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为角落文字类别；检查 notice.category=corner-hud。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化角落文字不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.hudUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-corner-hud-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使角落文字类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为角落文字类别；检查 notice.category=corner-hud。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化角落文字不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "beacon",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.beaconUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.beaconUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-beacon-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使信标类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为信标类别；检查 notice.category=beacon。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化信标不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "beacon",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.beaconUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.beaconUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-beacon-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使信标类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为信标类别；检查 notice.category=beacon。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化信标不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "popup",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.popupUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.popupUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-popup-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使正常弹窗类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为正常弹窗类别；检查 notice.category=popup。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化正常弹窗不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "popup",
+          "observation": "notice.category"
+        },
+        {
+          "equals": "gksr.status.popupUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.popupUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-status-copy-popup-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使正常弹窗类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取消息所属类别与语义键；预期为正常弹窗类别；检查 notice.category=popup。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化正常弹窗不可用消息"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "state-read",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.reminderUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.reminderUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-state-read-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使状态读取类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为状态读取类别；检查 log.userFacingDiagnosticCategory=state-read、log.userFacingDiagnosticKey=gksr.diagnostics.reminderUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化状态读取诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "state-read",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.reminderUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.reminderUnavailable",
+            "language": "en"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-state-read-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使状态读取类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为状态读取类别；检查 log.userFacingDiagnosticCategory=state-read、log.userFacingDiagnosticKey=gksr.diagnostics.reminderUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化状态读取诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.hudUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.hudUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-corner-hud-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使角落文字类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为角落文字类别；检查 log.userFacingDiagnosticCategory=corner-hud、log.userFacingDiagnosticKey=gksr.diagnostics.hudUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化角落文字诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "hud.dependentPresentationSuppressed"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "corner-hud",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.hudUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.hudUnavailable",
+            "language": "en"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-corner-hud-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使角落文字类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为角落文字类别；检查 log.userFacingDiagnosticCategory=corner-hud、log.userFacingDiagnosticKey=gksr.diagnostics.hudUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化角落文字诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "beacon",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.beaconUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.beaconUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-beacon-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使信标类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为信标类别；检查 log.userFacingDiagnosticCategory=beacon、log.userFacingDiagnosticKey=gksr.diagnostics.beaconUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化信标诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "beacon",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.beaconUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.beaconUnavailable",
+            "language": "en"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-beacon-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使信标类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为信标类别；检查 log.userFacingDiagnosticCategory=beacon、log.userFacingDiagnosticKey=gksr.diagnostics.beaconUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化信标诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "equals": "popup",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.popupUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.popupUnavailable",
+            "language": "zh_cn"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-popup-zh",
+      "prerequisites": [
+        "游戏语言为简体中文。",
+        "已通过受控故障使正常弹窗类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为正常弹窗类别；检查 log.userFacingDiagnosticCategory=popup、log.userFacingDiagnosticKey=gksr.diagnostics.popupUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "简体中文使用本地化正常弹窗诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": "en",
+          "observation": "language.active"
+        },
+        {
+          "equals": "popup",
+          "observation": "log.userFacingDiagnosticCategory"
+        },
+        {
+          "equals": "gksr.diagnostics.popupUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "notEqualsObservation": "notice.textKey",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.popupUnavailable",
+            "language": "en"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-diagnostics-popup-en",
+      "prerequisites": [
+        "游戏语言为英语。",
+        "已通过受控故障使正常弹窗类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取诊断所属类别与语义键；预期为正常弹窗类别；检查 log.userFacingDiagnosticCategory=popup、log.userFacingDiagnosticKey=gksr.diagnostics.popupUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "英语使用本地化正常弹窗诊断说明"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cht",
+          "observation": "language.active"
+        },
+        {
+          "equals": "gksr.status.beaconUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.beaconUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-zh-cht-falls-back-english-status",
+      "prerequisites": [
+        "游戏语言设为繁体中文（原生语言码 zh_cht）。",
+        "受控故障已使信标类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取原始语言标识；预期为繁体中文原生码；检查 language.active=zh_cht。",
+        "确认回退不改变语义键；预期键不变；检查 notice.textKey=gksr.status.beaconUnavailable。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "繁体中文的状态故障消息使用英语文案"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "notEquals": "zh_cn",
+          "observation": "language.active"
+        },
+        {
+          "notEquals": "en",
+          "observation": "language.active"
+        },
+        {
+          "notEquals": "zh_cht",
+          "observation": "language.active"
+        },
+        {
+          "equals": "gksr.status.popupUnavailable",
+          "observation": "notice.textKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.status.popupUnavailable",
+            "language": "en"
+          },
+          "observation": "notice.text"
+        }
+      ],
+      "id": "localization-other-unsupported-language-falls-back-english-status",
+      "prerequisites": [
+        "游戏语言为简体中文与英语之外的原生语言（例如 fr）。",
+        "受控故障已使正常弹窗类别故障消息实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "把游戏语言设为受支持之外的语言；预期确为非 zh_cn、非 en、非 zh_cht；检查 language.active 不等于 zh_cn、en、zh_cht。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "其他非 zh_cn 非 en 语言的状态消息回退为英语"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": "zh_cht",
+          "observation": "language.active"
+        },
+        {
+          "equals": "gksr.diagnostics.beaconUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.diagnostics.beaconUnavailable",
+            "language": "en"
+          },
+          "observation": "log.userFacingDiagnostic"
+        }
+      ],
+      "id": "localization-zh-cht-falls-back-english-diagnostics",
+      "prerequisites": [
+        "游戏语言设为繁体中文（原生语言码 zh_cht）。",
+        "受控故障已使信标类别故障出现并按设计记录用户可见诊断。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "读取原始语言标识；预期为繁体中文原生码；检查 language.active=zh_cht。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
+      ],
+      "title": "繁体中文的诊断说明使用英语文案"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "notice.pausedGame"
+        },
+        {
+          "equals": false,
+          "observation": "notice.inputCapture"
+        },
+        {
+          "equals": false,
+          "observation": "notice.titlePresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.iconPresent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.confirmControlPresent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeLocation"
+        },
+        {
+          "equals": true,
+          "observation": "notice.styleInherited"
+        },
+        {
+          "equals": true,
+          "observation": "notice.nativeLifetime"
+        },
+        {
+          "equals": true,
+          "observation": "notice.autoDismiss"
+        }
+      ],
+      "id": "localization-fault-notices-nonblocking-native-form",
+      "prerequisites": [
+        "四类故障消息均已实际显示，游戏处于可操作画面。",
+        "观察区间覆盖至少两类故障消息的实际显示。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "记录暂停与输入占用；预期非阻塞；检查 notice.pausedGame=false、notice.inputCapture=false。",
+        "记录标题、图标与确认控件；预期均不存在；检查 notice.titlePresent=false、notice.iconPresent=false、notice.confirmControlPresent=false。",
+        "记录位置、样式、时长与自动消失；预期沿用原生行为；检查 notice.nativeLocation=true、notice.styleInherited=true、notice.nativeLifetime=true、notice.autoDismiss=true。"
+      ],
+      "title": "四类故障消息均为非阻塞且无标题无确认的原生形式"
+    },
+    {
+      "category": "localization",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceAbsentAtStart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "pause.usedNativePause"
+        },
+        {
+          "equals": false,
+          "observation": "pause.timeScaleChangedByMod"
+        },
+        {
+          "equals": false,
+          "observation": "pause.unpauseAllInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "input.gameplayInputLeakedDuringPopup"
+        },
+        {
+          "equals": false,
+          "observation": "input.playerMovedDuringPopup"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "pause.otherPauseStillActive"
+        }
+      ],
+      "id": "localization-normal-popup-preserves-native-input-pause",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关开启。",
+        "场景开始时不存在其他暂停来源，用于验证关闭后不残留暂停。",
+        "正常弹窗实际显示并随后关闭。",
+        "本场景仅复核弹窗的输入与原生暂停行为。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认开始时无其他暂停来源并显示正常弹窗；预期使用原生暂停且不改写时间缩放；检查 pause.otherPauseSourceAbsentAtStart=true、popup.pausedWhileShown=true、pause.usedNativePause=true、pause.timeScaleChangedByMod=false、pause.unpauseAllInvoked=false。",
+        "显示期间记录输入；预期不泄漏游戏操作输入且玩家不移动；检查 input.gameplayInputLeakedDuringPopup=false、input.playerMovedDuringPopup=false。",
+        "用原生输入关闭后记录输入恢复；预期恢复且不残留暂停；检查 input.gameplayInputRestoredAfterClose=true、pause.otherPauseStillActive=false。"
+      ],
+      "title": "正常弹窗沿用 GKSA13 的输入处理与原生暂停规则"
+    }
+  ],
+  "schemaVersion": 2
+}

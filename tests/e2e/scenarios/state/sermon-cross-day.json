@@ -1,0 +1,296 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "cross-day",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdownAfter": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "language": "zh_cn",
+            "mode": "after-sermon-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
+          "observation": "hud.textBefore"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spaceReservedWhenCountdown"
+        },
+        {
+          "equals": false,
+          "observation": "icon.phantomGapCountdown"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayBeforeCrossing"
+        }
+      ],
+      "id": "next-day-after-done",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于开启窗口内的 Done 状态（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）。",
+        "跨日前星期编号等于观察到的 T。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前 Done 文字与跨日后绝对日、星期编号、倒计时与文字。",
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "已布道跨日后回到下一次布道的 5 天倒计时"
+    },
+    {
+      "category": "cross-day",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdownAfter": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "language": "zh_cn",
+            "mode": "after-sermon-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKeyBefore"
+        },
+        {
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
+          "observation": "hud.textBefore"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanTodayBeforeCrossing"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanTodayBeforeCrossing"
+        }
+      ],
+      "id": "next-day-after-missed",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日当天处于开启窗口且未开始布道（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行，原生 ready>=1）。",
+        "跨日前星期编号等于观察到的 T。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录跨日前 Ready 文字与跨日后绝对日、星期编号、倒计时与文字。",
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "错过布道跨日后同样回到下一次布道的 5 天倒计时"
+    },
+    {
+      "category": "cross-day",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDayAfter": "save.absoluteDayAfter",
+            "absoluteDayBefore": "save.absoluteDayBefore",
+            "countdown": "hud.countdownDays",
+            "dayOfWeekAfter": "save.dayOfWeek",
+            "dayOfWeekBefore": "save.priorDayOfWeek",
+            "language": "zh_cn",
+            "mode": "cycle-wrap",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown",
+            "text": "hud.text",
+            "textKey": "hud.textKey",
+            "visible": "hud.visible"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": 6,
+          "observation": "save.daysInWeek"
+        },
+        {
+          "equals": true,
+          "observation": "save.dayAdvanced"
+        }
+      ],
+      "id": "six-day-wrap-after-sermon",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "跨日前星期编号为 6、跨日后为 1、跨日后绝对日 = 跨日前绝对日 + 1。",
+        "读取真实布道日星期编号 T（save.sermonWeekday，必须等于环境 game.sermonWeekday）；T 可为任意值，不写死 T。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "记录跨日前绝对日与星期编号（应为 6）、跨日后绝对日与星期编号（应为 1）。",
+        "记录跨日后倒计时可见性、整数天数与文字；helper 按观察到的 T 推导期望值。",
+        "在倒计时可见时记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "在倒计时可见时读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "跨越六日周期边界（周 6→周 1）时按观察到的 T 得到正确状态"
+    },
+    {
+      "category": "cross-day",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "countdown": "hud.countdownDays",
+            "dayOfWeek": "save.dayOfWeek",
+            "language": "zh_cn",
+            "mode": "multi-day",
+            "text": "hud.text",
+            "textKey": "hud.textKey"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": false,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.staleNativeReadyFlag"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "hud.nonSermonCountdownShown"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "stale-ready-flag-nonsermon-day",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "刚跨过布道日进入非布道日，原生 ready 标志仍 >= 1。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "记录当前星期编号、绝对日与原生 ready 数值。",
+        "确认角落显示的是非布道日倒计时而不是 Ready。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "非布道日残留原生 ready 标志不得保持 Ready"
+    }
+  ],
+  "schemaVersion": 2
+}

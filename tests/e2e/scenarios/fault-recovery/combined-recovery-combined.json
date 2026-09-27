@@ -1,0 +1,666 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "combined",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByPopupFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 2,
+            "min": 2
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "combined-beacon-popup-independent",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "各受影响通道的故障由测试设施分别独立注入。",
+        "操作者记录各通道的实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "分别注入信标与弹窗故障；预期两者独立；检查 beacon.visibleDuringFault=false、popup.available=false。",
+        "在局部故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期角落仍可见；检查 corner.visibleAtSafeUi=true、popup.suppressedByBeaconFault=false、beacon.suppressedByPopupFault=false。",
+        "观察类别计数；预期信标与弹窗各显示一次故障消息；检查 notice.beaconDisplayedCount=1、notice.popupDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.totalDisplayedCount=2。"
+      ],
+      "title": "信标与弹窗独立故障时各自故障消息显示一次且互不抑制"
+    },
+    {
+      "category": "combined",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 2,
+            "min": 2
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "combined-corner-beacon-independent",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "各受影响通道的故障由测试设施分别独立注入。",
+        "操作者记录各通道的实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在首个正常弹窗机会前保持普通安全门；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在清空安全门前分别注入角落与信标故障；预期两者独立；检查 corner.visibleDuringFault=false、beacon.visibleDuringFault=false、beacon.suppressedByCornerFault=false。",
+        "清空安全门；预期不受影响且合格的正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1。",
+        "用原生输入关闭自有正常弹窗；预期关闭；检查 popup.closedWithNativeInput=true。",
+        "观察类别计数；预期角落与信标各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=1、notice.popupDisplayedCount=0、notice.totalDisplayedCount=2。"
+      ],
+      "title": "角落与信标独立故障时各自故障消息显示一次且互不抑制"
+    },
+    {
+      "category": "combined",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByCornerFault"
+        },
+        {
+          "equals": false,
+          "observation": "corner.suppressedByPopupFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 2,
+            "min": 2
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "combined-corner-popup-independent",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "各受影响通道的故障由测试设施分别独立注入。",
+        "操作者记录各通道的实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "分别注入角落与弹窗故障；预期两者独立；检查 corner.visibleDuringFault=false、popup.available=false。",
+        "在局部故障仍存在且原生 HUD 可见的安全时机观察健康通道；预期信标仍可见；检查 beacon.visibleAtSafeUi=true、popup.suppressedByCornerFault=false、corner.suppressedByPopupFault=false。",
+        "观察类别计数；预期角落与弹窗各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.popupDisplayedCount=1、notice.beaconDisplayedCount=0、notice.totalDisplayedCount=2。"
+      ],
+      "title": "角落与弹窗独立故障时各自故障消息显示一次且互不抑制"
+    },
+    {
+      "category": "combined",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "corner.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": false,
+          "observation": "corner.suppressedByBeaconFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 3,
+            "min": 3
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "combined-all-independent-displays",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "各受影响通道的故障由测试设施分别独立注入。",
+        "操作者记录各通道的实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "分别注入角落、信标与弹窗故障；预期三者独立；检查 corner.visibleDuringFault=false、beacon.visibleDuringFault=false、popup.available=false。",
+        "观察健康通道；预期不依赖共享状态的健康通道保持；检查 state.readable=true、popup.suppressedByBeaconFault=false、corner.suppressedByBeaconFault=false。",
+        "观察类别计数；预期三个独立通道各显示一次故障消息；检查 notice.cornerHudDisplayedCount=1、notice.beaconDisplayedCount=1、notice.popupDisplayedCount=1、notice.stateReadDisplayedCount=0、notice.totalDisplayedCount=3。"
+      ],
+      "title": "角落、信标与弹窗独立故障时各自故障消息显示一次且当前故障重新检查"
+    },
+    {
+      "category": "combined",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "fault.downstreamResourceFaultFabricated"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "combined-shared-state-no-fabricated-downstream-faults",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "共享状态随后不可读，下游资源尚未被评估。",
+        "测试设施不注入任何下游资源故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入共享状态不可读；预期状态读取类别故障消息显示一次；检查 fault.sharedStateUnreadable=true、notice.stateReadDisplayedCount=1。",
+        "观察下游类别；预期未被评估也未伪造；检查 fault.downstreamResourceFaultFabricated=false、notice.beaconDisplayedCount=0、notice.cornerHudDisplayedCount=0、notice.popupDisplayedCount=0。",
+        "确认消息总数；预期仅状态读取类别一次；检查 notice.totalDisplayedCount=1。"
+      ],
+      "title": "共享状态不可读时不伪造尚未评估的下游资源故障"
+    }
+  ],
+  "schemaVersion": 2
+}

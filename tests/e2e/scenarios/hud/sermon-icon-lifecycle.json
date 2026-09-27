@@ -1,0 +1,116 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "icon-lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.exitWhileLoading"
+        },
+        {
+          "equals": 0,
+          "observation": "icon.imageAfterExit"
+        },
+        {
+          "equals": true,
+          "observation": "icon.addressableRefReleased"
+        },
+        {
+          "equals": false,
+          "observation": "icon.uiResurrectedAfterExit"
+        },
+        {
+          "equals": 0,
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": true,
+          "observation": "hud.trackedResourcesReleased"
+        }
+      ],
+      "id": "icon-exit-while-loading",
+      "prerequisites": [
+        "Done 状态且图标处于加载中。",
+        "可记录退出后残留对象与引用状态。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "在图标加载未完成时退出存档返回主菜单。",
+        "等待可能的延迟完成后统计残留自有 Image 与引用。",
+        "确认旧 UI 未被复活。"
+      ],
+      "title": "加载未完成时退出存档清理 Image 并释放引用且不复活旧 UI"
+    },
+    {
+      "category": "icon-lifecycle",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.hudRebuilt"
+        },
+        {
+          "equals": true,
+          "observation": "icon.oldImageDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "icon.oldAddressableReferenceReleased"
+        },
+        {
+          "equals": 1,
+          "observation": "icon.imageInstanceCountAfterRebuild"
+        },
+        {
+          "equals": 0,
+          "observation": "icon.leakedImageCount"
+        },
+        {
+          "equals": 1,
+          "observation": "icon.addressableReferencesHeld"
+        },
+        {
+          "equals": 1,
+          "observation": "icon.asyncHandleCount"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": true,
+          "observation": "icon.ownImagePresent"
+        }
+      ],
+      "id": "icon-hud-rebuild-cleanup",
+      "prerequisites": [
+        "Done 状态且图标已成功加载。",
+        "可触发原生 HUD 重建（例如切换分辨率或返回再进入场景）。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "触发原生 HUD 重建。",
+        "观察重建的中间（加载中）状态并等待其完成。",
+        "在最终健康观察（重建后 Done+Image 已重新就绪）时统计自有 Image 实例与持有引用，并核对旧引用已释放（保留追踪日志）。"
+      ],
+      "title": "HUD 重建后销毁旧 Image 且仅保留一个实例并持有一个引用"
+    }
+  ],
+  "schemaVersion": 2
+}

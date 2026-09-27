@@ -1,0 +1,820 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "dedup.identitySourceIsActualLoadedSlot"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityCapturedAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozenForLoad"
+        },
+        {
+          "equalsObservation": "save.slotName",
+          "observation": "dedup.capturedSlotName"
+        },
+        {
+          "equalsObservation": "save.isDemoSave",
+          "observation": "dedup.capturedIsDemoSave"
+        },
+        {
+          "equalsObservation": "save.slotGeneration",
+          "observation": "dedup.capturedSlotGeneration"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.dayReadFreshPerTriggerEvaluation"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedTimestamp"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedPlatform"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        }
+      ],
+      "id": "dedup-identity-actual-loaded-slot",
+      "prerequisites": [
+        "存在一个满足门槛且处于布道日机会未消费状态的存档，弹窗开关为开启。",
+        "本进程对该实际保存槽该具体游戏日尚无去重记录。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "载入该存档并在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 与 dedup.slotIdentityCapturedAtLoad。",
+        "在初始载入捕获时、后续可变存档字段变化之前对比槽名、试玩标记与内存槽代；预期逐一相等；检查 dedup.capturedSlotName/IsDemoSave/SlotGeneration 分别等于 save.slotName/isDemoSave/slotGeneration。",
+        "检查身份是否整次载入冻结；预期冻结；检查 dedup.slotIdentityFrozenForLoad 为 true。",
+        "检查具体游戏日的读取时机；预期每次触发评估时重新读取；检查 dedup.dayReadFreshPerTriggerEvaluation 为 true。",
+        "检查是否使用被禁止的身份来源；预期均未使用；检查 dedup.usedTimestamp、dedup.usedPlatform、dedup.usedLatestSlotGuess 均为 false。"
+      ],
+      "title": "去重身份仅由实际载入保存槽的槽名、类型与槽代在载入时冻结；具体日每次触发评估时重新读取"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.firstLoadShown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.reloadShownAgain"
+        },
+        {
+          "equals": true,
+          "observation": "popup.reloadSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossReload"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterReload",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-reload-same-slot-same-day",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "首次载入该槽该日；预期显示一次；检查 popup.firstLoadShown 为 true。",
+        "在同一进程内重读该槽该日；预期被抑制；检查 popup.reloadShownAgain 为 false 与 popup.reloadSuppressed 为 true。",
+        "核对绝对日一致与记录保留；预期同槽同日且记录仍在；检查 popup.reloadSuppressed 与 dedup.recordRetainedAcrossReload。"
+      ],
+      "title": "同进程重读同槽同日后不重复提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.mainMenuRoundtripSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAfterMainMenu"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterRoundtrip",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-main-menu-roundtrip",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "记录退出前的槽与绝对日；预期已记录；检查 save.slotName 与 save.absoluteDay 有值。",
+        "退出该存档到主菜单；预期已回到主菜单且不再显示弹窗；检查 popup.displayedAfterExit 为 false。",
+        "重新载入该槽该日并观察；预期被既有记录抑制；检查 popup.mainMenuRoundtripSuppressed 为 true。",
+        "检查记录保留与绝对日一致；预期保留；检查 dedup.recordRetainedAfterMainMenu 为 true 与 save.absoluteDayAfterRoundtrip 等于 save.absoluteDay。"
+      ],
+      "title": "返回主菜单后保留去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.overwriteSuppressed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAfterOverwrite"
+        },
+        {
+          "equalsObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGeneration"
+        },
+        {
+          "equalsObservation": "save.absoluteDayAfterOverwrite",
+          "observation": "save.absoluteDay"
+        }
+      ],
+      "id": "dedup-ordinary-overwrite",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "记录覆盖保存前槽代；预期已记录；检查 save.slotGenerationBefore 有值。",
+        "对同一保存槽执行普通覆盖保存；预期槽代在覆盖前后一致；检查 save.slotGeneration 等于 save.slotGenerationBefore。",
+        "重新载入该槽该日；预期被抑制且记录保留；检查 popup.overwriteSuppressed 与 dedup.recordRetainedAfterOverwrite。"
+      ],
+      "title": "普通覆盖保存后保留去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "settings.popupDisabledThenReenabled"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossToggle"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterReenableSameSlotDay"
+        }
+      ],
+      "id": "dedup-settings-toggle-retains",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗，当前弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "关闭再重新开启弹窗开关；预期开关往返完成；检查 settings.popupDisabledThenReenabled 为 true。",
+        "载入已提示过的同槽同一天；预期不重复弹出且记录保留；检查 popup.shownAfterReenableSameSlotDay 为 false 与 dedup.recordRetainedAcrossToggle 为 true。"
+      ],
+      "title": "关闭后重新开启弹窗不清空已有去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.slotIsManual"
+        },
+        {
+          "equals": true,
+          "observation": "save.otherSlotIsAuto"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.manualAndAutoTrackedSeparately"
+        },
+        {
+          "equals": true,
+          "observation": "popup.manualSlotShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.autoSlotShown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.autoSlotSuppressedByManualRecord"
+        }
+      ],
+      "id": "dedup-manual-vs-auto-slots-independent",
+      "prerequisites": [
+        "存在同一进度的手动保存槽与自动保存槽，二者均满足门槛与布道日条件，弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "载入手动保存槽并观察；预期提示一次；检查 save.slotIsManual 与 popup.manualSlotShown。",
+        "载入自动保存槽并观察；预期独立提示一次；检查 save.otherSlotIsAuto 与 popup.autoSlotShown。",
+        "检查两类槽追踪；预期分别追踪；检查 dedup.manualAndAutoTrackedSeparately 为 true 且 popup.autoSlotSuppressedByManualRecord 为 false。"
+      ],
+      "title": "手动与自动保存槽分别记录提示结果"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "notEqualsObservation": "save.otherSlotName",
+          "observation": "save.slotName"
+        },
+        {
+          "equalsObservation": "save.otherSlotAbsoluteDay",
+          "observation": "save.absoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotAShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotBShown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.slotBIndependentCheck"
+        },
+        {
+          "equals": false,
+          "observation": "popup.slotBSuppressedBySlotARecord"
+        }
+      ],
+      "id": "dedup-distinct-slots-same-day-independent",
+      "prerequisites": [
+        "存在两个不同的真实保存槽，槽名不同但当前绝对日相同。",
+        "两槽均满足门槛与布道日条件，弹窗开关为开启。",
+        "本进程对两槽该具体游戏日均尚无去重记录。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "载入槽 A 并读取槽名与日期；预期记录 A 的提示；检查 popup.slotAShown 为 true。",
+        "载入槽 B 并读取槽名与日期；预期槽名不同但绝对日相同；检查 save.slotName 不等于 save.otherSlotName 且 save.absoluteDay 等于 save.otherSlotAbsoluteDay。",
+        "观察槽 B 的弹窗；预期独立检查并提示；检查 popup.slotBIndependentCheck 与 popup.slotBShown 为 true 且 popup.slotBSuppressedBySlotARecord 为 false。"
+      ],
+      "title": "槽名不同但具体游戏日相同的两个真实槽位彼此独立去重"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.isNewGameBeforeFirstSave"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.identitySourceIsActualLoadedSlot"
+        },
+        {
+          "equalsObservation": "save.slotName",
+          "observation": "dedup.capturedSlotName"
+        },
+        {
+          "equalsObservation": "save.isDemoSave",
+          "observation": "dedup.capturedIsDemoSave"
+        },
+        {
+          "equalsObservation": "save.slotGeneration",
+          "observation": "dedup.capturedSlotGeneration"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        }
+      ],
+      "id": "dedup-new-game-before-first-save",
+      "prerequisites": [
+        "存在一个尚未首次保存、但已在内存中分配了真实原生保存槽键的新游戏进度，满足门槛与布道日条件，弹窗开关为开启。",
+        "本进程对该实际槽键该具体游戏日尚无去重记录。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在首次保存前进入可操作画面并读取日期与资格；预期为首次保存前且处于布道日；检查 save.isNewGameBeforeFirstSave 为 true、save.isSermonDay 为 true 与 save.sermonWeekday 等于环境字段 game.sermonWeekday。",
+        "读取载入前去重状态；预期该槽该日无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
+        "在初始载入捕获时读取去重身份来源；预期来自实际载入保存槽；检查 dedup.identitySourceIsActualLoadedSlot 为 true。",
+        "在初始载入捕获时对比槽名、试玩标记与内存中槽代；预期逐一等于实际载入值且早于后续可变存档字段变化；检查 dedup.capturedSlotName、dedup.capturedIsDemoSave、dedup.capturedSlotGeneration 分别等于 save.slotName、save.isDemoSave、save.slotGeneration。",
+        "观察弹窗并检查身份来源；预期按资格显示且未使用最新槽猜测；检查 popup.shown 为 true 与 dedup.usedLatestSlotGuess 为 false。"
+      ],
+      "title": "新游戏首次保存前使用该进度实际分配的原生槽键与内存槽代作为身份"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "save.deletionSucceeded"
+        },
+        {
+          "greaterThanObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGenerationAfter"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.dedupInheritedFromDeletedSlot"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownForRecreatedSlot"
+        }
+      ],
+      "id": "dedup-delete-recreate-cleanup-success",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。",
+        "使用可恢复测试环境中的存档副本执行删除重建场景。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在可恢复测试环境用存档副本删除该保存槽；预期删除成功；检查 save.deletionSucceeded 为 true。",
+        "重建同名同进度的新槽位；预期槽代推进；检查 save.slotGenerationAfter 大于 save.slotGenerationBefore。",
+        "载入重建槽并观察；预期不继承旧记录且再次提示；检查 dedup.dedupInheritedFromDeletedSlot 为 false 与 popup.shownForRecreatedSlot 为 true。"
+      ],
+      "title": "删除成功后重建同名槽位开启新的去重生命周期并可再提示一次"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "save.deletionSucceeded"
+        },
+        {
+          "equals": true,
+          "observation": "save.deletionFailed"
+        },
+        {
+          "equalsObservation": "save.slotGenerationBefore",
+          "observation": "save.slotGenerationAfter"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterFailedDelete"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStillSuppressedAfterFailedDelete"
+        }
+      ],
+      "id": "dedup-recreate-failed-delete-no-advance",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。",
+        "测试设施使删除操作失败（如只读或占用）。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "使删除操作失败并尝试删除；预期删除失败；检查 save.deletionFailed 为 true 与 save.deletionSucceeded 为 false。",
+        "读取槽代；预期未变化；检查 save.slotGenerationAfter 等于 save.slotGenerationBefore。",
+        "载入同槽同一天；预期仍被抑制；检查 popup.shownAfterFailedDelete 为 false 与 popup.dedupStillSuppressedAfterFailedDelete 为 true。"
+      ],
+      "title": "删除失败不推进槽代且保留原去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.withinSameLoadNoReload"
+        },
+        {
+          "greaterThanObservation": "save.priorAbsoluteDay",
+          "observation": "save.absoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.dayReadFreshPerTriggerEvaluation"
+        },
+        {
+          "equals": true,
+          "observation": "popup.sameSlotAsPriorRecord"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByPriorCycleRecord"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownNextCycle"
+        }
+      ],
+      "id": "dedup-next-week-new-date",
+      "prerequisites": [
+        "本进程已在同一保存槽上一布道周期实际显示过一次弹窗。",
+        "当前为同一槽位下一布道周期布道日机会未消费状态，弹窗开关为开启。",
+        "整个推进过程不重新载入存档。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取既有记录日期；预期已提示过上一周期；检查 save.priorAbsoluteDay 有值。",
+        "在同一载入内推进到下一布道周期布道日；预期未重新载入且日期前进；检查 popup.withinSameLoadNoReload 与 save.absoluteDay 大于 save.priorAbsoluteDay。",
+        "观察弹窗；预期按新日期再次提示且不被抑制；检查 popup.suppressedByPriorCycleRecord 为 false 与 popup.shownNextCycle 为 true。"
+      ],
+      "title": "同一载入内进入下一布道周期时按当前具体日期重新检查并再次提示"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "equals": true,
+          "observation": "popup.earlierDayRecordAbsentBeforeFirstLoad"
+        },
+        {
+          "greaterThanObservation": "save.absoluteDay",
+          "observation": "save.priorAbsoluteDay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.priorRecordExistsForOtherDay"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByOtherDayRecord"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "popup.earlierDayReloadSuppressed"
+        }
+      ],
+      "id": "dedup-backward-day-identity",
+      "prerequisites": [
+        "本进程已在同一保存槽较晚的具体游戏日实际显示过一次弹窗。",
+        "存在该槽位较早具体游戏日、且本进程从未提示过该较早日的存档副本，满足门槛与布道日条件，弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "确认较早具体游戏日从未被提示；预期无记录；检查 popup.earlierDayRecordAbsentBeforeFirstLoad 为 true。",
+        "载入该较早日的存档副本；预期较早日小于既有记录日期；检查 save.priorAbsoluteDay 大于 save.absoluteDay。",
+        "观察弹窗；预期按该具体日显示且不被其他日记录抑制；检查 popup.shown 为 true 与 popup.suppressedByOtherDayRecord 为 false。",
+        "再次载入该较早日；预期被抑制；检查 popup.earlierDayReloadSuppressed 为 true。"
+      ],
+      "title": "回到同一槽位较早具体游戏日按该具体日期重新判定，重现过的该日再次载入仍被抑制"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.processRestarted"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStateAfterRestartEmpty"
+        },
+        {
+          "equals": false,
+          "observation": "popup.persistedMarkerPresentAfterRestart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.sameSlotSameDayAsBeforeRestart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownAfterRestart"
+        }
+      ],
+      "id": "dedup-process-restart-resets",
+      "prerequisites": [
+        "本进程已在某保存槽某具体游戏日实际显示过一次弹窗。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "完全退出并重启游戏进程；预期已重启；检查 popup.processRestarted 为 true。",
+        "读取进程内去重状态；预期为空且无持久标记；检查 popup.dedupStateAfterRestartEmpty 与 popup.persistedMarkerPresentAfterRestart 为 false。",
+        "载入重启前同槽同日；预期按当前状态再次显示；检查 popup.sameSlotSameDayAsBeforeRestart 与 popup.shownAfterRestart 为 true。"
+      ],
+      "title": "游戏进程重启后清空进程内去重记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "popup.dedupPersistedToDisk"
+        },
+        {
+          "equals": false,
+          "observation": "popup.persistedMarkerWritten"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupStateFreshProcessEmpty"
+        }
+      ],
+      "id": "dedup-not-persisted",
+      "prerequisites": [
+        "本进程已实际显示过正常弹窗。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "在显示弹窗后检查磁盘；预期未写入去重记录；检查 popup.dedupPersistedToDisk 与 popup.persistedMarkerWritten 为 false。",
+        "在全新进程中读取去重状态；预期初始为空；检查 popup.dedupStateFreshProcessEmpty 为 true。"
+      ],
+      "title": "正常弹窗去重记录不持久化"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.scheduledButNotDisplayed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnScheduleOnly"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedOnAttemptOnly"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedOnScheduleOnly"
+        },
+        {
+          "equals": true,
+          "observation": "popup.dedupRecordedAfterDisplay"
+        }
+      ],
+      "id": "dedup-recorded-only-after-display",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，但当前处于占用界面使弹窗被延后。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "读取调度阶段记录；预期未计入已提示；检查 popup.dedupRecordedOnScheduleOnly 与 popup.chanceConsumedOnScheduleOnly 为 false。",
+        "读取尝试阶段记录；预期未计入已提示；检查 popup.dedupRecordedOnAttemptOnly 为 false。",
+        "待弹窗实际显示后读取记录；预期此时才写入；检查 popup.dedupRecordedAfterDisplay 为 true。"
+      ],
+      "title": "仅在弹窗实际显示后记录已提示而不在调度或尝试阶段记录"
+    },
+    {
+      "category": "dedup",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 0
+          },
+          "observation": "popup.displayCountWithinSameFrame"
+        },
+        {
+          "equals": true,
+          "observation": "popup.shownOnceInLoad"
+        }
+      ],
+      "id": "no-duplicate-same-load-frame",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-13"
+      ],
+      "steps": [
+        "载入该存档并跨多帧观察；预期本次载入仅显示一次；检查 popup.displayCountWithinLoad 与 popup.shownOnceInLoad。",
+        "统计同一帧内显示次数；预期不超过一次；检查 popup.displayCountWithinSameFrame 为非负整数且不超过 1。"
+      ],
+      "title": "同一载入与同一帧内不重复显示弹窗"
+    }
+  ],
+  "schemaVersion": 2
+}

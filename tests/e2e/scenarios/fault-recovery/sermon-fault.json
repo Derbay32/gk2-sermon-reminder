@@ -1,0 +1,233 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "icon.sharedSpriteUnmodified"
+        },
+        {
+          "equals": true,
+          "observation": "icon.sharedMaterialUnmodified"
+        },
+        {
+          "equals": false,
+          "observation": "icon.spriteCopiedIntoDistribution"
+        },
+        {
+          "equals": false,
+          "observation": "icon.alternateImageFallbackUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.nativeProgressModified"
+        },
+        {
+          "equals": 0,
+          "observation": "state.progressWriteCount"
+        },
+        {
+          "equals": false,
+          "observation": "state.ownPersistenceWritten"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        }
+      ],
+      "id": "native-state-not-mutated",
+      "prerequisites": [
+        "两个门槛任务均为 Completed。",
+        "布道日开启窗口内 Done 状态（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且图标已加载或已尝试加载。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "确认共享 Sprite 与材质未被修改。",
+        "统计模组对原生进度的写入次数与自有持久化。",
+        "确认未将原生 Sprite 复制进发行包且未使用替代图回退。"
+      ],
+      "title": "不修改原生进度与共享资源且不复制 Sprite"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.missingPlayerOrSave"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        }
+      ],
+      "id": "unreadable-player-hidden-not-done",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生玩家或存档缺失（无需抛出读取异常）。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "注入玩家/存档缺失。",
+        "观察角落文字是否隐藏以及是否显示 Done。"
+      ],
+      "title": "玩家或存档缺失时隐藏且不显示 Done"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.readException"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "notEquals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        }
+      ],
+      "id": "unreadable-native-read-throws",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生状态读取抛出异常。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11"
+      ],
+      "steps": [
+        "注入原生读取异常。",
+        "观察角落文字是否隐藏以及是否显示 Done。"
+      ],
+      "title": "原生读取抛出异常时隐藏且不显示 Done"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "state.nativeReadyNonFinite"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "notEquals": "gksr.hud.sermonDone",
+          "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        }
+      ],
+      "id": "nonfinite-native-ready-unreadable",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）的存档。",
+        "测试设施可受控使原生 sermon_ready 返回非有限值。"
+      ],
+      "profileId": "sermon-state",
+      "requirements": [
+        "GKSA-11",
+        "GKSA-30"
+      ],
+      "steps": [
+        "注入原生 ready 非有限值。",
+        "观察角落文字是否隐藏且未显示 Done。"
+      ],
+      "title": "原生 ready 浮点为非有限值时视为不可读而非 Done"
+    }
+  ],
+  "schemaVersion": 2
+}

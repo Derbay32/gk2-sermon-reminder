@@ -1,0 +1,1116 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.faithIconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "observation": "beacon.injectedFaultRecorded",
+          "present": true
+        },
+        {
+          "equals": "missing church target",
+          "observation": "beacon.faultCondition"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "observation": "beacon.restorationRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-missing-church-target",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复，不使用游戏目录内不得改写的资源。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
+        "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing church target。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
+        "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
+      ],
+      "title": "教堂目标点缺失时仅停用信标且不影响其他合格提醒"
+    },
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.faithIconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "observation": "beacon.injectedFaultRecorded",
+          "present": true
+        },
+        {
+          "equals": "missing faith icon",
+          "observation": "beacon.faultCondition"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "observation": "beacon.restorationRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-missing-faith-icon",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
+        "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing faith icon。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
+        "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
+      ],
+      "title": "信仰图标缺失时仅停用信标且不影响其他合格提醒"
+    },
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "observation": "beacon.injectedFaultRecorded",
+          "present": true
+        },
+        {
+          "equals": "missing or broken beacon component",
+          "observation": "beacon.faultCondition"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "observation": "beacon.restorationRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-missing-or-broken-component",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
+        "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=missing or broken beacon component。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
+        "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
+      ],
+      "title": "信标组件缺失或损坏时仅停用信标且不影响其他合格提醒"
+    },
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.projectionSucceeded"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.faithIconAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.componentAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateHeldBeforePopupOpportunity"
+        },
+        {
+          "equals": true,
+          "observation": "popup.readyEligibleUnshownAtLoad"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "observation": "beacon.injectedFaultRecorded",
+          "present": true
+        },
+        {
+          "equals": "failed projection",
+          "observation": "beacon.faultCondition"
+        },
+        {
+          "equals": false,
+          "observation": "popup.suppressedByBeaconFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterGateCleared"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.newDisplaysAfterGateCleared"
+        },
+        {
+          "equals": true,
+          "observation": "popup.closedWithNativeInput"
+        },
+        {
+          "equals": true,
+          "observation": "input.gameplayInputRestoredAfterClose"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.suppressedByCornerFault"
+        },
+        {
+          "observation": "beacon.restorationRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-failed-projection",
+      "phaseNote": "阶段含义：BeforeFault=注入前资源健康独立确认、DuringFault=故障未清除阶段、AfterGateCleared=清空安全门后正常弹窗实际显示、SafeUi=关闭自有弹窗且原生 HUD 可见时的通道可见性、AfterNotice=安全时机故障消息、AfterRestore=受控恢复后。恢复方法为操作者记录的受控恢复。",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，弹窗开关开启且该槽该日尚未显示。",
+        "首个正常弹窗机会前先保持普通安全门。",
+        "注入前独立确认原生资源健康，不花费该槽该日弹窗机会，且不要求门保持期间自有 HUD 可见。",
+        "测试设施可受控仅使信标通道失效，并可在故障阶段后受控恢复。",
+        "操作者记录实际注入与恢复方法，供 GKSA-16 复现。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期安全门先保持且弹窗尚未显示；检查 ui.safetyGateHeldBeforePopupOpportunity=true、popup.readyEligibleUnshownAtLoad=true、popup.actualDisplaysBeforeRecovery=0。",
+        "在花费该槽该日弹窗机会前独立确认原生资源健康；检查 resource.nativeHealthyAtBaseline=true。",
+        "在清空安全门前注入受控信标故障；预期仅停用信标；检查 beacon.injectedFaultRecorded 存在、beacon.faultCondition=failed projection。",
+        "清空安全门；预期不受影响的合格正常弹窗实际显示一次；检查 ui.safetyGateClear=true、popup.actualDisplaysAfterGateCleared=1、popup.newDisplaysAfterGateCleared=1、popup.suppressedByBeaconFault=false。",
+        "用原生输入关闭自有正常弹窗；预期关闭且输入恢复；检查 popup.closedWithNativeInput=true、input.gameplayInputRestoredAfterClose=true。",
+        "在清空门并关闭自有弹窗后、局部故障仍存在且原生 HUD 可见的安全时机观察通道；预期信标不可见而角落仍可见；检查 beacon.visibleAtSafeUi=false、corner.visibleAtSafeUi=true、beacon.suppressedByCornerFault=false。",
+        "在安全时机观察信标故障消息；预期信标类别消息显示一次且其他类别为零；检查 notice.beaconDisplayedCount=1、notice.cornerHudDisplayedCount=0、notice.stateReadDisplayedCount=0、notice.popupDisplayedCount=0、notice.totalDisplayedCount=1。",
+        "受控恢复信标通道；预期信标重新可见；检查 beacon.restorationRecorded 存在、recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。"
+      ],
+      "title": "屏幕投影失败时仅停用信标且不影响其他合格提醒"
+    },
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupOffDeliberate"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentWhenPopupOff"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "observation": "beacon.injectedFaultRecorded",
+          "present": true
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "popup.componentAvailable"
+        },
+        {
+          "equals": false,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-fault-with-popup-off-still-notices",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "正常弹窗开关为关闭，且该关闭为玩家主动选择。",
+        "角落文字通道健康。",
+        "测试设施可受控仅使信标通道失效。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期弹窗开关关闭属主动缺省而非故障；检查 settings.popupEnabled=false、settings.popupOffDeliberate=true、dedup.recordAbsentWhenPopupOff=true。",
+        "注入受控信标故障；预期信标停用；检查 beacon.visibleDuringFault=false、beacon.injectedFaultRecorded 存在。",
+        "观察故障消息；预期信标类别消息仍显示一次且不产生弹窗类别消息；检查 notice.beaconDisplayedCount=1、notice.popupDisplayedCount=0。",
+        "确认弹窗未被视为故障通道且角落未受抑制；检查 popup.componentAvailable=true、popup.recordAfterDisplay=false、corner.visibleAtSafeUi=true、notice.popupBudgetConsumed=false。"
+      ],
+      "title": "弹窗开关关闭时信标故障消息仍显示且不视为弹窗故障"
+    },
+    {
+      "category": "beacon-fault",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconOffDeliberate"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.targetAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAtSafeUi"
+        },
+        {
+          "equals": true,
+          "observation": "popup.available"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "beacon-off-deliberate-no-beacon-notice-others-healthy",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "信标开关为关闭且该关闭为玩家主动选择。",
+        "角落文字与正常弹窗通道健康。",
+        "未注入任何故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档；预期信标开关关闭属主动缺省而非故障；检查 settings.beaconEnabled=false、settings.beaconOffDeliberate=true。",
+        "观察信标；预期不显示信标；检查 beacon.visibleDuringFault=false、beacon.targetAvailable=true。",
+        "观察角落与正常弹窗；预期健康且可继续；检查 corner.visibleAtSafeUi=true、popup.available=true。",
+        "观察故障消息计数；预期不产生信标类别故障消息；检查 notice.beaconDisplayedCount=0、notice.totalDisplayedCount=0。"
+      ],
+      "title": "信标开关关闭是主动缺省且不产生信标故障消息"
+    }
+  ],
+  "schemaVersion": 2
+}

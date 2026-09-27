@@ -1,0 +1,102 @@
+name: Bug report
+description: Report a crash, display issue, or other unexpected behavior.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report one problem per issue.
+        Remove private information, such as usernames and local paths, before uploading evidence.
+        Do not upload save files, game files, or third-party DLLs.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirm
+      options:
+        - label: I have searched existing Issues
+          required: true
+        - label: I confirm that my issue is unique
+          required: true
+        - label: I have provided a complete description and relevant logs
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      description: Describe the problem you encountered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the actions in order. Identify the first step where the behavior differs from your expectation.
+      placeholder: |
+        1. Load a save where...
+        2. Perform...
+        3. Observe...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe what should happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe what happened. State whether the problem occurs every time or intermittently.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Provide the versions you actually use. Write "unknown" for anything you cannot confirm.
+      placeholder: |
+        Operating system:
+        Proton version (if applicable):
+        Game version:
+        GK2 Sermon Reminder version:
+        BepInEx version:
+        GK2 Mod Framework version:
+        Game language:
+        Other enabled mods:
+    validations:
+      required: true
+
+  - type: textarea
+    id: state-settings
+    attributes:
+      label: Save state and settings
+      description: Include the details relevant to this problem. Write "not applicable" for unrelated items.
+      placeholder: |
+        Church unlocked:
+        Sermon tutorial completed:
+        Currently on Sermon Day:
+        Sermon already held this week:
+        Church beacon enabled:
+        Ultimate Reminder enabled:
+        Save reloaded after changing the toggles:
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste relevant excerpts from BepInEx/LogOutput.log after removing private information.
+      render: text
+
+  - type: textarea
+    id: visual-evidence
+    attributes:
+      label: Screenshots or recordings
+      description: Attach screenshots or recordings for UI problems. Logs alone do not show what was actually displayed.

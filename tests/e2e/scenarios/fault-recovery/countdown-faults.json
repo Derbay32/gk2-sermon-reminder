@@ -1,0 +1,121 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.staleValueReused"
+        }
+      ],
+      "id": "unreadable-state-stale-hide",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足、且倒计时已显示的当前存档。",
+        "测试设施可受控使必要状态读取失败。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在倒计时可见状态下注入必要状态读取故障。",
+        "观察角落文字是否隐藏以及是否沿用故障前天数。"
+      ],
+      "title": "必要状态不可读时隐藏文字且不沿用旧结果"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": true,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        }
+      ],
+      "id": "normal-hide-no-fault",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "正常载入存档并让原生 HUD 自然隐藏（例如打开菜单）。",
+        "观察是否出现故障消息或故障日志。"
+      ],
+      "title": "正常加载或原生 HUD 隐藏不误报故障"
+    },
+    {
+      "category": "fault",
+      "evidence": {
+        "log": false,
+        "measurement": false,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": 0,
+          "observation": "items.count"
+        },
+        {
+          "equals": true,
+          "observation": "hud.visible"
+        },
+        {
+          "localizedText": {
+            "daysObservation": "hud.countdownDays",
+            "keyObservation": "hud.textKey",
+            "keysAnyOf": [
+              "gksr.hud.sermonCountdown.one",
+              "gksr.hud.sermonCountdown.other"
+            ],
+            "language": "zh_cn"
+          },
+          "observation": "hud.text"
+        }
+      ],
+      "id": "item-count-independence",
+      "prerequisites": [
+        "解锁条件与教学条件均已满足的当前存档。",
+        "背包与基地物品数量为 0。",
+        "当前为非布道日。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-10"
+      ],
+      "steps": [
+        "在物品数量为 0 的状态下载入存档。",
+        "观察倒计时是否仍按游戏状态显示。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+      ],
+      "title": "物品数量不参与提醒判定"
+    }
+  ],
+  "schemaVersion": 2
+}

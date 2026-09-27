@@ -1,0 +1,149 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "logging",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "log.initialDiagnosticPresent"
+        },
+        {
+          "equals": 0,
+          "observation": "log.perFrameRepeatCount"
+        },
+        {
+          "equals": true,
+          "observation": "log.faultStageIdentified"
+        },
+        {
+          "equals": true,
+          "observation": "log.stackSeparatedFromUserFacing"
+        },
+        {
+          "equals": "gksr.diagnostics.reminderUnavailable",
+          "observation": "log.userFacingDiagnosticKey"
+        }
+      ],
+      "id": "bounded-logs-no-per-frame-noise",
+      "prerequisites": [
+        "必要状态读取故障持续发生。",
+        "可读取运行日志。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "保持同类故障持续若干帧。预期：保留首次初始诊断。检查：log.initialDiagnosticPresent=true。",
+        "统计逐帧重复日志。预期：无逐帧噪声。检查：log.perFrameRepeatCount=0。",
+        "确认说明与调用栈分开且标识故障环节。预期：全部满足。检查：log.faultStageIdentified=true 且 log.stackSeparatedFromUserFacing=true。"
+      ],
+      "title": "持续相同故障不逐帧刷同一日志且保留初始诊断"
+    },
+    {
+      "category": "logging",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "log.healthyBindingObserved"
+        },
+        {
+          "equals": true,
+          "observation": "log.cornerRenderFailureContinued"
+        },
+        {
+          "equals": 1,
+          "observation": "log.cornerEpisodeCount"
+        },
+        {
+          "equals": false,
+          "observation": "log.healthyBindingResetCornerEpisode"
+        },
+        {
+          "equals": true,
+          "observation": "log.initialDiagnosticPresent"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.stateReadDisplayedCount"
+        }
+      ],
+      "id": "intermediate-healthy-binding-keeps-episode",
+      "prerequisites": [
+        "角落渲染或文本故障回合已开始。",
+        "该回合内出现一次健康绑定，随后角落渲染或文本故障继续。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "记录该回合内是否观察到健康绑定。预期：观察到健康绑定且故障继续。检查：log.healthyBindingObserved=true 且 log.cornerRenderFailureContinued=true。",
+        "确认角落回合不被健康绑定重置。预期：同一回合。检查：log.cornerEpisodeCount=1 且 log.healthyBindingResetCornerEpisode=false。",
+        "确认角落提示机会独立于健康状态通道。预期：状态读取类别为零。检查：notice.cornerHudDisplayedCount=1 且 notice.stateReadDisplayedCount=0。"
+      ],
+      "title": "中间健康绑定后角落渲染或文本再次失败不重置同一故障回合"
+    },
+    {
+      "category": "logging",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "log.stateReadChannelPresent"
+        },
+        {
+          "equals": true,
+          "observation": "log.cornerHudChannelPresent"
+        },
+        {
+          "equals": true,
+          "observation": "log.channelsObservedInCausalOrder"
+        },
+        {
+          "equals": true,
+          "observation": "log.channelsSeparated"
+        },
+        {
+          "equals": false,
+          "observation": "log.frameworkFaultedState"
+        }
+      ],
+      "id": "per-channel-logs-separated",
+      "prerequisites": [
+        "同一载入内先发生状态读取故障，恢复后再发生角落文字故障。",
+        "框架生命周期可观察。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "先记录状态读取故障通道。预期：通道存在并保留诊断。检查：log.stateReadChannelPresent=true。",
+        "恢复状态后再记录角落文字故障通道。预期：通道独立且按因果顺序观察。检查：log.cornerHudChannelPresent=true 且 log.channelsObservedInCausalOrder=true。",
+        "确认日志分离且未逃逸为框架异常。预期：全部满足。检查：log.channelsSeparated=true 且 log.frameworkFaultedState=false。"
+      ],
+      "title": "状态读取与角落文字日志分离且按因果顺序观察且可恢复故障不逃逸为框架异常"
+    }
+  ],
+  "schemaVersion": 2
+}

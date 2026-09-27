@@ -1,0 +1,886 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierObjectAbsent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.logOnlyNoSurface"
+        },
+        {
+          "equals": false,
+          "observation": "notice.beaconBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "log.beaconFailureLogged"
+        },
+        {
+          "equals": false,
+          "observation": "notice.leakedPooledItem"
+        },
+        {
+          "equals": false,
+          "observation": "notice.partialMessageLeft"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-unavailable-beacon-fault-logs-only-no-budget",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "测试设施可受控使原生消息组件对象缺失并同时使信标通道故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入原生消息组件缺失与信标故障；预期仅记录日志且不显示；检查 notice.notifierObjectAbsent=true、notice.surfaceAvailable=false、notice.logOnlyNoSurface=true。",
+        "观察信标类别预算；预期未消耗；检查 notice.beaconBudgetConsumed=false 且 notice.beaconDisplayedCount=0。",
+        "观察日志与残留对象；预期记录日志且无泄漏；检查 log.beaconFailureLogged=true、notice.leakedPooledItem=false、notice.partialMessageLeft=false。"
+      ],
+      "title": "消息组件不可用时信标故障仅记日志且不消耗预算"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierObjectAbsent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.logOnlyNoSurface"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "log.popupFailureLogged"
+        },
+        {
+          "equals": false,
+          "observation": "notice.leakedPooledItem"
+        },
+        {
+          "equals": false,
+          "observation": "notice.partialMessageLeft"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-unavailable-popup-fault-logs-only-no-budget",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费。",
+        "测试设施可受控使原生消息组件对象缺失并同时使正常弹窗通道故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "注入原生消息组件缺失与正常弹窗故障；预期仅记录日志且不显示；检查 notice.notifierObjectAbsent=true、notice.surfaceAvailable=false、notice.logOnlyNoSurface=true。",
+        "观察正常弹窗类别预算；预期未消耗；检查 notice.popupBudgetConsumed=false 且 notice.popupDisplayedCount=0。",
+        "观察日志与残留对象；预期记录日志且无泄漏；检查 log.popupFailureLogged=true、notice.leakedPooledItem=false、notice.partialMessageLeft=false。"
+      ],
+      "title": "消息组件不可用时弹窗故障仅记日志且不消耗预算"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierRecoveryRevalidate"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": false,
+          "observation": "notice.additionalNotifierNoticeShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-recovery-rechecks-persistent-fault-once-at-safe-ui",
+      "prerequisites": [
+        "信标故障持续存在且消息组件曾不可用，故障仅记日志未显示。",
+        "恢复消息组件且界面处于安全可操作时机。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复原生消息组件；预期重新检查持续故障；检查 notice.notifierAvailable=true、notice.notifierRecoveryRevalidate=true。",
+        "在安全时机观察显示；预期信标类别故障消息显示一次；检查 notice.beaconDisplayedCount=1、ui.safetyGateClear=true。",
+        "确认无额外消息组件类别消息与成功提示；预期均无；检查 notice.additionalNotifierNoticeShown=false、notice.recoveryToastShown=false。"
+      ],
+      "title": "消息组件恢复后重新检查持续信标故障并在安全时机显示一次"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.notifierRecoveryRevalidate"
+        },
+        {
+          "equals": false,
+          "observation": "popup.available"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": false,
+          "observation": "notice.additionalNotifierNoticeShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-recovery-rechecks-persistent-popup-fault-once-at-safe-ui",
+      "prerequisites": [
+        "正常弹窗通道故障持续存在且消息组件曾不可用，弹窗类别故障仅记日志未显示。",
+        "恢复消息组件且界面处于安全可操作时机。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复原生消息组件；预期重新检查持续弹窗故障；检查 notice.notifierAvailable=true、notice.notifierRecoveryRevalidate=true。",
+        "在安全时机观察显示；预期弹窗类别故障消息显示一次且恢复正常弹窗通道后仍受资格约束；检查 notice.popupDisplayedCount=1、ui.safetyGateClear=true。",
+        "确认无额外消息组件类别消息与成功提示；预期均无；检查 notice.additionalNotifierNoticeShown=false、notice.recoveryToastShown=false。"
+      ],
+      "title": "消息组件恢复后重新检查持续弹窗故障并在安全时机显示一次"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.beaconBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-recovery-beacon-fault-already-recovered-no-stale-notice",
+      "prerequisites": [
+        "信标通道曾故障并排队，消息组件曾不可用。",
+        "在消息组件恢复前先使底层故障恢复。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "先恢复信标通道；预期故障恢复；检查 recovery.autoRecovered=true、beacon.visibleAfterRecovery=true。",
+        "再恢复消息组件；预期无过期消息补发；检查 notice.staleNoticeAfterRecovery=false、notice.beaconDisplayedCount=0。",
+        "确认预算未消耗；预期未消耗；检查 notice.beaconBudgetConsumed=false、notice.totalDisplayedCount=0。"
+      ],
+      "title": "消息组件恢复前信标底层故障已恢复则不补发过期消息"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "popup.available"
+        },
+        {
+          "equals": false,
+          "observation": "notice.staleNoticeAfterRecovery"
+        },
+        {
+          "equals": false,
+          "observation": "notice.popupBudgetConsumed"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-recovery-popup-fault-canceled-before-recovery-no-stale-notice",
+      "prerequisites": [
+        "正常弹窗通道曾故障并排队，消息组件曾不可用。",
+        "在消息组件恢复前先使底层故障恢复。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "先恢复正常弹窗通道；预期故障恢复；检查 recovery.autoRecovered=true、popup.available=true。",
+        "再恢复消息组件；预期无过期弹窗故障消息补发；检查 notice.staleNoticeAfterRecovery=false、notice.popupDisplayedCount=0。",
+        "确认预算未消耗；预期未消耗；检查 notice.popupBudgetConsumed=false、notice.totalDisplayedCount=0。"
+      ],
+      "title": "消息组件恢复前弹窗底层故障已恢复则不补发过期消息"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthyAtBaseline"
+        },
+        {
+          "equals": true,
+          "observation": "settings.beaconEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "notice.additionalNotifierNoticeShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-recovery-no-extra-category-notice-no-success-toast",
+      "prerequisites": [
+        "信标故障持续且消息组件曾不可用。",
+        "恢复消息组件后在安全时机显示一次持续故障消息。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "恢复消息组件并观察；预期仅持续故障类别显示一次；检查 notice.beaconDisplayedCount=1。",
+        "检查是否存在消息组件类别故障消息；预期不存在；检查 notice.additionalNotifierNoticeShown=false。",
+        "检查是否存在恢复成功提示；预期不存在；检查 notice.recoveryToastShown=false、notice.successMessageShown=false。"
+      ],
+      "title": "消息组件恢复不产生额外类别消息或恢复成功提示"
+    }
+  ],
+  "schemaVersion": 2
+}

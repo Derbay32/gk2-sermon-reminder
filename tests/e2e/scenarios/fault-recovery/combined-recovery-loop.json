@@ -1,0 +1,203 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "loop",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "log.perFrameRepeatCount"
+        },
+        {
+          "equals": true,
+          "observation": "log.initialDiagnosticPresent"
+        },
+        {
+          "equals": true,
+          "observation": "log.boundedDuringLoop"
+        },
+        {
+          "equals": true,
+          "observation": "log.faultStageIdentified"
+        },
+        {
+          "equals": true,
+          "observation": "log.stackSeparatedFromUserFacing"
+        }
+      ],
+      "id": "loop-no-per-frame-log-flood",
+      "prerequisites": [
+        "必要共享状态或某一显示资源持续重复故障并恢复。",
+        "观察区间为有限个连续帧或固定时长。",
+        "可读取运行日志并观察原生共享对象与暂停状态。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在有限观察区间内反复触发同类故障与恢复；预期保留首次诊断；检查 log.initialDiagnosticPresent=true。",
+        "统计逐帧重复日志；预期无逐帧噪声；检查 log.perFrameRepeatCount=0、log.boundedDuringLoop=true。",
+        "确认故障环节标识与调用栈分离；预期满足；检查 log.faultStageIdentified=true、log.stackSeparatedFromUserFacing=true。"
+      ],
+      "title": "重复故障恢复循环不逐帧刷同一日志且保留初始诊断"
+    },
+    {
+      "category": "loop",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "ui.sharedDialogDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalUnaffected"
+        },
+        {
+          "equals": false,
+          "observation": "ui.foreignDialogMutated"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "hud.instanceCount"
+        },
+        {
+          "equals": false,
+          "observation": "hud.staleOldBindingPresent"
+        }
+      ],
+      "id": "loop-no-native-shared-destruction",
+      "prerequisites": [
+        "必要共享状态或某一显示资源持续重复故障并恢复。",
+        "观察区间为有限个连续帧或固定时长。",
+        "可读取运行日志并观察原生共享对象与暂停状态。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在有限观察区间内反复故障与恢复；预期不销毁共享对话框对象；检查 ui.sharedDialogDestroyed=false。",
+        "检查他方与其他模态共存；预期未被影响；检查 ui.otherNativeModalUnaffected=true、ui.foreignDialogMutated=false。",
+        "检查自有实例；预期唯一且无残留旧绑定；检查 hud.instanceCount=1、hud.staleOldBindingPresent=false。"
+      ],
+      "title": "重复故障恢复循环不销毁原生共享对象也不残留旧绑定"
+    },
+    {
+      "category": "loop",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "ui.otherPauseSourcePresent"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseStillActive"
+        },
+        {
+          "equals": false,
+          "observation": "ui.globalUnpauseInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "pause.modForcedUnpause"
+        },
+        {
+          "equals": true,
+          "observation": "ui.pauseSourcePreserved"
+        },
+        {
+          "equals": false,
+          "observation": "log.frameworkFaulted"
+        }
+      ],
+      "id": "loop-no-global-unpause-no-framework-faulted",
+      "prerequisites": [
+        "必要共享状态或某一显示资源持续重复故障并恢复。",
+        "观察区间为有限个连续帧或固定时长。",
+        "可读取运行日志并观察原生共享对象与暂停状态。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在触发任何故障或清理前，先显式引入一个额外的原生暂停来源；预期该暂停来源存在；检查 ui.otherPauseSourcePresent=true、pause.otherPauseStillActive=true。",
+        "在有限观察区间内反复故障与恢复；预期未执行全局解除暂停；检查 ui.globalUnpauseInvoked=false、pause.modForcedUnpause=false。",
+        "检查其他暂停来源；预期未被影响；检查 ui.pauseSourcePreserved=true、pause.otherPauseStillActive=true。",
+        "检查模组状态；预期不进入框架 Faulted；检查 log.frameworkFaulted=false。"
+      ],
+      "title": "重复故障恢复循环不全局解除暂停且不进入框架 Faulted"
+    },
+    {
+      "category": "loop",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "save.sermonProgressWriteCount"
+        },
+        {
+          "equals": false,
+          "observation": "state.nativeProgressModified"
+        },
+        {
+          "equals": false,
+          "observation": "save.staleProgressReused"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "save.modOwnPersistenceWriteCount"
+        }
+      ],
+      "id": "loop-no-sermon-progress-mutation",
+      "prerequisites": [
+        "必要共享状态或某一显示资源持续重复故障并恢复。",
+        "观察区间为有限个连续帧或固定时长。",
+        "可读取运行日志并观察原生共享对象与暂停状态。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在有限观察区间内反复故障与恢复；预期未写入游戏布道进度；检查 save.sermonProgressWriteCount=0。",
+        "检查原生进度标志；预期未被修改；检查 state.nativeProgressModified=false、save.staleProgressReused=false。",
+        "检查模组自有持久化；预期未误写；检查 save.modOwnPersistenceWriteCount=0。"
+      ],
+      "title": "重复故障恢复循环不修改游戏布道进度"
+    }
+  ],
+  "schemaVersion": 2
+}

@@ -1,0 +1,240 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "notice.notifierObjectAbsent"
+        },
+        {
+          "equals": false,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.budgetConsumedWithoutDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.leakedPooledItem"
+        },
+        {
+          "equals": false,
+          "observation": "notice.partialMessageLeft"
+        },
+        {
+          "equals": true,
+          "observation": "log.notifierFailureLogged"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "notifier-unavailable-logs-only",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生消息组件对象缺失并同时使必要状态不可读。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入原生消息组件对象缺失与必要状态不可读。预期：仅记录日志，不显示消息且不消耗机会。检查：notice.notifierObjectAbsent=true 且 notice.stateReadBudgetConsumed=false。",
+        "观察池化对象与部分消息。预期：无泄漏。检查：notice.leakedPooledItem=false 且 notice.partialMessageLeft=false。"
+      ],
+      "title": "消息组件对象缺失时仅记录日志且不消耗提示机会"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": false,
+          "observation": "notice.notifierObjectAbsent"
+        },
+        {
+          "equals": true,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.showFailed"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.budgetConsumedWithoutDisplay"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "notice.leakedPooledItem"
+        },
+        {
+          "equals": false,
+          "observation": "notice.partialMessageLeft"
+        },
+        {
+          "equals": true,
+          "observation": "log.notifierFailureLogged"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        }
+      ],
+      "id": "notifier-present-show-fails-logs-only",
+      "prerequisites": [
+        "两个门槛任务均为 Completed 的存档。",
+        "测试设施可受控使原生消息组件存在但实际显示失败并同时使必要状态不可读。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成。预期：业务状态可读一次。检查：state.readinessObservedBeforeInjection=true。",
+        "注入消息组件显示失败与必要状态不可读。预期：仅记录日志，不显示消息且不消耗机会。检查：notice.showFailed=true 且 notice.stateReadBudgetConsumed=false。",
+        "观察池化对象与部分消息。预期：无泄漏且无部分消息残留。检查：notice.leakedPooledItem=false 且 notice.partialMessageLeft=false。"
+      ],
+      "title": "消息组件存在但实际显示失败时仅记录日志且不消耗提示机会"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "notice.surfaceAvailable"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumed"
+        },
+        {
+          "equals": true,
+          "observation": "notice.retriedRealDisplayAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.retryRealDisplayCount"
+        },
+        {
+          "equals": false,
+          "observation": "notice.leakedPooledItem"
+        },
+        {
+          "equals": false,
+          "observation": "notice.partialMessageLeft"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        }
+      ],
+      "id": "notifier-recovers-pending-fault-once",
+      "prerequisites": [
+        "原生消息组件不可用或显示失败且状态读取故障尚未提示。",
+        "状态读取故障在消息组件恢复后仍然存在。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "恢复原生消息组件。预期：仍存在的状态读取故障显示一次。检查：notice.stateReadDisplayedCount=1 且 notice.retriedRealDisplayAfterRecovery=true。",
+        "观察提示机会与呈现。预期：消耗该类机会且故障呈现保持隐藏。检查：notice.stateReadBudgetConsumed=true 且 hud.visible=false。"
+      ],
+      "title": "消息组件恢复后按仍存在的未提示故障显示一次"
+    },
+    {
+      "category": "notifier",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "notice.queuedWhileSurfaceUnavailable"
+        },
+        {
+          "equals": true,
+          "observation": "notice.queuePending"
+        },
+        {
+          "equals": 1,
+          "observation": "notice.queueCount"
+        },
+        {
+          "equals": 0,
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "notifier-queue-single-flight",
+      "phaseNote": "queuePending=true 意味着该类恰有一条待显示消息，故 queueCount 用严格整数 1。",
+      "prerequisites": [
+        "原生消息组件不可用。",
+        "菜单、对话或过场占用界面使故障消息需要延后。"
+      ],
+      "profileId": "local-fault-notices",
+      "requirements": [
+        "GKSA-14"
+      ],
+      "steps": [
+        "在消息组件不可用且界面被占用期间注入同类故障。预期：排一条待显示消息。检查：notice.queuedWhileSurfaceUnavailable=true 且 notice.queuePending=true。",
+        "记录排队数量与显示次数。预期：恰为一条且未实际显示。检查：notice.queueCount=1 且 notice.totalDisplayedCount=0。"
+      ],
+      "title": "消息组件不可用期间同类故障只排一条待显示消息"
+    }
+  ],
+  "schemaVersion": 2
+}

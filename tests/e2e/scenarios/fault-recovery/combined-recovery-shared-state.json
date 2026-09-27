@@ -1,0 +1,1741 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": true,
+          "observation": "save.saveSlotUnavailable"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingPlayerOrSave"
+        },
+        {
+          "equals": false,
+          "observation": "save.requiredPlayerMissing"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "shared-state-missing-save",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态不可读；检查 state.readable=false、fault.sharedStateUnreadable=true。",
+        "观察依赖输出；预期全部被抑制；检查 hud.visible=false、beacon.visibleDuringFault=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "观察预算与身份；预期已消耗一次且身份保持；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1、dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。"
+      ],
+      "title": "就绪后当前存档不可用时停用全部依赖该状态的提醒"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": true,
+          "observation": "save.requiredPlayerMissing"
+        },
+        {
+          "equals": true,
+          "observation": "state.missingPlayerOrSave"
+        },
+        {
+          "equals": false,
+          "observation": "save.saveSlotUnavailable"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "shared-state-missing-player",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态不可读；检查 state.readable=false、fault.sharedStateUnreadable=true。",
+        "观察依赖输出；预期全部被抑制；检查 hud.visible=false、beacon.visibleDuringFault=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "观察预算与身份；预期已消耗一次且身份保持；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1、dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。"
+      ],
+      "title": "就绪后必需玩家缺失时停用全部依赖该状态的提醒"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "observation": "save.readException",
+          "present": true
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleValueReused"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "shared-state-read-exception",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态不可读；检查 state.readable=false、fault.sharedStateUnreadable=true。",
+        "观察依赖输出；预期全部被抑制；检查 hud.visible=false、beacon.visibleDuringFault=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "观察预算与身份；预期已消耗一次且身份保持；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1、dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。"
+      ],
+      "title": "就绪后原生读取抛出异常时停用依赖提醒且不伪造结果"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": true,
+          "observation": "save.nativeReadyNonFinite"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        }
+      ],
+      "id": "shared-state-nonfinite-ready",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15",
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态不可读；检查 state.readable=false、fault.sharedStateUnreadable=true。",
+        "观察依赖输出；预期全部被抑制；检查 hud.visible=false、beacon.visibleDuringFault=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "观察预算与身份；预期已消耗一次且身份保持；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1、dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。"
+      ],
+      "title": "就绪后原生 sermon_ready 为 NaN 或 Infinity 时视为不可读而非 Done"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": true,
+          "observation": "save.invalidCalendar"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleDateReused"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "shared-state-invalid-calendar",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态不可读；检查 state.readable=false、fault.sharedStateUnreadable=true。",
+        "观察依赖输出；预期全部被抑制；检查 hud.visible=false、beacon.visibleDuringFault=false、popup.displayedDuringFault=false、popup.actualDisplaysBeforeRecovery=0。",
+        "观察预算与身份；预期已消耗一次且身份保持；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1、dedup.capturedIdentityStable=true、dedup.slotIdentityFrozen=true。"
+      ],
+      "title": "就绪后日历值非法时停用依赖提醒且不沿用过判"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.slotIdentityFrozen"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleValueReused"
+        },
+        {
+          "equals": false,
+          "observation": "state.staleDateReused"
+        },
+        {
+          "equals": false,
+          "observation": "dedup.usedLatestSlotGuess"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.stateReadBudgetConsumedBeforeFault"
+        },
+        {
+          "equals": true,
+          "observation": "notice.stateReadBudgetConsumedAfterActualNotice"
+        },
+        {
+          "equals": false,
+          "observation": "fault.downstreamResourceFaultFabricated"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "shared-state-suppresses-dependent-without-replenishing-budgets",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "角落文字、信标与正常弹窗通道在本场景前均健康。",
+        "测试设施可受控使该共享状态在就绪后不可读。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
+        "在首次故障前记录身份与预算基线；预期身份冻结且预算未消耗；检查 notice.stateReadBudgetConsumedBeforeFault=false、dedup.slotIdentityFrozen=true。",
+        "注入受控共享状态失效；预期状态不可读且抑制依赖输出；检查 state.readable=false、fault.sharedStateUnreadable=true、state.defaultValueUsed=false。",
+        "在故障消息实际显示后记录预算；预期该类别机会已消耗一次；检查 notice.stateReadBudgetConsumedAfterActualNotice=true、notice.stateReadDisplayedCount=1。",
+        "记录被抑制的独立通道；预期未伪造下游资源故障；检查 fault.downstreamResourceFaultFabricated=false、notice.beaconDisplayedCount=0、notice.popupDisplayedCount=0。"
+      ],
+      "title": "共享状态故障抑制依赖输出且不下调预算不丢失冻结身份"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "save.missingNativeResourceKeyDefaultApplied"
+        },
+        {
+          "numberRange": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "save.defaultDoneFromMissingReadyKey"
+        },
+        {
+          "equals": false,
+          "observation": "state.defaultValueUsed"
+        },
+        {
+          "equals": false,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": "gksr.hud.sermonDone",
+          "observation": "hud.selectedTextKey"
+        },
+        {
+          "equals": false,
+          "observation": "beacon.visibleDuringFault"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        }
+      ],
+      "id": "state-missing-ready-key-default0-done-control",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）。",
+        "原生资源缺少 sermon_ready 键，按文档默认值处理。",
+        "测试设施仅在受控读取中移除该键，不注入其他故障。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15",
+        "GKSA-30"
+      ],
+      "steps": [
+        "读取原生 ready；预期缺键按默认值处理；检查 save.missingNativeResourceKeyDefaultApplied=true、state.sermonReadyValue=0 且可接受 0.0。",
+        "判定状态可读与 Done；预期状态可读且判定为已布道；检查 state.readable=true、save.defaultDoneFromMissingReadyKey=true、state.sermonReadyValue<1。",
+        "确认非故障且无猜测回退；预期不显示故障消息；检查 notice.stateReadDisplayedCount=0、notice.totalDisplayedCount=0、state.defaultValueUsed=false、fault.sharedStateUnreadable=false。",
+        "读取角落文字与信标；预期显示 Done 且不显示信标；检查 hud.selectedTextKey=gksr.hud.sermonDone、beacon.visibleDuringFault=false。"
+      ],
+      "title": "原生 ready 缺键按文档默认判定为已布道且不是故障"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "popup.ownContentPresentBeforeFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.currentContentIsOwnAtFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.ownContentClosedOnFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.currentContentIsForeign"
+        },
+        {
+          "equals": false,
+          "observation": "popup.displayedDuringFault"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        },
+        {
+          "equals": false,
+          "observation": "load.transientEndLoadCalled"
+        },
+        {
+          "equals": false,
+          "observation": "notice.loadBudgetResetOnFault"
+        },
+        {
+          "equals": false,
+          "observation": "ui.sharedDialogDestroyed"
+        },
+        {
+          "equals": false,
+          "observation": "ui.globalUnpauseInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "pause.modForcedUnpause"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherNativeModalUnaffected"
+        }
+      ],
+      "id": "shown-popup-closed-on-shared-state-failure",
+      "prerequisites": [
+        "该槽该日已实际显示过一次正常弹窗并已写入去重记录。",
+        "测试设施可受控使共享状态在弹窗显示后不可读。",
+        "关闭时不得调用载入结束流程。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认自有弹窗已显示且内容已证明为自有；预期显示；检查 popup.ownContentPresentBeforeFault=true、popup.currentContentIsOwnAtFault=true、popup.recordAfterDisplay=true。",
+        "注入受控共享状态失效；预期仅关闭或抑制自有内容；检查 popup.ownContentClosedOnFault=true、popup.currentContentIsForeign=false、popup.displayedDuringFault=false。",
+        "检查去重记录与身份；预期均保留且未触发临时载入结束；检查 dedup.recordRetainedAcrossFault=true、popup.recordAfterDisplay=true、dedup.capturedIdentityStable=true、load.transientEndLoadCalled=false、notice.loadBudgetResetOnFault=false。",
+        "检查共享与外来源；预期不销毁共享对象、不强制全局解除暂停、其他模态未受影响；检查 ui.sharedDialogDestroyed=false、ui.globalUnpauseInvoked=false、pause.modForcedUnpause=false、ui.otherNativeModalUnaffected=true。"
+      ],
+      "title": "共享状态故障时关闭已显示的自有弹窗并保留身份与去重记录"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "recovery.autoRecovered"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "resource.nativeHealthIndependentlyObserved"
+        },
+        {
+          "equals": true,
+          "observation": "beacon.visibleAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "corner.visibleAfterRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "ui.safetyGateClear"
+        },
+        {
+          "equals": true,
+          "observation": "ui.playerControllable"
+        },
+        {
+          "equals": true,
+          "observation": "popup.eligibilityRechecked"
+        },
+        {
+          "equals": false,
+          "observation": "popup.eligibleOnRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordBeforeDisplay"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.newDisplaysAfterRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "popup.actualDisplaysAfterFurtherTicks"
+        },
+        {
+          "equals": false,
+          "observation": "notice.successMessageShown"
+        },
+        {
+          "equals": false,
+          "observation": "notice.recoveryToastShown"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordRetainedAcrossRecovery"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        }
+      ],
+      "id": "shown-popup-not-reopened-after-healthy-restore",
+      "phaseNote": "阶段含义：DuringFault=同一载入内已成功显示一次后共享状态故障并关闭自有内容、AfterRecovery=独立重建合格条件后恢复阶段、AfterFurtherTicks=后续多帧；popup.actualDisplays* 为自当前载入起累计口径（同载入已显示 1 次故为 1），popup.newDisplaysAfterRecovery 为恢复区间增量（0）。",
+      "prerequisites": [
+        "该槽该日已实际显示过一次正常弹窗且去重记录存在。",
+        "共享状态曾故障且自有弹窗已被关闭。",
+        "恢复时独立重新建立 Ready、开关开启、资源健康、同一身份同一游戏日与安全可操作界面；已显示记录是唯一抑制条件。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "确认同一次载入内此前已成功显示过一次正常弹窗；预期累计显示次数为 1；检查 popup.actualDisplaysBeforeRecovery=1、popup.recordAfterDisplay=true。",
+        "恢复共享状态并独立重新建立合格条件；预期自动恢复；检查 recovery.autoRecovered=true、state.readable=true、state.sermonReadyValue>=1、settings.popupEnabled=true、resource.nativeHealthIndependentlyObserved=true、beacon.visibleAfterRecovery=true、corner.visibleAfterRecovery=true、ui.safetyGateClear=true、ui.playerControllable=true。",
+        "恢复后重新检查弹窗资格；预期因已有记录而不符合；检查 popup.eligibilityRechecked=true、popup.eligibleOnRecovery=false、popup.recordBeforeDisplay=true。",
+        "在恢复阶段观察是否重开；预期不重开、累计仍为 1、新增为 0 且不显示成功消息；检查 popup.actualDisplaysAfterRecovery=1、popup.newDisplaysAfterRecovery=0、popup.actualDisplaysAfterFurtherTicks=1、notice.successMessageShown=false、notice.recoveryToastShown=false。",
+        "检查去重记录与身份；预期保留；检查 dedup.recordRetainedAcrossRecovery=true、popup.recordAfterDisplay=true、dedup.capturedIdentityStable=true。"
+      ],
+      "title": "共享状态恢复后同槽同日已显示弹窗不再重开"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "pause.otherPauseSourceAbsentAtStart"
+        },
+        {
+          "equals": true,
+          "observation": "popup.pausedWhileShown"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherPauseSourcePresent"
+        },
+        {
+          "equals": true,
+          "observation": "popup.ownContentClosedOnFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.currentContentIsOwnAtFault"
+        },
+        {
+          "equals": true,
+          "observation": "ui.otherPauseSourceUnaffected"
+        },
+        {
+          "equals": true,
+          "observation": "ui.pauseSourcePreserved"
+        },
+        {
+          "equals": true,
+          "observation": "pause.otherPauseStillActive"
+        },
+        {
+          "equals": false,
+          "observation": "pause.modForcedUnpause"
+        },
+        {
+          "equals": false,
+          "observation": "ui.globalUnpauseInvoked"
+        },
+        {
+          "equals": false,
+          "observation": "load.transientEndLoadCalled"
+        }
+      ],
+      "id": "shown-popup-close-preserves-additional-pause",
+      "prerequisites": [
+        "该槽该日已实际显示过一次正常弹窗。",
+        "在弹窗显示后引入第二个原生暂停来源。",
+        "测试设施可受控在引入暂停后使共享状态失效以触发自有弹窗关闭。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "在无其他暂停时显示自有弹窗；预期开始时无其他暂停来源；检查 pause.otherPauseSourceAbsentAtStart=true、popup.pausedWhileShown=true。",
+        "在弹窗显示后引入第二个原生暂停来源；预期已引入；检查 ui.otherPauseSourcePresent=true、pause.otherPauseStillActive=true。",
+        "在共享状态失效时仅关闭自有内容；预期自有内容关闭；检查 popup.ownContentClosedOnFault=true、popup.currentContentIsOwnAtFault=true。",
+        "读取第二个暂停来源；预期未被影响；检查 ui.otherPauseSourceUnaffected=true、ui.pauseSourcePreserved=true、pause.otherPauseStillActive=true。",
+        "确认未强制全局解除暂停且未触发临时载入结束；检查 pause.modForcedUnpause=false、ui.globalUnpauseInvoked=false、load.transientEndLoadCalled=false。"
+      ],
+      "title": "关闭自有弹窗时保留随后引入的额外暂停来源"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equals": true,
+          "observation": "popup.ownContentPresentBeforeFault"
+        },
+        {
+          "equals": true,
+          "observation": "popup.recordAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "popup.foreignTakeoverOccurred"
+        },
+        {
+          "equals": true,
+          "observation": "popup.currentContentIsForeign"
+        },
+        {
+          "equals": false,
+          "observation": "popup.currentContentIsOwnAtFault"
+        },
+        {
+          "equals": false,
+          "observation": "popup.foreignContentClosedByMod"
+        },
+        {
+          "equals": false,
+          "observation": "popup.foreignButtonsMutated"
+        },
+        {
+          "equals": false,
+          "observation": "popup.foreignWindowMutated"
+        },
+        {
+          "equals": false,
+          "observation": "ui.foreignDialogMutated"
+        },
+        {
+          "equals": true,
+          "observation": "popup.foreignPausePreserved"
+        },
+        {
+          "equals": true,
+          "observation": "ui.pauseSourcePreserved"
+        },
+        {
+          "equals": false,
+          "observation": "ui.sharedDialogDestroyed"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.capturedIdentityStable"
+        }
+      ],
+      "id": "shown-popup-close-foreign-takeover-safety",
+      "phaseNote": "阶段含义：OwnShown=自有内容显示阶段、AfterTakeover=他方接管同一缓存对话框后、AtFault=接管后共享状态故障；故障时当前内容为他方，故不断言自有内容关闭。",
+      "prerequisites": [
+        "该槽该日已实际显示过一次正常弹窗。",
+        "随后另一系统以非空他方内容接管了同一缓存的原生对话框。",
+        "测试设施可受控在他方内容接管后使共享状态失效。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "先由本模组显示自有弹窗；预期自有内容已显示；检查 popup.ownContentPresentBeforeFault=true、popup.recordAfterDisplay=true。",
+        "随后由他方系统以非空内容接管同一缓存原生对话框；预期接管发生；检查 popup.foreignTakeoverOccurred=true、popup.currentContentIsForeign=true、popup.currentContentIsOwnAtFault=false。",
+        "在他方内容接管后注入共享状态失效；预期模组不关闭也不改写他方内容；检查 popup.foreignContentClosedByMod=false、popup.foreignButtonsMutated=false、popup.foreignWindowMutated=false、ui.foreignDialogMutated=false。",
+        "读取他方暂停与共享对象；预期他方暂停保留且不销毁共享对象；检查 popup.foreignPausePreserved=true、ui.pauseSourcePreserved=true、ui.sharedDialogDestroyed=false。",
+        "检查本模组记录与身份；预期保留该槽该日已显示记录与冻结身份；检查 popup.recordAfterDisplay=true、dedup.capturedIdentityStable=true。"
+      ],
+      "title": "他方内容接管同一缓存对话框后共享状态故障不关闭也不改写他方内容"
+    },
+    {
+      "category": "shared-state",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "save.churchUnlocked"
+        },
+        {
+          "equals": true,
+          "observation": "save.tutorialCompleted"
+        },
+        {
+          "equals": true,
+          "observation": "save.isSermonDay"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.readinessObservedBeforeInjection"
+        },
+        {
+          "equals": false,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "fault.sharedStateUnreadable"
+        },
+        {
+          "equals": false,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupOffDeliberate"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "popup.actualDisplaysBeforeRecovery"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.stateReadDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.cornerHudDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.beaconDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 0,
+            "min": 0
+          },
+          "observation": "notice.popupDisplayedCount"
+        },
+        {
+          "integerBetween": {
+            "max": 1,
+            "min": 1
+          },
+          "observation": "notice.totalDisplayedCount"
+        }
+      ],
+      "id": "popup-off-with-state-fault-still-notices",
+      "prerequisites": [
+        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "正常弹窗开关为关闭且该关闭为玩家主动选择。",
+        "角落与信标通道健康。"
+      ],
+      "profileId": "combined-recovery",
+      "requirements": [
+        "GKSA-15"
+      ],
+      "steps": [
+        "载入该存档；预期弹窗开关关闭属主动缺省而非故障；检查 settings.popupEnabled=false、settings.popupOffDeliberate=true、state.readinessObservedBeforeInjection=true。",
+        "注入受控共享状态失效；预期状态读取类别故障消息仍显示一次；检查 fault.sharedStateUnreadable=true、notice.stateReadDisplayedCount=1。",
+        "确认关闭不抑制共享状态故障消息；检查 notice.popupDisplayedCount=0、notice.totalDisplayedCount=1、popup.actualDisplaysBeforeRecovery=0。"
+      ],
+      "title": "弹窗开关关闭时共享状态故障消息仍显示"
+    }
+  ],
+  "schemaVersion": 2
+}

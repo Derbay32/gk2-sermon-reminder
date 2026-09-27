@@ -1,0 +1,155 @@
+{
+  "capturePurpose": "example",
+  "captureVersion": 2,
+  "environment": {
+    "bepinex.sha256": "REPLACE_WITH_64_HEX",
+    "bepinex.version": "5.4.23.5",
+    "build.artifactSha256": "REPLACE_WITH_64_HEX",
+    "build.command": "REPLACE_WITH_REPRODUCIBLE_BUILD_COMMAND",
+    "build.sdkVersion": "REPLACE",
+    "build.sourceCommit": "REPLACE_WITH_40_HEX_COMMIT",
+    "capturedAt": "REPLACE_WITH_ISO_8601_TIMESTAMP",
+    "evidenceFiles": {
+      "logs/BepInEx-load.log": "REPLACE_WITH_SHA256_OF_REAL_FILE",
+      "screenshots/popup-shown-when-enabled-zh.png": "REPLACE_WITH_SHA256_OF_REAL_FILE"
+    },
+    "framework.commit": "REPLACE_WITH_40_HEX_COMMIT",
+    "framework.name": "GK2 Mod Framework",
+    "framework.version": "REPLACE",
+    "game.buildId": "REPLACE",
+    "game.name": "Graveyard Keeper 2 (Steam Windows build)",
+    "game.sermonWeekday": 2,
+    "game.sha256": "REPLACE_WITH_64_HEX",
+    "game.version": "REPLACE",
+    "inputDevices": [
+      "keyboard",
+      "mouse",
+      "gamepad"
+    ],
+    "os": "CachyOS x86-64",
+    "plugin.loaded": true,
+    "plugin.sha256": "REPLACE_WITH_64_HEX",
+    "plugin.version": "REPLACE",
+    "proton.buildId": "REPLACE",
+    "proton.version": "REPLACE",
+    "resolution.height": 1080,
+    "resolution.width": 1920,
+    "uiScale": 1.0
+  },
+  "kind": "gksr-e2e-capture",
+  "manifestId": "gksr-full-mod",
+  "manifestSha256": "84c0767dc6aea1803448137bd4a22f8e769b11701e6186d211c5f42c4f27d257",
+  "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
+  "observations": {
+    "close-esc": {
+      "input.gameplayInputRestoredAfterClose": true,
+      "pause.stuckPauseAfterClose": false,
+      "popup.closedByEsc": true,
+      "popup.openAfterClose": false,
+      "popup.shown": true
+    },
+    "dedup-reload-same-slot-same-day": {
+      "dedup.recordRetainedAcrossReload": true,
+      "popup.firstLoadShown": true,
+      "popup.reloadShownAgain": false,
+      "popup.reloadSuppressed": true,
+      "save.absoluteDay": 8,
+      "save.absoluteDayAfterReload": 8,
+      "save.churchUnlocked": true,
+      "save.dayOfWeek": 2,
+      "save.daysInWeek": 6,
+      "save.isSermonDay": true,
+      "save.sermonWeekday": 2,
+      "save.tutorialCompleted": true
+    },
+    "popup-shown-when-enabled": {
+      "dedup.recordAbsentForThisSlotDayBeforeLoad": true,
+      "i18n.popup.bodyText.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.popup.bodyText.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.popup.bodyText.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "i18n.popup.confirmLabel.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.popup.confirmLabel.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.popup.confirmLabel.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "i18n.popup.titleText.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.popup.titleText.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.popup.titleText.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
+      "input.playerMovedDuringPopup": false,
+      "language.active": "zh_cn",
+      "pause.timeScaleChangedByMod": false,
+      "pause.unpauseAllInvoked": false,
+      "pause.usedNativePause": true,
+      "popup.bodyText": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "popup.confirmButtonCount": 1,
+      "popup.confirmLabel": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "popup.displayCountWithinLoad": 1,
+      "popup.extraActionButtonCount": 0,
+      "popup.nativeDialogUsed": true,
+      "popup.pausedWhileShown": true,
+      "popup.shown": true,
+      "popup.stayedUntilConfirmed": true,
+      "popup.titleNonEmpty": true,
+      "popup.titleText": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
+      "popup.titled": true,
+      "save.absoluteDay": 8,
+      "save.churchUnlocked": true,
+      "save.dayOfWeek": 2,
+      "save.daysInWeek": 6,
+      "save.isSermonDay": true,
+      "save.sermonWeekday": 2,
+      "save.tutorialCompleted": true,
+      "settings.popupEnabled": true,
+      "state.readable": true,
+      "state.sermonReadyValue": 1
+    },
+    "settings-toggle-keyboard": {
+      "settings.autosavedAfterToggle": true,
+      "settings.inputDeviceUsed": "keyboard-mouse",
+      "settings.popupEnabledAfterToggle": true,
+      "settings.toggleChanged": true
+    }
+  },
+  "results": [
+    {
+      "evidence": {
+        "screenshot": "screenshots/popup-shown-when-enabled-zh.png"
+      },
+      "measurement": {
+        "values": {
+          "popup.confirmButtonCount": 1,
+          "popup.displayCountWithinLoad": 1
+        }
+      },
+      "notes": "REPLACE with the observed run notes; never mark an unexecuted scenario as passed.",
+      "scenarioId": "popup-shown-when-enabled",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/settings-toggle-keyboard.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "settings-toggle-keyboard",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/dedup-reload-same-slot-same-day.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "dedup-reload-same-slot-same-day",
+      "status": "unexecuted"
+    },
+    {
+      "evidence": {
+        "screenshot": "screenshots/close-esc.png"
+      },
+      "measurement": false,
+      "notes": "REPLACE with the observed run notes.",
+      "scenarioId": "close-esc",
+      "status": "unexecuted"
+    }
+  ],
+  "unexecuted": true
+}

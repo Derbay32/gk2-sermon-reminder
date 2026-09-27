@@ -1,0 +1,69 @@
+name: 功能建议（简体中文）
+description: 提出新的布道提醒功能或现有体验的改进建议。
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        每个 Issue 只提出一个功能建议。
+        描述玩家可见的行为，无需提供代码实现方案。
+        上传附件前移除隐私信息。
+        不要上传存档、游戏文件或第三方 DLL。
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已经搜索过已有 Issue
+          required: true
+        - label: 我确认我的需求是独一无二的
+          required: true
+        - label: 我已经提供了该功能建议的完整说明
+          required: true
+          
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景与问题
+      description: 描述当前体验在什么场景下无法满足需求。
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-behavior
+    attributes:
+      label: 期望的功能
+      description: 说明功能应在什么条件下生效。描述玩家应看到什么结果或能够执行什么操作。
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收方式
+      description: 给出可以在游戏中观察的完成标准。
+      placeholder: |
+        触发条件或前置条件：
+        预期结果：
+        在游戏中检查结果的方式：
+    validations:
+      required: true
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: 设置与现有行为
+      description: 说明是否需要新增设置。指出哪些现有行为应保持不变。
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案
+      description: 描述目前的处理方式或考虑过的其他方案。
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 补充资料
+      description: 提供相关 Issue 链接或示意图。标注示意图，避免将其误认为实际游戏画面。
