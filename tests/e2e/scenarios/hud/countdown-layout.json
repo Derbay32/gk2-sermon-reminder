@@ -4,8 +4,8 @@
     {
       "category": "layout",
       "evidence": {
-        "log": false,
-        "measurement": false,
+        "log": true,
+        "measurement": true,
         "screenshot": true
       },
       "expect": [
@@ -15,7 +15,7 @@
         },
         {
           "equals": true,
-          "observation": "hud.style.clonedFromNative"
+          "observation": "hud.style.derivedFromNative"
         },
         {
           "equals": "HUD.happinessLabel",
@@ -23,7 +23,7 @@
         },
         {
           "equals": true,
-          "observation": "hud.style.fontMatchesNative"
+          "observation": "hud.style.fontMatchesNativeLanguageMapping"
         },
         {
           "equals": true,
@@ -31,15 +31,31 @@
         },
         {
           "equals": true,
-          "observation": "hud.style.materialMatchesNative"
+          "observation": "hud.style.materialMatchesLocalizedFont"
         },
         {
           "equals": true,
-          "observation": "hud.style.outlineMatchesNative"
+          "observation": "hud.style.outlineMatchesNativeLanguageStyle"
         },
         {
           "equals": true,
           "observation": "hud.style.colorMatchesNative"
+        },
+        {
+          "observation": "hud.style.missingRenderedGlyphCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.materialAtlasMatchesFont",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.unsupportedOutlineAccessCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.nativeAssetsUnchanged",
+          "equals": true
         }
       ],
       "id": "hud-style-clone",
@@ -49,13 +65,19 @@
       ],
       "profileId": "countdown",
       "requirements": [
-        "GKSA-10"
+        "GKSA-10",
+        "GKSA-29"
       ],
       "steps": [
-        "载入该存档并等待加载完成。",
-        "对比倒计时文字与 HUD.happinessLabel 所标识的原生幸福度文字来源的字体、字号、材质、描边与颜色。"
+        "载入满足条件的存档；预期显示倒计时；检查 hud.visible=true。",
+        "比较模组字号与颜色；预期保持原生幸福度标签的视觉关系；检查 fontSizeMatchesNative 与 colorMatchesNative。",
+        "比较字体与材质；预期使用当前解析语言的原生字体映射；检查 fontMatchesNativeLanguageMapping、materialMatchesLocalizedFont 与 outlineMatchesNativeLanguageStyle。",
+        "采集当前 HUD 文本的字形覆盖与渲染字符；预期所有非空白字符可见；检查 missingRenderedGlyphCount=0，不固定译文措辞。",
+        "检查实际字体与材质纹理；预期材质使用对应字体图集；检查 materialAtlasMatchesFont=true。",
+        "观察 HUD 稳定显示期间的 Unity 日志；预期没有模组引起的不支持描边属性访问；检查 unsupportedOutlineAccessCount=0。",
+        "对比显示前后的原生字体、材质与回退列表；预期共享资源未被模组修改；检查 nativeAssetsUnchanged=true。"
       ],
-      "title": "文字样式复制运行时原生 HUD 幸福度文字"
+      "title": "文字样式使用原生 HUD 的本地化字体与匹配材质"
     },
     {
       "category": "layout",
@@ -160,6 +182,107 @@
         "对比原生提示层与本模组文字层级。"
       ],
       "title": "倒计时继承原生 HUD 可见性与层级且不新增隐藏名单"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "observation": "hud.firstLoadWrappedPerCharacter",
+          "equals": false
+        },
+        {
+          "observation": "hud.firstMeasurementOrthographic",
+          "equals": true
+        }
+      ],
+      "id": "first-load-text-metrics",
+      "prerequisites": [
+        "重新启动包含本模组的游戏，尚未切换语言或重新加载存档。",
+        "载入已满足门槛且距离布道日仅剩一天的简体中文存档。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-29"
+      ],
+      "steps": [
+        "首次载入后观察提醒；预期在可用空间充足时横向显示；检查 firstLoadWrappedPerCharacter=false 并保留首次显示截图。",
+        "采集测量模式；预期首次测量与实际渲染均使用 UI 正交模式；检查 firstMeasurementOrthographic=true。"
+      ],
+      "title": "首次载入使用一致的 UI 文本测量比例"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "observation": "layout.tutorialButtonVisible",
+          "equals": true
+        },
+        {
+          "observation": "layout.textBelowTutorialButton",
+          "equals": true
+        },
+        {
+          "observation": "layout.tutorialButtonOverlap",
+          "equals": false
+        }
+      ],
+      "id": "layout-tutorial-button-clearance",
+      "prerequisites": [
+        "载入已满足门槛的非布道日存档。",
+        "使用键鼠操作，原生教程问号按钮可见。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-29"
+      ],
+      "steps": [
+        "测量教程按钮与提醒的边界；预期提醒位于按钮下方；检查 textBelowTutorialButton=true。",
+        "观察两者交界；预期不重叠且存在间隔；检查 tutorialButtonOverlap=false 并保留截图。",
+        "切换为手柄后再切回键鼠；预期按钮再次出现时提醒仍避让；对两个键鼠采样分别保存边界测量。"
+      ],
+      "title": "提醒文字避开可见教程按钮"
+    },
+    {
+      "category": "layout",
+      "evidence": {
+        "log": true,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "observation": "native.hotbar.location",
+          "equals": "bottom_left"
+        },
+        {
+          "observation": "native.hotbar.transformUnchangedByMod",
+          "equals": true
+        }
+      ],
+      "id": "controller-hotbar-coexistence",
+      "prerequisites": [
+        "载入已满足门槛的存档，模组提醒可见。",
+        "使用与无模组对照一致的分辨率、UI 比例与存档。"
+      ],
+      "profileId": "countdown",
+      "requirements": [
+        "GKSA-29"
+      ],
+      "steps": [
+        "从键鼠切换到手柄；预期原生快捷栏仍在左下角；检查 native.hotbar.location=bottom_left 并保留完整画面截图。",
+        "记录原生快捷栏的父级、锚点与局部位置；预期不被模组修改；检查 native.hotbar.transformUnchangedByMod=true，并附无模组对照与带模组测量记录。"
+      ],
+      "title": "切换手柄后保留原生快捷栏左下角位置"
     }
   ],
   "schemaVersion": 2

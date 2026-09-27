@@ -18,7 +18,7 @@ using UnityEngine;
 namespace GK2.SermonReminder
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    [BepInDependency(FrameworkPlugin.PluginGuid, "0.1.9")]
+    [BepInDependency(FrameworkPlugin.PluginGuid, "0.1.14")]
     public sealed class SermonReminderPlugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.derbay32.gk2.sermonreminder";
@@ -129,7 +129,7 @@ namespace GK2.SermonReminder
         {
             dependencies = new[]
             {
-                new Gk2ModDependency(FrameworkPlugin.PluginGuid, "0.1.9")
+                new Gk2ModDependency(FrameworkPlugin.PluginGuid, "0.1.14")
             };
 
             // Seed a non-null metadata so registration can never fail; the
