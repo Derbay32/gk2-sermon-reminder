@@ -112,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
         "gameE2eVerdict": None,
         "mod": {
             "name": "GK2 Sermon Reminder",
-            "version": "0.1.0",
+            "version": "1.0.0",
             "guid": "com.derbay32.gk2.sermonreminder",
             "assembly": "GK2.SermonReminder",
             "informationalVersion": informational.group(1).decode("ascii") if informational else None,

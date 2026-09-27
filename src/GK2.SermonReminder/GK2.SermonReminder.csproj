@@ -27,9 +27,9 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 
-    <Version>0.1.0</Version>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <Authors>derbay32</Authors>
     <Description>Sermon-day Ready/Done corner text and a non-sermon-day integer countdown shown beneath the native Graveyard Keeper 2 clock.</Description>
 

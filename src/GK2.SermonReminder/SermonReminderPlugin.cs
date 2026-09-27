@@ -23,7 +23,7 @@ namespace GK2.SermonReminder
     {
         public const string PluginGuid = "com.derbay32.gk2.sermonreminder";
         public const string PluginName = "GK2 Sermon Reminder";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "1.0.0";
 
         private SermonReminderMod mod;
 
