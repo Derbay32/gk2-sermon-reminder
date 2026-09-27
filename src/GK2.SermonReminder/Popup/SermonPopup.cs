@@ -301,7 +301,7 @@ namespace GK2.SermonReminder.Popup
         /// Contained; when the observer stays unavailable the popup fails closed
         /// before any pre-claim or native open.
         /// </summary>
-        internal void ConfigureHarmony(Harmony harmony)
+        internal static void ConfigureHarmony(Harmony harmony)
         {
             try { SermonPopupButtonCapture.ConfigureHarmony(harmony); }
             catch (Exception) { }
@@ -312,7 +312,7 @@ namespace GK2.SermonReminder.Popup
         /// already removed this transpiler; this only clears the cached owner and the
         /// supported flag so a re-enable cannot trust a stale success.
         /// </summary>
-        internal void ClearHarmonyConfiguration()
+        internal static void ClearHarmonyConfiguration()
         {
             try { SermonPopupButtonCapture.ClearConfiguration(); }
             catch (Exception) { }
@@ -737,7 +737,7 @@ namespace GK2.SermonReminder.Popup
             cleanupFaulted = true;
         }
 
-        private bool VerifyDisplayed(
+        private static bool VerifyDisplayed(
             UIDialogWindow window,
             UIDialogWindowData data,
             string title,
@@ -863,7 +863,7 @@ namespace GK2.SermonReminder.Popup
             }
         }
 
-        private bool TryIsSafeToShow(out string reason)
+        private static bool TryIsSafeToShow(out string reason)
         {
             reason = null;
 
@@ -966,7 +966,7 @@ namespace GK2.SermonReminder.Popup
         /// ownership; an unreadable read retains ownership and fails closed.
         /// Returns true only when every required step has succeeded.
         /// </summary>
-        private bool RunCleanup(OwnedTransaction tx)
+        private static bool RunCleanup(OwnedTransaction tx)
         {
             if (tx == null)
                 return true;
@@ -1151,7 +1151,7 @@ namespace GK2.SermonReminder.Popup
         /// lost capture record quarantines the transaction by never reporting the
         /// button stage complete.
         /// </summary>
-        private ButtonProcessResult ProcessOwnedButtons(OwnedTransaction tx)
+        private static ButtonProcessResult ProcessOwnedButtons(OwnedTransaction tx)
         {
             bool allDone = !tx.CaptureRecordFailed;
 

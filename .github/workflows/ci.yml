@@ -2,14 +2,21 @@ name: ci
 
 # Repository source/structure CI for the aggregated GKSA E2E specification.
 #
-# This workflow only runs the Python-standard-library source, manifest/structure,
-# protocol and migration checks on a hosted runner. It does NOT compile native
-# code, does NOT build the plugin against game assemblies, does NOT use fake
-# assemblies and does NOT run or validate the game. The native reference
-# assemblies are deliberately unavailable here, so the real local-build and
-# package checks are gated and reported as unexecuted. Every uploaded report is a
-# source/structure/negative report and must never be read as a game passing: no
-# scenario in the aggregated manifest is executed by this workflow.
+# This workflow runs the Python-standard-library source, manifest/structure,
+# protocol and migration checks, plus two real .NET quality gates on a hosted
+# runner: a `dotnet format whitespace` check over the plugin sources and the
+# SDK analyzer/style canary matrix (IDE0005/CA1822/CA1001/whitespace) that
+# builds disposable netstandard2.1 fixtures inheriting the real repository
+# Directory.Build.props and .editorconfig.
+#
+# It still does NOT build the plugin against the native game assemblies and does
+# NOT run or validate the game: the native reference assemblies are deliberately
+# unavailable here, so the real local-build and package checks stay gated and
+# reported as unexecuted. The .NET canary matrix proves only that the analyzer
+# and style configuration is enforced; it is not a production semantic build and
+# not a game pass. Every uploaded report is a source/structure/negative report
+# and must never be read as a game passing: no scenario in the aggregated
+# manifest is executed by this workflow.
 on:
   pull_request:
     branches:
@@ -88,9 +95,29 @@ jobs:
       - name: Build/package negative gate
         run: uv run --locked python tests/tools/build_package_matrix.py --repo-root . --negative-only --output artifacts/ci/build-package-negative.json
 
+      # The hosted runner has no native game assemblies, so it cannot perform the
+      # real plugin semantic build. It CAN still enforce the repository C# quality
+      # configuration: the whitespace/style gate over the real plugin sources, and
+      # the SDK analyzer canary matrix over disposable netstandard2.1 fixtures that
+      # inherit the real Directory.Build.props/.editorconfig. The formatting check
+      # runs on the actual sources; the analyzer matrix is a tool/configuration
+      # canary over disposable fixtures. Neither step uses fake game assemblies.
+      - name: Set up .NET SDK from global.json
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        with:
+          global-json-file: global.json
+
+      - name: C# whitespace formatting check (source only)
+        run: dotnet format whitespace src/GK2.SermonReminder --folder --verify-no-changes --exclude bin --exclude obj --report artifacts/ci/csharp-format.json
+
+      - name: SDK analyzer/style canary matrix (no native build)
+        run: uv run --locked python tests/tools/csharp_quality_matrix.py --repo-root . --dotnet "$(command -v dotnet)" --output artifacts/ci/csharp-quality.json
+
       - name: Upload structural reports (not a game pass)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: gksa23-source-structure-reports
-          path: artifacts/ci/*.json
+          path: |
+            artifacts/ci/*.json
+            artifacts/gksa25-tests/csharp-quality-*/logs/*.log
           if-no-files-found: error

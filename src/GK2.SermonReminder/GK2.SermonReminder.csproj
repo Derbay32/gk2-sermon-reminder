@@ -14,11 +14,16 @@
     <AssemblyName>GK2.SermonReminder</AssemblyName>
     <RootNamespace>GK2.SermonReminder</RootNamespace>
 
-    <!-- Deterministic managed artifact. No PDB / XML doc / ref assembly output. -->
+    <!--
+      Deterministic managed artifact. No PDB / ref assembly output, and no XML
+      documentation file copied next to the DLL. Intermediate documentation XML
+      is still generated in obj/ for build-time IDE0005 analysis (see
+      Directory.Build.props), but CopyDocumentationFileToOutputDirectory=false
+      keeps the shipped output DLL-only.
+    -->
     <Deterministic>true</Deterministic>
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
-    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
 

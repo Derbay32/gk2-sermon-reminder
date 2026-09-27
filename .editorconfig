@@ -1,0 +1,31 @@
+# GKSA-25: repository editor configuration for the .NET quality gate.
+#
+# This file is intentionally scoped to C# only and conservative: it fixes C#
+# whitespace and using-directive placement, and it turns the unused-using
+# diagnostic (IDE0005) into a build error. It does NOT introduce naming,
+# expression-body, var, namespace-modernization or unused-private-member
+# policy, and it imposes no editor policy on Python, JSON or YAML.
+
+root = true
+
+[*.cs]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# The plugin source uses block-scoped namespaces and single-line blocks; those
+# existing choices are preserved because no namespace/brace policy is set here.
+#
+# Keep using directives outside the namespace (the current placement) and
+# prefer System directives first. IDE0065 is enabled so that a future directive
+# placed inside a namespace is reported instead of silently accepted.
+csharp_using_directive_placement = outside_namespace
+dotnet_sort_system_directives_first = true
+dotnet_diagnostic.IDE0065.severity = warning
+
+# Unused using directives are a build error. This rule requires the
+# documentation XML generated in obj/ (see Directory.Build.props).
+dotnet_diagnostic.IDE0005.severity = error

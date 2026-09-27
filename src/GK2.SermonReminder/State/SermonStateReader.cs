@@ -25,7 +25,7 @@ namespace GK2.SermonReminder.State
         // mod never performs a separate key-presence check or copies the state.
         private const string SermonReadyResource = "sermon_ready";
 
-        internal SermonStateSnapshot Read(GameSave expectedSave)
+        internal static SermonStateSnapshot Read(GameSave expectedSave)
         {
             try
             {

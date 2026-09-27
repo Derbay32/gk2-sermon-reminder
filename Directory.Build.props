@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    GKSA-25: repository-wide .NET quality gate.
+
+    Every project under this root (the real plugin and any disposable canary
+    project) inherits these settings. The SDK pinned by global.json and the
+    netstandard2.1 target framework are deliberately unchanged.
+  -->
+  <PropertyGroup>
+    <!-- Enable the SDK's .NET (CAxxxx) analyzers even for netstandard2.1. -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>8.0-recommended</AnalysisLevel>
+
+    <!-- Enable the IDE (IDExxxx) style analyzers during a command-line build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- An analyzer or compiler warning is a build failure. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Intermediate documentation XML in obj/ is required for IDE0005
+      (remove unnecessary using directives) to run at build time:
+      https://learn.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/ide0005
+      The XML is NOT copied next to the DLL, so the shipped output stays
+      DLL-only; see the SDK property of the same purpose below.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <CopyDocumentationFileToOutputDirectory>false</CopyDocumentationFileToOutputDirectory>
+
+    <!--
+      GenerateDocumentationFile above exists only to enable IDE0005. Missing XML
+      documentation comments (CS1591) are not part of this task, so that single
+      diagnostic is suppressed; every CA and IDE diagnostic stays active.
+    -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+</Project>
