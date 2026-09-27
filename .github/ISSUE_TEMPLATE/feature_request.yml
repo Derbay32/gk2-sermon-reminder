@@ -1,0 +1,69 @@
+name: Feature request
+description: Suggest a sermon reminder feature or an improvement to the current experience.
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose one feature per issue.
+        Describe the player-facing behavior rather than a code implementation.
+        Remove private information before uploading attachments.
+        Do not upload save files, game files, or third-party DLLs.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before Submitting
+      options:
+        - label: I have searched existing Issues
+          required: true
+        - label: I confirm that my feature request is unique
+          required: true
+        - label: I have provided a complete description of the proposed feature
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Use case and problem
+      description: Describe the situation where the current experience falls short.
+    validations:
+      required: true
+
+  - type: textarea
+    id: desired-behavior
+    attributes:
+      label: Proposed behavior
+      description: Explain when the feature should activate. Describe what the player should see or be able to do.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: How to verify the feature
+      description: Give observable in-game criteria for considering this feature complete.
+      placeholder: |
+        Trigger or precondition:
+        Expected result:
+        How to check the result in the game:
+    validations:
+      required: true
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings and existing behavior
+      description: Explain whether a new setting is needed. Identify existing behavior that should remain unchanged.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe your current workaround or other approaches you considered.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add relevant issue links or mockups. Label mockups so they are not mistaken for actual gameplay captures.

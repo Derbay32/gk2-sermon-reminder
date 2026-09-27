@@ -1,0 +1,102 @@
+name: 问题反馈（简体中文）
+description: 报告崩溃、显示异常或其他不符合预期的行为。
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        每个 Issue 只报告一个问题。
+        上传证据前移除用户名、本机路径等隐私信息。
+        不要上传存档、游戏文件或第三方 DLL。
+        
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已经搜索过已有 Issue
+          required: true
+        - label: 我确认我的问题是独一无二的
+          required: true
+        - label: 我已经提供了该问题的完整说明与日志
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 描述遇到的问题。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+      description: 按顺序列出操作。指出从哪一步开始出现与预期不符的行为。
+      placeholder: |
+        1. 加载一个满足以下条件的存档……
+        2. 执行……
+        3. 观察……
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+      description: 描述正常情况下应该发生什么。
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 描述实际发生了什么。注明问题是每次出现还是偶尔出现。
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: 填写实际使用的版本。无法确认的项目请填写“不清楚”。
+      placeholder: |
+        操作系统：
+        Proton 版本（如适用）：
+        游戏版本：
+        GK2 Sermon Reminder 版本：
+        BepInEx 版本：
+        GK2 Mod Framework 版本：
+        游戏语言：
+        其他已启用的 Mod：
+    validations:
+      required: true
+
+  - type: textarea
+    id: state-settings
+    attributes:
+      label: 存档状态与设置
+      description: 提供与问题相关的信息。无关项目请填写“不适用”。
+      placeholder: |
+        是否已解锁教堂：
+        是否已完成布道教程：
+        是否处于布道日：
+        本周是否已完成布道：
+        教堂方向信标是否开启：
+        Ultimate Reminder 是否开启：
+        修改开关后是否重新加载过存档：
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 相关日志
+      description: 移除隐私信息后，粘贴 BepInEx/LogOutput.log 中与问题有关的片段。
+      render: text
+
+  - type: textarea
+    id: visual-evidence
+    attributes:
+      label: 截图或录像
+      description: 提供截图或录像来展示 UI 问题。日志不能替代实际显示证据。
