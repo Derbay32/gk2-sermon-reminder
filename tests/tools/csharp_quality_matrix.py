@@ -33,10 +33,13 @@ Fixture canaries (inherit the REAL ancestor props/.editorconfig):
   c6a  clean source is not whitespace-clean                 -> FAIL
   c6b  mis-indented source passes --verify-no-changes       -> FAIL
   c6c  any check mutates its hashed input files             -> FAIL
-Missing future configuration must yield orderly RED, never a crash. Positive
-controls (c2, c2b, c6a) run before the negative canaries. Each check records its
-command array, exit code, expected/actual values, log path, and the before/after
-sha256 of the inputs it read. The artifact carries ``e2eVerdict: null`` and
+Missing future configuration must yield orderly RED, never a crash.
+Build controls c2/c2b run before negative build canaries c3-c5.
+The clean formatting control c6a runs before the malformed-source check c6b.
+Each check records its command array, exit code, expected/actual values and log path.
+Input-mutation evidence hashes only explicitly listed files: the real plugin
+project for property queries and fixture project/source files for canaries.
+Inherited configuration files are not part of that hash evidence. The artifact carries ``e2eVerdict: null`` and
 ``scope: quality-gate-canaries-only``: analyzer canaries, not game simulations,
 with NO production semantic check.
 """
