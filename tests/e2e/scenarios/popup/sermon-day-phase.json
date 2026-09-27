@@ -1,0 +1,237 @@
+{
+  "kind": "gksr-e2e-scenarios",
+  "scenarios": [
+    {
+      "category": "phase-gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedAfterDisplay"
+        },
+        {
+          "equals": true,
+          "observation": "dedup.recordAbsentForThisSlotDayBeforeLoad"
+        },
+        {
+          "equals": "gksr.hud.sermonReminder",
+          "observation": "hud.textKey"
+        }
+      ],
+      "id": "popup-preopen-not-triggered",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，弹窗开关为开启。",
+        "当前为布道日当天、sermon_ready 规则尚未当日执行，存档残留有限 sermon_ready>=1，本进程该槽该日尚无记录。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读、门槛满足且处于开启前阶段。",
+        "观察弹窗；预期不显示且不消耗提示机会。",
+        "记录去重；预期未写入记录且显示的是 Ready 文字。"
+      ],
+      "title": "开启前阶段即使残留 ready>=1 也不触发弹窗且不写去重记录"
+    },
+    {
+      "category": "phase-gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "numberRange": {
+            "min": 1
+          },
+          "observation": "state.sermonReadyValue"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "settings.popupEnabled"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shown"
+        },
+        {
+          "equals": 0,
+          "observation": "popup.displayCountWithinLoad"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedAfterDisplay"
+        }
+      ],
+      "id": "popup-locked-no-new-display",
+      "prerequisites": [
+        "两个解锁门槛任务均为 Completed，弹窗开关为开启。",
+        "当前为布道日当天、sermon_lock 规则当日已执行，原生残留有限 sermon_ready>=1。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "载入该存档并等待加载完成；预期状态可读且已锁定。",
+        "观察弹窗；预期本载入不显示弹窗。",
+        "记录去重；预期未消耗提示机会也不写入记录。"
+      ],
+      "title": "sermon_lock 当日执行后不触发新弹窗也不写去重记录"
+    },
+    {
+      "category": "phase-gating",
+      "evidence": {
+        "log": false,
+        "measurement": true,
+        "screenshot": true
+      },
+      "expect": [
+        {
+          "equalsEnvironment": "game.sermonWeekday",
+          "observation": "save.sermonWeekday"
+        },
+        {
+          "dateCheck": {
+            "absoluteDay": "save.absoluteDay",
+            "dayOfWeek": "save.dayOfWeek",
+            "mode": "sermon-day",
+            "nonSermonCountdownShown": "hud.nonSermonCountdownShown"
+          }
+        },
+        {
+          "equals": true,
+          "observation": "popup.pendingDuringDeferral"
+        },
+        {
+          "equals": true,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equals": true,
+          "observation": "popup.canceledWhenEligibilityLost"
+        },
+        {
+          "equals": false,
+          "observation": "popup.shownAfterCancellation"
+        },
+        {
+          "equals": false,
+          "observation": "popup.chanceConsumedByCanceledPending"
+        },
+        {
+          "equals": false,
+          "observation": "popup.dedupRecordedForCanceledPending"
+        }
+      ],
+      "id": "popup-pending-cancelled-at-lock-no-dedup",
+      "prerequisites": [
+        "存档满足全部门槛且弹窗开关为开启，弹窗已处于待显示状态但尚未显示（例如被安全门或占用界面延后）。",
+        "在待显示期间 sermon_lock 规则当日执行，使该日提醒资格失效。"
+      ],
+      "profileId": "sermon-popup",
+      "requirements": [
+        "GKSA-30"
+      ],
+      "steps": [
+        "读取等待期间状态；预期存在待显示弹窗且资格尚未失效。",
+        "使 sermon_lock 规则当日执行；预期待显示被取消且不显示。",
+        "记录去重；预期不消耗提示机会也不写入记录；本场景不要求已显示的原生暂停弹窗自动关闭。"
+      ],
+      "title": "等待或待显示期间 sermon_lock 执行时取消待显示且不消耗提示机会"
+    }
+  ],
+  "schemaVersion": 2
+}

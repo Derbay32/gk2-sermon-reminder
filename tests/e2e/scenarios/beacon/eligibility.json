@@ -36,6 +36,14 @@
         {
           "notEquals": "gksr.hud.sermonDone",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "beacon-gate-church-incomplete",
@@ -45,7 +53,8 @@
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入教堂开启任务未完成的存档并等待加载完成；预期存档可用；检查 save.sermonWeekday 等于 game.sermonWeekday。",
@@ -85,6 +94,14 @@
         {
           "equals": false,
           "observation": "hud.visible"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "beacon-gate-tutorial-incomplete",
@@ -95,7 +112,8 @@
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入教堂已解锁但教学未完成的存档并等待加载完成；预期教堂解锁；检查 save.churchUnlocked=true。",
@@ -181,17 +199,38 @@
         {
           "equals": true,
           "observation": "native.hudVisibleNormal"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
+        },
+        {
+          "equalsObservation": "save.absoluteDay",
+          "observation": "phase.sermonReadyRuleLastExecDay"
         }
       ],
       "id": "beacon-eligible-sermon-day-unconsumed",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "当前存档处于布道日当天，且原生 playerData.GetRes(\"sermon_ready\") >= 1。",
+        "当前存档处于布道日当天开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），且原生 playerData.GetRes(\"sermon_ready\") >= 1。",
         "信标开关为开启。"
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期门槛满足；检查 save.churchUnlocked=true 与 save.tutorialCompleted=true。",
@@ -251,6 +290,14 @@
         {
           "equals": "gksr.hud.sermonCountdown.other",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "beacon-hidden-nonsermon-day",
@@ -261,7 +308,8 @@
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",
@@ -327,18 +375,35 @@
         {
           "equals": true,
           "observation": "done.presentationHealthy"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "beacon-hidden-opportunity-consumed",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "当前为布道日当天，且原生 playerData.GetRes(\"sermon_ready\") < 1。",
+        "当前为布道日当天开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），且原生 playerData.GetRes(\"sermon_ready\") < 1。",
         "Done 文字与图标资源均健康可用（done.iconAvailable=true 且 done.presentationHealthy=true）。",
         "信标开关为开启。"
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入布道日且机会已消费的存档并等待加载完成；预期状态可读且机会已消费；检查 state.readable=true 与 state.sermonReadyValue<1。",
@@ -392,6 +457,18 @@
         {
           "notEquals": "gksr.hud.sermonDone",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
+        },
+        {
+          "equals": true,
+          "observation": "state.readable"
         }
       ],
       "id": "beacon-hidden-offday-stale-ready",
@@ -402,7 +479,8 @@
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "跨过布道日进入非布道日；预期日期已推进；检查 save.dayOfWeek 不等于 save.sermonWeekday。",
@@ -506,18 +584,35 @@
         {
           "equals": true,
           "observation": "hud.visible"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "beacon-item-shortage-still-eligible",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "当前为布道日且原生 sermon_ready >= 1。",
+        "当前为布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）且原生 sermon_ready >= 1。",
         "当前存档存在物品或材料短缺。",
         "信标开关为开启。"
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "准备物品/材料不足但满足布道资格的存档；预期短缺存在；检查 inventory.itemShortage=true。",
@@ -573,6 +668,14 @@
         {
           "equals": "gksr.hud.sermonCountdown.one",
           "observation": "hud.textKey"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "beacon-bearing-delta-one",
@@ -583,7 +686,8 @@
       ],
       "profileId": "church-beacon",
       "requirements": [
-        "GKSA-12"
+        "GKSA-12",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",

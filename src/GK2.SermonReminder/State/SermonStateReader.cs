@@ -25,6 +25,11 @@ namespace GK2.SermonReminder.State
         // mod never performs a separate key-presence check or copies the state.
         private const string SermonReadyResource = "sermon_ready";
 
+        // Native daily schedule entries. Their saved execution days distinguish
+        // pre-opening and day-end closure without guessing a time or caching state.
+        private const string SermonOpenRule = "sermon_ready";
+        private const string SermonCloseRule = "sermon_lock";
+
         internal static SermonStateSnapshot Read(GameSave expectedSave)
         {
             try
@@ -84,7 +89,7 @@ namespace GK2.SermonReminder.State
                 if (delta > 0)
                 {
                     return SermonStateSnapshot.Resolved(
-                        absoluteDay, currentDayNumber, week, delta, SermonDisplayState.Countdown);
+                        absoluteDay, currentDayNumber, week, delta, SermonDisplayState.Countdown, false);
                 }
 
                 PlayerData player = expectedSave.playerData;
@@ -99,16 +104,97 @@ namespace GK2.SermonReminder.State
                     return SermonStateSnapshot.Unreadable("native sermon_ready is not finite");
                 }
 
-                SermonDisplayState display = ready >= 1f
-                    ? SermonDisplayState.Ready
-                    : SermonDisplayState.Done;
+                if (!TryReadSermonWindow(expectedSave, absoluteDay,
+                    out bool openedToday, out bool closedToday, out string failure))
+                {
+                    return SermonStateSnapshot.Unreadable(failure);
+                }
 
-                return SermonStateSnapshot.Resolved(absoluteDay, currentDayNumber, week, 0, display);
+                // Both consumption and the native day-end rule clear sermon_ready.
+                // After closure we intentionally hide rather than invent a completion
+                // history. Before opening, today's HUD reminder is not yet actionable.
+                SermonDisplayState display;
+                if (closedToday)
+                    display = SermonDisplayState.Hidden;
+                else if (!openedToday || ready >= 1f)
+                    display = SermonDisplayState.Ready;
+                else
+                    display = SermonDisplayState.Done;
+
+                bool reminderEligible = openedToday && !closedToday && ready >= 1f;
+                return SermonStateSnapshot.Resolved(
+                    absoluteDay, currentDayNumber, week, 0, display, reminderEligible);
             }
             catch (Exception ex)
             {
                 return SermonStateSnapshot.Unreadable(ex.GetType().Name);
             }
+        }
+
+        private static bool TryReadSermonWindow(
+            GameSave save, int absoluteDay, out bool openedToday, out bool closedToday, out string failure)
+        {
+            openedToday = false;
+            closedToday = false;
+            failure = null;
+
+            GameLogicsSystemData logicData = save.gameLogicSystemData;
+            if (logicData?.gameLogics == null)
+            {
+                failure = "game logic system data unavailable";
+                return false;
+            }
+
+            GameLogicData opening = null;
+            GameLogicData closing = null;
+            foreach (GameLogicData rule in logicData.gameLogics)
+            {
+                if (rule == null)
+                {
+                    failure = "native game logic entry unavailable";
+                    return false;
+                }
+
+                if (rule.id == SermonOpenRule)
+                {
+                    if (opening != null)
+                    {
+                        failure = "duplicate native sermon opening rule";
+                        return false;
+                    }
+                    opening = rule;
+                }
+                else if (rule.id == SermonCloseRule)
+                {
+                    if (closing != null)
+                    {
+                        failure = "duplicate native sermon closing rule";
+                        return false;
+                    }
+                    closing = rule;
+                }
+            }
+
+            if (opening == null || closing == null)
+            {
+                failure = "native sermon opening or closing rule unavailable";
+                return false;
+            }
+
+            int openedDay = opening.lastExecDay;
+            int closedDay = closing.lastExecDay;
+            // Zero is the native never-executed default. The closing rule cannot
+            // legitimately run ahead of the opening rule in this daily schedule.
+            if (openedDay < 0 || closedDay < 0 || openedDay > absoluteDay || closedDay > absoluteDay
+                || closedDay > openedDay)
+            {
+                failure = "native sermon rule execution days inconsistent";
+                return false;
+            }
+
+            openedToday = openedDay == absoluteDay;
+            closedToday = closedDay == absoluteDay;
+            return true;
         }
     }
 }

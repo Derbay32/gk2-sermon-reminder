@@ -390,16 +390,33 @@
             "language": "zh_cn"
           },
           "observation": "hud.text"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "native-ready-accessor-default-zero",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "布道日当天，原生存档中不存在 sermon_ready 键。"
+        "布道日当天处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），原生存档中不存在 sermon_ready 键。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成。",
@@ -454,16 +471,33 @@
             "language": "zh_cn"
           },
           "observation": "hud.textAfter"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "done-persists-same-date",
       "prerequisites": [
         "两个门槛任务均为 Completed。",
-        "布道日当天，开始布道后原生 sermon_ready < 1。"
+        "布道日当天处于开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），开始布道后原生 sermon_ready < 1。"
       ],
       "profileId": "sermon-state",
       "requirements": [
-        "GKSA-11"
+        "GKSA-11",
+        "GKSA-30"
       ],
       "steps": [
         "记录第一次观察的绝对日与角落文字。",
@@ -472,7 +506,7 @@
         "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
         "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "同一天内 Done 状态在剩余时间保持不变"
+      "title": "开启窗口内同一天 Done 状态在 sermon_lock 执行前保持不变"
     }
   ],
   "schemaVersion": 2

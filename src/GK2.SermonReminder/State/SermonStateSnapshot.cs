@@ -14,6 +14,13 @@ namespace GK2.SermonReminder.State
         internal int DaysInWeek { get; }
         internal int Delta { get; }
         internal SermonDisplayState Display { get; }
+
+        /// <summary>
+        /// Native opportunity is open and unconsumed. Ready text alone does not
+        /// imply this: the HUD also shows Ready before the native opening rule runs.
+        /// Per-load toggles and popup safety/dedup gates are applied by consumers.
+        /// </summary>
+        internal bool ReminderEligible { get; }
         internal string Failure { get; }
 
         private SermonStateSnapshot(
@@ -24,6 +31,7 @@ namespace GK2.SermonReminder.State
             int daysInWeek,
             int delta,
             SermonDisplayState display,
+            bool reminderEligible,
             string failure)
         {
             Readable = readable;
@@ -33,22 +41,24 @@ namespace GK2.SermonReminder.State
             DaysInWeek = daysInWeek;
             Delta = delta;
             Display = display;
+            ReminderEligible = reminderEligible;
             Failure = failure;
         }
 
         internal static SermonStateSnapshot Unreadable(string failure) =>
-            new SermonStateSnapshot(false, false, 0, 0, 0, 0, SermonDisplayState.Hidden, failure);
+            new SermonStateSnapshot(false, false, 0, 0, 0, 0, SermonDisplayState.Hidden, false, failure);
 
         /// <summary>Closed quest gates: a normal, non-fault hidden state.</summary>
         internal static SermonStateSnapshot GatesClosed(int daysInWeek) =>
-            new SermonStateSnapshot(true, false, 0, 0, daysInWeek, 0, SermonDisplayState.Hidden, null);
+            new SermonStateSnapshot(true, false, 0, 0, daysInWeek, 0, SermonDisplayState.Hidden, false, null);
 
         internal static SermonStateSnapshot Resolved(
             int absoluteDay,
             int dayOfWeek,
             int daysInWeek,
             int delta,
-            SermonDisplayState display) =>
-            new SermonStateSnapshot(true, true, absoluteDay, dayOfWeek, daysInWeek, delta, display, null);
+            SermonDisplayState display,
+            bool reminderEligible) =>
+            new SermonStateSnapshot(true, true, absoluteDay, dayOfWeek, daysInWeek, delta, display, reminderEligible, null);
     }
 }

@@ -802,18 +802,19 @@ namespace GK2.SermonReminder
                 UpdateBeacon(activeSave, snapshot, ref beaconFailed);
 
                 SermonDisplayState state = snapshot.Display;
-                string text = snapshot.GatesSatisfied ? ResolveText(state, snapshot.Delta) : string.Empty;
-
-                if (!snapshot.GatesSatisfied)
+                if (!snapshot.GatesSatisfied || state == SermonDisplayState.Hidden)
                 {
-                    // Gates not complete is a normal hidden state, not a fault; also the
-                    // explicit end of this resource-eligibility episode.
+                    // Closed gates and the native day-end closure are normal hidden
+                    // states, not missing-text faults. End owned icon eligibility too.
+                    if (snapshot.GatesSatisfied)
+                        LogDisplayTransition(snapshot);
                     ClearCornerDiagnostic();
                     hud.Suppress();
                     ResetEligibility();
                     return;
                 }
 
+                string text = ResolveText(state, snapshot.Delta);
                 if (string.IsNullOrEmpty(text))
                 {
                     // Missing approved required corner text: a corner-category fault.
@@ -939,7 +940,7 @@ namespace GK2.SermonReminder
         /// <summary>
         /// Advance the owned beacon for this tick. Eligibility is derived from the fresh
         /// per-tick snapshot: the load-snapshot toggle, a readable state, satisfied
-        /// gates, and the Ready display state (sermon day with the opportunity intact).
+        /// gates, and an open, unconsumed native opportunity (not just Ready text).
         /// The current beacon category failure is reported by reference as a concrete
         /// Failed outcome or an unresolved Pending hold, never from stale diagnostic
         /// text. Failure is contained so it can never propagate into the corner work.
@@ -949,7 +950,7 @@ namespace GK2.SermonReminder
             bool eligible = beaconEnabledForLoad
                 && snapshot.Readable
                 && snapshot.GatesSatisfied
-                && snapshot.Display == SermonDisplayState.Ready;
+                && snapshot.ReminderEligible;
 
             BeaconUpdateResult result;
             try

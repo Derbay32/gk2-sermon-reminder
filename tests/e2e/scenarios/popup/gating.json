@@ -88,6 +88,14 @@
         {
           "equals": false,
           "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "gate-church-incomplete",
@@ -96,7 +104,8 @@
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取教堂门槛；预期未完成；检查 save.churchUnlocked 为 false。",
@@ -140,6 +149,14 @@
         {
           "equals": false,
           "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "gate-tutorial-incomplete",
@@ -149,7 +166,8 @@
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取两个门槛；预期教堂完成、教学未完成；检查 save.churchUnlocked 与 save.tutorialCompleted。",
@@ -206,15 +224,32 @@
         {
           "equals": false,
           "observation": "popup.chanceConsumed"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": false,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "gate-opportunity-consumed",
       "prerequisites": [
-        "存档满足两个门槛且处于布道日当天，原生 sermon_ready 小于 1，弹窗开关为开启。"
+        "存档满足两个门槛且处于布道日当天开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行），原生 sermon_ready 小于 1，弹窗开关为开启。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取布道日与原生机会值；预期处于布道日且机会已消费；检查 save.isSermonDay 为 true 且 state.sermonReadyValue 小于 1。",
@@ -257,6 +292,14 @@
         {
           "equals": 0,
           "observation": "popup.pendingCount"
+        },
+        {
+          "equals": false,
+          "observation": "phase.listRead"
+        },
+        {
+          "equals": false,
+          "observation": "fault.reported"
         }
       ],
       "id": "gate-not-sermon-day",
@@ -265,7 +308,8 @@
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取两个门槛与日期；预期门槛完成且为非布道日；检查 save.churchUnlocked、save.tutorialCompleted、save.isSermonDay。",
@@ -399,16 +443,33 @@
         {
           "equals": true,
           "observation": "popup.shown"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
+        },
+        {
+          "equals": true,
+          "observation": "state.reminderEligible"
         }
       ],
       "id": "item-shortage-irrelevant",
       "prerequisites": [
-        "存档满足两个门槛且处于布道日机会未消费状态，弹窗开关为开启。",
+        "存档满足两个门槛且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）机会未消费状态，弹窗开关为开启。",
         "玩家背包或基地缺少布道所需物品。"
       ],
       "profileId": "sermon-popup",
       "requirements": [
-        "GKSA-13"
+        "GKSA-13",
+        "GKSA-30"
       ],
       "steps": [
         "读取物品状况与日期；预期缺少布道物品且处于布道日；检查 item.shortagePresent 与 save.isSermonDay。",

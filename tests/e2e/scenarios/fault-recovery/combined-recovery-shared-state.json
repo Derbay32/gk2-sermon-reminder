@@ -693,17 +693,26 @@
             "min": 1
           },
           "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
         }
       ],
       "id": "shared-state-nonfinite-ready",
       "prerequisites": [
-        "存档满足两个解锁门槛且处于布道日、当日机会未消费，并已成功就绪读取一次。",
+        "存档满足两个解锁门槛且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）、当日机会未消费，并已成功就绪读取一次。",
         "角落文字、信标与正常弹窗通道在本场景前均健康。",
         "测试设施可受控使该共享状态在就绪后不可读。"
       ],
       "profileId": "combined-recovery",
       "requirements": [
-        "GKSA-15"
+        "GKSA-15",
+        "GKSA-30"
       ],
       "steps": [
         "载入该存档并等待加载完成；预期已成功观察过一次原生就绪读取；检查 state.readinessObservedBeforeInjection=true。",
@@ -1191,17 +1200,30 @@
             "min": 0
           },
           "observation": "notice.totalDisplayedCount"
+        },
+        {
+          "equals": true,
+          "observation": "phase.openRanToday"
+        },
+        {
+          "equals": false,
+          "observation": "phase.lockRanToday"
+        },
+        {
+          "equals": true,
+          "observation": "state.gatesSatisfied"
         }
       ],
       "id": "state-missing-ready-key-default0-done-control",
       "prerequisites": [
-        "存档满足两个解锁门槛且处于布道日。",
+        "存档满足两个解锁门槛且处于布道日开启窗口（sermon_ready 规则当日已执行且 sermon_lock 尚未当日执行）。",
         "原生资源缺少 sermon_ready 键，按文档默认值处理。",
         "测试设施仅在受控读取中移除该键，不注入其他故障。"
       ],
       "profileId": "combined-recovery",
       "requirements": [
-        "GKSA-15"
+        "GKSA-15",
+        "GKSA-30"
       ],
       "steps": [
         "读取原生 ready；预期缺键按默认值处理；检查 save.missingNativeResourceKeyDefaultApplied=true、state.sermonReadyValue=0 且可接受 0.0。",

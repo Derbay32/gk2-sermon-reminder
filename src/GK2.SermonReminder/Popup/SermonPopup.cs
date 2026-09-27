@@ -455,11 +455,11 @@ namespace GK2.SermonReminder.Popup
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "unreadable");
             }
 
-            bool opportunity = snapshot.GatesSatisfied && snapshot.Display == SermonDisplayState.Ready;
+            bool opportunity = snapshot.GatesSatisfied && snapshot.ReminderEligible;
             if (!opportunity)
             {
-                // Closed gates, off day, or an already-consumed opportunity: not
-                // eligible, so a missing identity is never implicated or reported.
+                // Includes pre-opening Ready and normal day-end Hidden. Cancel a
+                // pending request without spending dedup or reporting an identity fault.
                 ClearPendingRetry();
                 return Outcome(SermonPopupStatus.Inactive, SermonPopupStage.None, "not-eligible");
             }
