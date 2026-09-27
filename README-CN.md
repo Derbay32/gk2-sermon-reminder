@@ -95,7 +95,7 @@
 | Ruff | 0.16.9 | [pyproject.toml](pyproject.toml) |
 | Pyright | 1.1.414 | [pyproject.toml](pyproject.toml) |
 | BepInEx (Unity Mono) | 5.4.23.5| - |
-| GK2 Mod Framework | 0.1.9 | - |
+| GK2 Mod Framework | 0.1.14 | - |
 
 ### 准备 Python 工具环境
 

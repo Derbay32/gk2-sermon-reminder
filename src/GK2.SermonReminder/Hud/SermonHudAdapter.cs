@@ -90,6 +90,7 @@ namespace GK2.SermonReminder.Hud
         private const string HappinessLabelFieldName = "happinessLabel";
         private const string WheelFieldName = "wheel";
         private const string LeftUpGroupFieldName = "leftUpGroup";
+        private const string TutorialButtonFieldName = "tutorialListBtn";
 
         // Small local UI-unit gap; parent-local units scale with the native canvas.
         private const float LocalGap = 6f;
@@ -102,6 +103,7 @@ namespace GK2.SermonReminder.Hud
         private FieldInfo happinessLabelField;
         private FieldInfo wheelField;
         private FieldInfo leftUpGroupField;
+        private FieldInfo tutorialButtonField;
 
         // Explicit ownership of a created binding: the flag survives external Unity
         // destruction, while the CLR references identify the host instance.
@@ -120,6 +122,7 @@ namespace GK2.SermonReminder.Hud
         // Geometry captured during a healthy binding preparation.
         private RectTransform boundParentRect;
         private RectTransform boundWheelRect;
+        private RectTransform boundTutorialButtonRect;
         private float canvasMinX;
         private float canvasMaxX;
 
@@ -134,12 +137,14 @@ namespace GK2.SermonReminder.Hud
         private bool styleApplied;
         private string appliedLanguage;
         private TMP_FontAsset appliedFont;
+        private TextStyle appliedTextStyle;
+        private TMP_FontAsset appliedLocalizedFont;
         private Material appliedSharedMaterial;
         private float appliedFontSize;
         private FontStyles appliedFontStyle;
         private Color appliedColor;
         private float appliedOutlineWidth;
-        private Color32 appliedOutlineColor;
+        private Color appliedOutlineColor;
 
         private bool reboundThisPrepare;
 
@@ -240,6 +245,8 @@ namespace GK2.SermonReminder.Hud
 
             boundParentRect = parentRect;
             boundWheelRect = wheelRect;
+            LazyButton tutorialButton = ReadMember<LazyButton>(tutorialButtonField, hud);
+            boundTutorialButtonRect = tutorialButton == null ? null : tutorialButton.transform as RectTransform;
             canvasMinX = minX;
             canvasMaxX = maxX;
             return new SermonBindingResult(SermonHudStatus.Healthy, null, reboundThisPrepare);
@@ -432,13 +439,15 @@ namespace GK2.SermonReminder.Hud
         private bool EnsureFields()
         {
             if (fieldsResolved)
-                return happinessLabelField != null && wheelField != null && leftUpGroupField != null;
+                return happinessLabelField != null && wheelField != null && leftUpGroupField != null
+                    && tutorialButtonField != null;
 
             try
             {
                 happinessLabelField = AccessTools.Field(typeof(HUD), HappinessLabelFieldName);
                 wheelField = AccessTools.Field(typeof(HUD), WheelFieldName);
                 leftUpGroupField = AccessTools.Field(typeof(HUD), LeftUpGroupFieldName);
+                tutorialButtonField = AccessTools.Field(typeof(HUD), TutorialButtonFieldName);
             }
             catch (Exception)
             {
@@ -446,7 +455,8 @@ namespace GK2.SermonReminder.Hud
             }
 
             fieldsResolved = true;
-            return happinessLabelField != null && wheelField != null && leftUpGroupField != null;
+            return happinessLabelField != null && wheelField != null && leftUpGroupField != null
+                && tutorialButtonField != null;
         }
 
         private static T ReadMember<T>(FieldInfo field, object target) where T : class
@@ -491,6 +501,9 @@ namespace GK2.SermonReminder.Hud
                 textGo.transform.SetParent(root.transform, false);
 
                 var text = textGo.AddComponent<TextMeshProUGUI>();
+                // The inactive root defers TMP.Awake until after our first measure.
+                // Use UI metrics now, rather than TMP's pre-Awake 0.1 scale.
+                text.isOrthographic = true;
                 text.raycastTarget = false;
 
                 label = text;
@@ -580,34 +593,46 @@ namespace GK2.SermonReminder.Hud
             {
                 TMP_FontAsset font = source.font;
                 Material shared = source.fontSharedMaterial;
-                if (font == null || shared == null) return false;
+                TextStyle nativeStyle = source.GetComponent<TextStyleComponent>()?.CurrentTextStyle;
+                if (font == null || shared == null || nativeStyle == null || nativeStyle.Font == null)
+                    return false;
 
-                // Read every native value first so a partial read cannot leave a
-                // half-styled label behind.
+                // Numeric labels may deliberately use static Latin-only fonts.
+                // Resolve the sentence through the native language mapping instead.
+                TMP_FontAsset localizedFont = nativeStyle.Font.GetFontAssetFor(language, staticFont: false);
+                if (localizedFont == null) return false;
+
                 float fontSize = source.fontSize;
                 FontStyles fontStyle = source.fontStyle;
                 Color color = source.color;
-                float outlineWidth = source.outlineWidth;
-                Color32 outlineColor = source.outlineColor;
+                float outlineWidth = ReadOutlineWidth(shared);
+                Color outlineColor = ReadOutlineColor(shared);
 
-                label.font = font;
+                // Apply only to our own label. The native API selects the matching
+                // shader and atlas, including fonts that require their own material.
+                // Never read source.outlineWidth/outlineColor: TMP getters access
+                // shader properties without checking whether they are supported.
+                nativeStyle.ApplyStyleAndLanguage(label, language, staticFont: false,
+                    overrideColor: color,
+                    overrideOutlineColor: shared.HasProperty("_OutlineColor") ? (Color?)outlineColor : null);
+                Material localizedMaterial = label.fontSharedMaterial;
+                if (!ReferenceEquals(label.font, localizedFont) || localizedMaterial == null)
+                    return false;
 
-                // Copy the source material into a private instance so outline
-                // changes never mutate the shared native material, replacing any
-                // instance we already own.
+                // Own the material we subsequently modify, not the native cache.
                 if (ownedMaterial != null)
                 {
                     UnityEngine.Object.Destroy(ownedMaterial);
                     ownedMaterial = null;
                 }
-
-                ownedMaterial = new Material(shared);
+                ownedMaterial = new Material(localizedMaterial) { name = "GK2SermonReminder.Hud" };
                 label.fontSharedMaterial = ownedMaterial;
+
                 label.fontSize = fontSize;
                 label.fontStyle = fontStyle;
                 label.color = color;
-                label.outlineWidth = outlineWidth;
-                label.outlineColor = outlineColor;
+                if (shared.HasProperty("_OutlineWidth") && ownedMaterial.HasProperty("_OutlineWidth"))
+                    ownedMaterial.SetFloat("_OutlineWidth", outlineWidth);
 
                 label.textWrappingMode = TextWrappingModes.Normal;
                 label.overflowMode = TextOverflowModes.Overflow;
@@ -615,6 +640,8 @@ namespace GK2.SermonReminder.Hud
                 label.raycastTarget = false;
 
                 appliedFont = font;
+                appliedTextStyle = nativeStyle;
+                appliedLocalizedFont = localizedFont;
                 appliedSharedMaterial = shared;
                 appliedFontSize = fontSize;
                 appliedFontStyle = fontStyle;
@@ -645,13 +672,19 @@ namespace GK2.SermonReminder.Hud
         {
             try
             {
+                TextStyle nativeStyle = source.GetComponent<TextStyleComponent>()?.CurrentTextStyle;
+                if (nativeStyle == null || nativeStyle.Font == null) return true;
+                if (!ReferenceEquals(appliedTextStyle, nativeStyle)) return true;
+                if (!ReferenceEquals(appliedLocalizedFont,
+                    nativeStyle.Font.GetFontAssetFor(appliedLanguage, staticFont: false))) return true;
                 if (!ReferenceEquals(appliedFont, source.font)) return true;
-                if (!ReferenceEquals(appliedSharedMaterial, source.fontSharedMaterial)) return true;
+                Material shared = source.fontSharedMaterial;
+                if (shared == null || !ReferenceEquals(appliedSharedMaterial, shared)) return true;
                 if (!Mathf.Approximately(appliedFontSize, source.fontSize)) return true;
                 if (appliedFontStyle != source.fontStyle) return true;
                 if (!(appliedColor == source.color)) return true;
-                if (!Mathf.Approximately(appliedOutlineWidth, source.outlineWidth)) return true;
-                if (!appliedOutlineColor.Equals(source.outlineColor)) return true;
+                if (!Mathf.Approximately(appliedOutlineWidth, ReadOutlineWidth(shared))) return true;
+                if (!appliedOutlineColor.Equals(ReadOutlineColor(shared))) return true;
                 return false;
             }
             catch (Exception)
@@ -661,6 +694,12 @@ namespace GK2.SermonReminder.Hud
                 return true;
             }
         }
+
+        private static float ReadOutlineWidth(Material material)
+            => material.HasProperty("_OutlineWidth") ? material.GetFloat("_OutlineWidth") : 0f;
+
+        private static Color ReadOutlineColor(Material material)
+            => material.HasProperty("_OutlineColor") ? material.GetColor("_OutlineColor") : default;
 
         private void ApplyTextLayout(string text, float offsetX, float width, float height)
         {
@@ -710,6 +749,15 @@ namespace GK2.SermonReminder.Hud
                 if (local.x < minX) minX = local.x;
                 if (local.x > maxX) maxX = local.x;
                 if (local.y < minY) minY = local.y;
+            }
+
+            // The native tutorial button extends below the wheel in keyboard mode.
+            // Read its live bounds without changing its visibility or layout.
+            if (boundTutorialButtonRect != null && boundTutorialButtonRect.gameObject.activeInHierarchy)
+            {
+                boundTutorialButtonRect.GetWorldCorners(corners);
+                for (int i = 0; i < 4; i++)
+                    minY = Mathf.Min(minY, boundParentRect.InverseTransformPoint(corners[i]).y);
             }
 
             var rect = (RectTransform)displayObject.transform;
@@ -887,9 +935,14 @@ namespace GK2.SermonReminder.Hud
             boundStyleSource = null;
             boundParentRect = null;
             boundWheelRect = null;
+            boundTutorialButtonRect = null;
             canvasMinX = 0f;
             canvasMaxX = 0f;
             styleApplied = false;
+            appliedTextStyle = null;
+            appliedLocalizedFont = null;
+            appliedFont = null;
+            appliedSharedMaterial = null;
             ResetLayoutCache();
         }
 

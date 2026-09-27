@@ -4,8 +4,8 @@
     {
       "category": "localization",
       "evidence": {
-        "log": false,
-        "measurement": false,
+        "log": true,
+        "measurement": true,
         "screenshot": true
       },
       "expect": [
@@ -35,6 +35,22 @@
         {
           "notEquals": "en",
           "observation": "language.active"
+        },
+        {
+          "observation": "hud.style.missingRenderedGlyphCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.materialAtlasMatchesFont",
+          "equals": true
+        },
+        {
+          "observation": "hud.style.unsupportedOutlineAccessCount",
+          "equals": 0
+        },
+        {
+          "observation": "hud.style.nativeAssetsUnchanged",
+          "equals": true
         }
       ],
       "id": "language-unsupported-fallback",
@@ -45,7 +61,8 @@
       ],
       "profileId": "countdown",
       "requirements": [
-        "GKSA-10"
+        "GKSA-10",
+        "GKSA-29"
       ],
       "steps": [
         "将游戏语言设为受支持之外的语言。",
@@ -54,7 +71,11 @@
         "读取左上角时钟下方的倒计时文字与实际选用的文案键。",
         "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
         "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
-        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。",
+        "采集当前 HUD 文本的字形覆盖与渲染字符；预期所有非空白字符可见；检查 missingRenderedGlyphCount=0，不固定译文措辞。",
+        "检查实际字体与材质纹理；预期材质使用对应字体图集；检查 materialAtlasMatchesFont=true。",
+        "观察 HUD 稳定显示期间的 Unity 日志；预期没有模组引起的不支持描边属性访问；检查 unsupportedOutlineAccessCount=0。",
+        "对比显示前后的原生字体、材质与回退列表；预期共享资源未被模组修改；检查 nativeAssetsUnchanged=true。"
       ],
       "title": "游戏语言缺少译文时倒计时回退为英语"
     }

@@ -6,7 +6,7 @@ This project provides sermon reminders for Graveyard Keeper 2.
 
 BepInEx loads the plugin.
 
-The plugin depends on GK2 Mod Framework 0.1.9.
+The plugin depends on GK2 Mod Framework 0.1.14.
 
 The delivered assembly is `GK2.SermonReminder.dll`.
 

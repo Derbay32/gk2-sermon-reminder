@@ -95,7 +95,7 @@ If you run into a compatibility problem, submit an issue with your logs to help 
 | Ruff | 0.16.9 | [pyproject.toml](pyproject.toml) |
 | Pyright | 1.1.414 | [pyproject.toml](pyproject.toml) |
 | BepInEx (Unity Mono) | 5.4.23.5 | - |
-| GK2 Mod Framework | 0.1.9 | - |
+| GK2 Mod Framework | 0.1.14 | - |
 
 ### Prepare the Python tool environment
 
