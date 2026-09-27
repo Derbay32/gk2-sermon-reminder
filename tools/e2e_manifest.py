@@ -16,7 +16,7 @@ never diverge between the two tools. The loader owns:
     scenario document kind/version, non-empty collections, globally unique
     scenario ids, resolvable ``profileId`` references, non-empty
     ``requirements``);
-  * the profile/scenario structural grammar (``finalText`` / ``languageMapping``
+  * the profile/scenario structural grammar (``localizedText`` / ``languageMapping``
     shape, the fixed ``dateCheck`` mode/field tables, the bounded
     ``numberRange`` and ``measuredRatio`` declarations, and every scenario's
     ``expect``/``evidence`` objects), so the returned bundle is already fully
@@ -35,7 +35,6 @@ Only the Python 3 standard library is used.
 from __future__ import annotations
 
 import os
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeGuard
@@ -300,9 +299,10 @@ def validate_date_check(sid: str, condition: JsonObject) -> None:
             f"scenario {sid} dateCheck({mode}) must read the week length from the "
             f"observed save.daysInWeek (got {spec['week']!r})"
         )
-    if "language" in spec and spec["language"] not in ("zh-CN", "en"):
+    if "language" in spec and spec["language"] not in ("zh_cn", "en"):
         raise ManifestInputError(
-            f"scenario {sid} dateCheck({mode}) language {spec['language']!r} must be a catalog label (zh-CN or en)"
+            f"scenario {sid} dateCheck({mode}) language {spec['language']!r} "
+            "must be a resource language id (zh_cn or en)"
         )
 
 
@@ -385,39 +385,37 @@ def profile_label_map(profile: JsonObject, label: str) -> JsonObject:
     return label_map
 
 
-def validate_final_text(final_text: JsonValue, label: str) -> None:
-    """Every finalText key must map catalog labels to complete sentences."""
-    if not isinstance(final_text, dict) or not final_text:
-        raise ManifestInputError(f"{label} must declare finalText for every required key")
-    for key, translations in final_text.items():
-        if not key.strip():
-            raise ManifestInputError(f"{label} finalText key {key!r} must be a non-empty string")
-        if not isinstance(translations, dict) or not translations:
-            raise ManifestInputError(f"{label} finalText[{key!r}] must map languages to complete sentences")
-        for language, text in translations.items():
-            if not isinstance(text, str) or not text.strip():
-                raise ManifestInputError(f"{label} finalText[{key!r}][{language!r}] must be a non-empty sentence")
-        en_text = translations.get("en", "")
-        if isinstance(en_text, str) and en_text:
-            en_params = set(re.findall(r"\{(\w+)\}", en_text))
-            zh_text = translations.get("zh-CN", "")
-            zh_params = set(re.findall(r"\{(\w+)\}", zh_text)) if isinstance(zh_text, str) else set()
-            if en_params and en_params != zh_params:
-                raise ManifestInputError(
-                    f"{label} finalText[{key!r}] placeholder mismatch between en and zh-CN: "
-                    f"{sorted(en_params)} vs {sorted(zh_params)}"
-                )
+def validate_localized_text(sid: str, condition: JsonObject) -> None:
+    """Require functional lookup expectations, never a translation baseline."""
+    spec = condition["localizedText"]
+    if not isinstance(spec, dict) or not spec:
+        raise ManifestInputError(f"scenario {sid} localizedText must be a non-empty object")
+    allowed = {"key", "keyObservation", "keysAnyOf", "language", "daysObservation"}
+    if set(spec) - allowed:
+        raise ManifestInputError(f"scenario {sid} localizedText has unknown fields: {sorted(set(spec) - allowed)}")
+    if spec.get("language") not in ("zh_cn", "en"):
+        raise ManifestInputError(f"scenario {sid} localizedText.language must be zh_cn or en")
+    if ("key" in spec) == ("keyObservation" in spec):
+        raise ManifestInputError(f"scenario {sid} localizedText requires either key or keyObservation")
+    for field in ("key", "keyObservation", "daysObservation"):
+        if field in spec:
+            _require_nonempty_string(spec, field, f"scenario {sid} localizedText")
+    if "keyObservation" in spec:
+        keys = spec.get("keysAnyOf")
+        if not isinstance(keys, list) or not keys or not all(isinstance(k, str) and k.strip() for k in keys):
+            raise ManifestInputError(f"scenario {sid} localizedText.keysAnyOf must list allowed keys")
+    elif "keysAnyOf" in spec:
+        raise ManifestInputError(f"scenario {sid} localizedText.keysAnyOf requires keyObservation")
 
 
 def validate_profiles(bundle: ManifestBundle) -> None:
-    """Strictly check every profile context (finalText and language mapping).
+    """Strictly check every profile context (language mapping).
 
     This is structural validation only: it proves the bundle can be used by the
     full evidence validator. It never asserts that any game scenario passed.
     """
     for profile_id in bundle.profile_ids():
         profile = json_data.as_object(bundle.profiles[profile_id], f"profile {profile_id!r}")
-        validate_final_text(profile.get("finalText"), f"profile {profile_id!r}")
         profile_label_map(profile, f"profile {profile_id!r}")
 
 
@@ -472,8 +470,7 @@ def validate_scenarios(bundle: ManifestBundle) -> None:
                 or "equalsObservation" in condition
                 or "equalsEnvironment" in condition
                 or "present" in condition
-                or "finalTextKey" in condition
-                or "finalTextKeyFromObservation" in condition
+                or "localizedText" in condition
                 or "numberRange" in condition
                 or "measuredRatio" in condition
             ):
@@ -482,17 +479,8 @@ def validate_scenarios(bundle: ManifestBundle) -> None:
                 validate_number_range(scenario_id, condition)
             if "measuredRatio" in condition:
                 validate_measured_ratio(scenario_id, condition)
-            if "finalTextKey" in condition and "finalTextKeyFromObservation" in condition:
-                raise ManifestInputError(
-                    f"{label} expectation must use either finalTextKey or finalTextKeyFromObservation, not both"
-                )
-            if "finalTextKey" in condition or "finalTextKeyFromObservation" in condition:
-                language = condition.get("language")
-                if language not in ("zh-CN", "en"):
-                    raise ManifestInputError(
-                        f"{label} references catalog language {language!r}; "
-                        "finalText languages are catalog labels (zh-CN, en)"
-                    )
+            if "localizedText" in condition:
+                validate_localized_text(scenario_id, condition)
             if observation == "language.active":
                 raw_ids = {item for item in label_map.values() if isinstance(item, str)}
                 for key in ("equals", "notEquals"):

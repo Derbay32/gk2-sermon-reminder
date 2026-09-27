@@ -16,7 +16,7 @@
             "countdownAfter": "hud.countdownDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "after-sermon-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -31,8 +31,10 @@
           "observation": "hud.textKeyBefore"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
           "observation": "hud.textBefore"
         },
         {
@@ -64,7 +66,10 @@
       ],
       "steps": [
         "记录跨日前 Done 文字与跨日后绝对日、星期编号、倒计时与文字。",
-        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "已布道跨日后回到下一次布道的 5 天倒计时"
     },
@@ -83,7 +88,7 @@
             "countdownAfter": "hud.countdownDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "after-sermon-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -98,8 +103,10 @@
           "observation": "hud.textKeyBefore"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.textBefore"
         },
         {
@@ -123,7 +130,10 @@
       ],
       "steps": [
         "记录跨日前 Ready 文字与跨日后绝对日、星期编号、倒计时与文字。",
-        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+        "确认跨日后 afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "错过布道跨日后同样回到下一次布道的 5 天倒计时"
     },
@@ -142,7 +152,7 @@
             "countdown": "hud.countdownDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "cycle-wrap",
             "nonSermonCountdownShown": "hud.nonSermonCountdownShown",
             "text": "hud.text",
@@ -175,7 +185,10 @@
       ],
       "steps": [
         "记录跨日前绝对日与星期编号（应为 6）、跨日后绝对日与星期编号（应为 1）。",
-        "记录跨日后倒计时可见性、整数天数与文字；helper 按观察到的 T 推导期望值。"
+        "记录跨日后倒计时可见性、整数天数与文字；helper 按观察到的 T 推导期望值。",
+        "在倒计时可见时记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "在倒计时可见时读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "跨越六日周期边界（周 6→周 1）时按观察到的 T 得到正确状态"
     },
@@ -192,7 +205,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "multi-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -240,7 +253,10 @@
       ],
       "steps": [
         "记录当前星期编号、绝对日与原生 ready 数值。",
-        "确认角落显示的是非布道日倒计时而不是 Ready。"
+        "确认角落显示的是非布道日倒计时而不是 Ready。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "非布道日残留原生 ready 标志不得保持 Ready"
     }

@@ -52,8 +52,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         },
         {
@@ -78,7 +80,9 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
-        "记录原生 sermon_ready 数值与角落文字。"
+        "记录原生 sermon_ready 数值与角落文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "布道日当天原生 sermon_ready>=1 显示简体中文 Ready 文案"
     },
@@ -133,8 +137,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "en"
+          },
           "observation": "hud.text"
         },
         {
@@ -155,7 +161,9 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
-        "记录原生 sermon_ready 数值与角落文字。"
+        "记录原生 sermon_ready 数值与角落文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "布道日当天原生 sermon_ready>=1 显示英文 Ready 文案"
     },
@@ -210,8 +218,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         },
         {
@@ -236,7 +246,9 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
-        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+        "记录原生 sermon_ready 数值、角落文字与图标空间。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "布道日当天原生 sermon_ready<1 显示简体中文 Done 文案"
     },
@@ -291,8 +303,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "en"
+          },
           "observation": "hud.text"
         },
         {
@@ -317,7 +331,9 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.sermonWeekday（必须等于环境 game.sermonWeekday）、save.absoluteDay 与 save.dayOfWeek。",
-        "记录原生 sermon_ready 数值、角落文字与图标空间。"
+        "记录原生 sermon_ready 数值、角落文字与图标空间。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "布道日当天原生 sermon_ready<1 显示英文 Done 文案"
     },
@@ -369,8 +385,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         }
       ],
@@ -386,7 +404,9 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "确认键缺失（不要求模组做键存在性检查或复制状态）。",
-        "观察角落文字是否按默认 0 显示 Done。"
+        "观察角落文字是否按默认 0 显示 Done。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "原生 sermon_ready 键缺失时按文档默认 0 判定为 Done"
     },
@@ -429,8 +449,10 @@
           "observation": "hud.textBefore"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
           "observation": "hud.textAfter"
         }
       ],
@@ -446,7 +468,9 @@
       "steps": [
         "记录第一次观察的绝对日与角落文字。",
         "在同一天内推进游戏时间。",
-        "记录第二次观察的绝对日与角落文字。"
+        "记录第二次观察的绝对日与角落文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "同一天内 Done 状态在剩余时间保持不变"
     }

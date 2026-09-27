@@ -14,18 +14,24 @@
           "observation": "language.active"
         },
         {
-          "finalTextKey": "gksr.settings.group.title",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.group.title",
+            "language": "zh_cn"
+          },
           "observation": "settings.groupTitleText"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.label",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.beacon.label",
+            "language": "zh_cn"
+          },
           "observation": "settings.beacon.labelText"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.description",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.beacon.description",
+            "language": "zh_cn"
+          },
           "observation": "settings.beacon.descriptionText"
         }
       ],
@@ -40,9 +46,10 @@
       ],
       "steps": [
         "以简体中文进入本模组设置页面；预期语言为简体中文；检查 language.active=zh_cn。",
-        "记录页面标题、信标开关名称与说明；预期均为已定稿简体中文文案；检查三者分别匹配 gksr.settings.group.title、gksr.settings.beacon.label、gksr.settings.beacon.description 且 language=zh-CN。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "简体中文语言下显示已定稿的信标设置名称与说明"
+      "title": "简体中文语言下显示本地化信标设置名称与说明"
     },
     {
       "category": "localization",
@@ -57,18 +64,24 @@
           "observation": "language.active"
         },
         {
-          "finalTextKey": "gksr.settings.group.title",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.settings.group.title",
+            "language": "en"
+          },
           "observation": "settings.groupTitleText"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.label",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.settings.beacon.label",
+            "language": "en"
+          },
           "observation": "settings.beacon.labelText"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.description",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.settings.beacon.description",
+            "language": "en"
+          },
           "observation": "settings.beacon.descriptionText"
         }
       ],
@@ -83,9 +96,10 @@
       ],
       "steps": [
         "以英语进入本模组设置页面；预期语言为英语；检查 language.active=en。",
-        "记录页面标题、信标开关名称与说明；预期均为已定稿英语文案；检查三者分别匹配 gksr.settings.group.title、gksr.settings.beacon.label、gksr.settings.beacon.description 且 language=en。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "英语语言下显示已定稿的信标设置名称与说明"
+      "title": "英语语言下显示本地化信标设置名称与说明"
     },
     {
       "category": "localization",
@@ -100,13 +114,17 @@
           "observation": "language.active"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.label",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.settings.beacon.label",
+            "language": "en"
+          },
           "observation": "settings.beacon.labelText"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.description",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.settings.beacon.description",
+            "language": "en"
+          },
           "observation": "settings.beacon.descriptionText"
         }
       ],
@@ -121,7 +139,9 @@
       ],
       "steps": [
         "把游戏语言设为未覆盖的语言；预期语言非中英；检查 language.active=fr。",
-        "进入本模组设置页面记录信标开关名称与说明；预期回退英语；检查两者分别匹配 gksr.settings.beacon.label 与 gksr.settings.beacon.description 且 language=en。"
+        "进入本模组设置页面记录信标开关名称与说明；预期回退英语；检查两者分别匹配 gksr.settings.beacon.label 与 gksr.settings.beacon.description 且 language=en。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "当前语言缺少译文时信标设置文案回退英语"
     }

@@ -34,8 +34,10 @@
           "observation": "language.active"
         },
         {
-          "finalTextKey": "gksr.hud.sermonCountdown.one",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonCountdown.one",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         }
       ],
@@ -52,9 +54,11 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.absoluteDay（绝对日）与 save.dayOfWeek（星期编号）以及 save.sermonWeekday。",
-        "读取左上角时钟下方的倒计时文字。"
+        "读取左上角时钟下方的倒计时文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "简体中文剩余 1 天显示无参数字数的完整定稿句式"
+      "title": "简体中文剩余 1 天使用无参数的单日资源"
     },
     {
       "category": "countdown-text",
@@ -89,8 +93,10 @@
           "observation": "language.active"
         },
         {
-          "finalTextKey": "gksr.hud.sermonCountdown.one",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.hud.sermonCountdown.one",
+            "language": "en"
+          },
           "observation": "hud.text"
         }
       ],
@@ -107,9 +113,11 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.absoluteDay（绝对日）与 save.dayOfWeek（星期编号）以及 save.sermonWeekday。",
-        "读取左上角时钟下方的倒计时文字。"
+        "读取左上角时钟下方的倒计时文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "英语剩余 1 天显示无参数字数的完整定稿句式"
+      "title": "英语剩余 1 天使用无参数的单日资源"
     },
     {
       "category": "countdown-text",
@@ -124,7 +132,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "multi-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -156,7 +164,10 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.absoluteDay（绝对日）、save.dayOfWeek（星期编号）与 save.sermonWeekday。",
-        "读取左上角时钟下方的倒计时文字与已显示的整数天数。"
+        "读取左上角时钟下方的倒计时文字与已显示的整数天数。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "简体中文多天倒计时使用大于 1 的整数 {days} 参数"
     },
@@ -205,7 +216,10 @@
       "steps": [
         "载入该存档并等待加载完成。",
         "记录 save.absoluteDay（绝对日）、save.dayOfWeek（星期编号）与 save.sermonWeekday。",
-        "读取左上角时钟下方的倒计时文字与已显示的整数天数。"
+        "读取左上角时钟下方的倒计时文字与已显示的整数天数。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "英语多天倒计时使用大于 1 的整数 {days} 参数"
     }

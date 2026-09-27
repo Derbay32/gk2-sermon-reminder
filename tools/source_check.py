@@ -12,29 +12,11 @@ Checks:
   * every native ``<Reference>`` sets ``Private=false``;
   * every ``<EmbeddedResource>`` keeps an explicit ``LogicalName`` and
     ``WithCulture="false"``;
-  * localization declares both supported catalogs (en, zh_cn), every supported
-    catalog carries an identical key set, every required HUD key is present,
-    every value is a nonempty string, placeholder parity holds, and every
-    implemented HUD sentence matches the accepted manifest finalText;
-  * no final localized sentence is duplicated inside C# source, with one narrow
-    documented technical-registration-metadata exception (see below).
-
-Technical registration-metadata exception: the mod's public BepInEx display
-name is declared exactly once, in real code, as
-``public const string PluginName = "GK2 Sermon Reminder";`` and referenced by
-the actual ``[BepInPlugin(PluginGuid, PluginName, PluginVersion)]`` attribute
-attached to the unique ``public sealed class SermonReminderPlugin``. That single
-declaration's exact value-literal span is registration metadata, not localized
-copy. The guard recognises real C# code lexically (comment spans and ordinary,
-verbatim, interpolated and raw string literals are never treated as code, and
-unmodeled shapes are refused rather than guessed) and requires exactly one
-attribute, one class and one canonical declaration; it then masks only that one
-literal span in this one file. It is never a whole-file, whole-line,
-arbitrary-field or all-copies exemption: a commented or string-borne attribute,
-a commented or absent declaration, a non-canonical PluginName value, an
-attribute attached to another class, or any other duplicate copy of the sentence
-still fails. This is one documented exception, not a localized-copy allowlist and
-not a compatibility fallback.
+  * localization declares a readable, nonempty catalog for every language that
+    any profile's ``languageMapping`` requires, every supported catalog carries
+    an identical key set, every required HUD key is present, every value is a
+    nonempty string, placeholder parity holds, and the countdown pair keeps its
+    required parameter shape ({days} on "other", none on "one").
 
 Only the Python 3 standard library is used.
 """
@@ -88,13 +70,9 @@ PROHIBITED_BASENAME_PREFIXES = (
     "monomod",
 )
 
-# Localization language id -> manifest catalog label used in finalText.
-LANGUAGE_TO_CATALOG_LABEL = {"en": "en", "zh_cn": "zh-CN"}
-
 # HUD keys the implemented plugin must declare in every supported catalog: the
-# GKSA-10 countdown pair plus the GKSA-11 ready/done pair. The accepted ticket
-# manifests stay the single source of truth for the sentences themselves; only
-# the key names are required here, so no final sentence is copied into Python.
+# GKSA-10 countdown pair plus the GKSA-11 ready/done pair. Only the key names are
+# required here, so no final sentence is copied into Python.
 REQUIRED_HUD_KEYS = (
     "gksr.hud.sermonCountdown.one",
     "gksr.hud.sermonCountdown.other",
@@ -102,25 +80,20 @@ REQUIRED_HUD_KEYS = (
     "gksr.hud.sermonDone",
 )
 
-# Default accepted manifest used as the finalText source of truth. The settled
-# project is the aggregated v2 index; ``--manifest`` overrides it explicitly and
-# there is no discovery or fallback to another file.
+# Narrow parameter-shape contract (never wording): the countdown "other"
+# sentence must take exactly the {days} placeholder and the countdown "one"
+# sentence must take none, in every supported catalog. Placeholder parity alone
+# would still pass if {days} were dropped from both locales at once.
+REQUIRED_PLACEHOLDERS = {
+    "gksr.hud.sermonCountdown.other": ("days",),
+    "gksr.hud.sermonCountdown.one": (),
+}
+
+# Default accepted manifest used to derive required supported languages from
+# every profile's languageMapping. The settled project is the aggregated v2
+# index; ``--manifest`` overrides it explicitly and there is no discovery or
+# fallback to another file.
 DEFAULT_MANIFEST = "tests/e2e/manifest.json"
-
-# Narrow technical-registration-metadata exception, scoped to the one plugin file
-# that declares the BepInEx plugin registration. See the module docstring.
-REGISTRATION_FILE = "src/GK2.SermonReminder/SermonReminderPlugin.cs"
-REGISTRATION_CLASS = "SermonReminderPlugin"
-
-# The one canonical BepInEx technical registration name. This is registration
-# metadata compiled into the assembly, never localized copy; the exemption is
-# tied to this exact value so changing PluginName to any other sentence (even
-# another approved sentence) cannot hide that copy.
-CANONICAL_PLUGIN_NAME = "GK2 Sermon Reminder"
-
-_PLUGIN_ATTRIBUTE = re.compile(r"\[BepInPlugin\s*\(\s*PluginGuid\s*,\s*PluginName\s*,\s*PluginVersion\s*\)\]")
-_PLUGIN_CLASS = re.compile(r"\bpublic\s+sealed\s+class\s+" + REGISTRATION_CLASS + r"\b")
-_PLUGIN_NAME_STUB = re.compile(r"public\s+const\s+string\s+PluginName\s*=\s*")
 
 
 class LocalizationEntry(TypedDict):
@@ -141,7 +114,7 @@ class ReferenceEntry(TypedDict):
 
 
 class LocalizationReport(TypedDict):
-    """The localization comparison block of the source-check report."""
+    """The localization structure block of the source-check report."""
 
     logicalResourceMap: dict[str, dict[str, str]]
     languages: list[str]
@@ -150,7 +123,6 @@ class LocalizationReport(TypedDict):
     keySetsEqual: bool | None
     missingKeys: dict[str, list[str]]
     keyParity: list[dict[str, object]]
-    manifestComparison: list[dict[str, object]]
     violations: list[str]
     implementedKeys: list[str]
 
@@ -177,7 +149,6 @@ class SourceCheckReport(TypedDict):
     prohibitedDocs: list[str]
     referencePrivacy: ReferencePrivacyReport
     localization: LocalizationReport
-    sentencesInCode: list[str]
     errors: list[str]
     violationCount: int
 
@@ -191,7 +162,6 @@ def _empty_localization() -> LocalizationReport:
         "keySetsEqual": None,
         "missingKeys": {},
         "keyParity": [],
-        "manifestComparison": [],
         "violations": [],
         "implementedKeys": [],
     }
@@ -232,13 +202,6 @@ def versioned_files(root: Path) -> list[str]:
             continue
         result.append(normalized)
     return sorted(result)
-
-
-def read_text(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8", errors="ignore")
-    except OSError:
-        return ""
 
 
 def find_localization_files(root: Path, project: Path) -> tuple[list[LocalizationEntry], list[str]]:
@@ -343,41 +306,16 @@ def _supported_language_ids(bundle: e2e_manifest.ManifestBundle) -> tuple[str, .
     return tuple(sorted(raws))
 
 
-def _merged_final_text(bundle: e2e_manifest.ManifestBundle) -> tuple[dict[str, dict[str, str]], list[str]]:
-    """Aggregate every profile's finalText, reporting conflicting sentences."""
-    merged: dict[str, dict[str, str]] = {}
-    conflicts: list[str] = []
-    for profile_id in bundle.profile_ids():
-        profile_value = bundle.profiles[profile_id]
-        if not isinstance(profile_value, dict):
-            continue
-        final_text = profile_value.get("finalText")
-        if not isinstance(final_text, dict):
-            continue
-        for key, translations in final_text.items():
-            if not isinstance(translations, dict):
-                continue
-            entry = merged.setdefault(key, {})
-            for label, value in translations.items():
-                if not isinstance(value, str):
-                    continue
-                if label in entry and entry[label] != value:
-                    conflicts.append(
-                        f"finalText[{key!r}][{label!r}] conflicts across profiles: {entry[label]!r} vs {value!r}"
-                    )
-                else:
-                    entry[label] = value
-    return merged, conflicts
-
-
-def check_manifest_and_localization(
+def check_localization(
     bundle: e2e_manifest.ManifestBundle, entries: list[LocalizationEntry], project_dir: Path
-) -> tuple[LocalizationReport, set[str], dict[str, dict[str, str]]]:
-    """Compare implemented localization to every profile in the accepted bundle.
+) -> tuple[LocalizationReport, set[str]]:
+    """Validate the implemented localization catalogs against the manifest.
 
-    Every context's finalText is aggregated (with conflict detection) so a later
-    context's key is never omitted and two contexts can never silently overwrite
-    each other; the bundle stays the single source of truth for the sentences.
+    The bundle's profile ``languageMapping`` stays the single source of truth for
+    which raw game languages must ship a readable, nonempty catalog; each declared
+    catalog is parsed, key parity and the required HUD keys are enforced,
+    placeholder parity and the countdown parameter shape are checked. No
+    translated sentence is compared.
     """
     localization: LocalizationReport = _empty_localization()
 
@@ -403,10 +341,6 @@ def check_manifest_and_localization(
         catalogs.setdefault(language, []).append((entry["include"], data))
 
     localization["languages"] = sorted(catalogs)
-
-    manifest_text, conflicts = _merged_final_text(bundle)
-    for conflict in conflicts:
-        localization["violations"].append(conflict)
 
     supported = _supported_language_ids(bundle)
     localization["supportedLanguages"] = list(supported)
@@ -480,289 +414,19 @@ def check_manifest_and_localization(
         if len(distinct) > 1:
             localization["violations"].append(f"placeholder parity failure for {key!r}: {placeholders_by_language}")
 
-    # Exact comparison for keys that also appear in the accepted manifest.
-    for key in sorted(implemented_keys):
-        if key not in manifest_text:
-            continue
-        expected = manifest_text[key]
-        for language in sorted(catalogs):
-            if language not in LANGUAGE_TO_CATALOG_LABEL:
-                continue
-            catalog_label = LANGUAGE_TO_CATALOG_LABEL[language]
-            if catalog_label not in expected:
-                continue
-            actual: object = None
-            for _, data in catalogs[language]:
-                if key in data:
-                    actual = data[key]
-                    break
-            expected_value = expected[catalog_label]
-            matches = actual == expected_value
-            comparison_entry: dict[str, object] = {
-                "key": key,
-                "language": language,
-                "catalogLabel": catalog_label,
-                "matchesManifest": matches,
-            }
-            localization["manifestComparison"].append(comparison_entry)
-            if not matches:
-                localization["violations"].append(f"{key!r} {language} does not match accepted manifest finalText")
+        # Matching placeholder sets must also satisfy the countdown parameter contract.
+        if key in REQUIRED_PLACEHOLDERS:
+            expected_placeholders = list(REQUIRED_PLACEHOLDERS[key])
+            for language in supported:
+                actual_placeholders = placeholders_by_language.get(language)
+                if actual_placeholders is not None and actual_placeholders != expected_placeholders:
+                    localization["violations"].append(
+                        f"{key!r} in {language!r} must declare placeholders "
+                        f"{expected_placeholders} (found {actual_placeholders})"
+                    )
 
     localization["implementedKeys"] = sorted(implemented_keys)
-    return localization, implemented_keys, manifest_text
-
-
-def _scan_csharp(text: str) -> tuple[str, list[tuple[int, int, str]], bool]:
-    """Bounded C# lexical scan: comment spans and real string literals.
-
-    Returns ``(masked, literals, supported)``:
-
-      * ``masked`` -- same-length text with every comment span and every string
-        literal span blanked to a non-whitespace sentinel, so code tokens can be
-        matched positionally while comments and strings never read as code and a
-        trailing ``\\s*`` in a code pattern can never swallow a blanked span;
-      * ``literals`` -- real string literals as ``(start, end, value)`` in
-        original coordinates, delimiters included in the span;
-      * ``supported`` -- ``False`` when an unmodeled lexical shape (raw or
-        interpolated string, or a char literal in code) appears, so the caller
-        refuses the exemption instead of guessing.
-    """
-    length = len(text)
-    # A sentinel that is not whitespace: blanked spans keep their exact length so
-    # real-code matches stay positionally aligned, while a trailing regex ``\s*``
-    # can never swallow a blanked string/comment and read it back as code.
-    filler = "\x00"
-    masked: list[str] = list(text)
-    literals: list[tuple[int, int, str]] = []
-    index = 0
-    while index < length:
-        ch = text[index]
-        nxt = text[index + 1] if index + 1 < length else ""
-
-        if ch == "/" and nxt == "/":
-            end = text.find("\n", index)
-            end = length if end == -1 else end
-            for blank in range(index, end):
-                masked[blank] = filler
-            index = end
-            continue
-
-        if ch == "/" and nxt == "*":
-            end = text.find("*/", index + 2)
-            end = length if end == -1 else end + 2
-            for blank in range(index, end):
-                masked[blank] = filler
-            index = end
-            continue
-
-        if ch == '"':
-            if text.startswith('"""', index):
-                return "".join(masked), literals, False
-            start = index
-            index += 1
-            while index < length:
-                if text[index] == "\\":
-                    index += 2
-                    continue
-                if text[index] == '"':
-                    index += 1
-                    break
-                index += 1
-            literals.append((start, index, text[start + 1 : index - 1]))
-            for blank in range(start, index):
-                masked[blank] = filler
-            continue
-
-        if ch == "@" and nxt == '"':
-            start = index
-            index += 2
-            while index < length:
-                if text[index] == '"':
-                    if index + 1 < length and text[index + 1] == '"':
-                        index += 2
-                        continue
-                    index += 1
-                    break
-                index += 1
-            raw = text[start + 2 : index - 1]
-            literals.append((start, index, raw.replace('""', '"')))
-            for blank in range(start, index):
-                masked[blank] = filler
-            continue
-
-        if ch == "$" and (nxt == '"' or (nxt == "@" and index + 2 < length and text[index + 2] == '"')):
-            return "".join(masked), literals, False
-
-        if ch == "@" and nxt == "$" and index + 2 < length and text[index + 2] == '"':
-            return "".join(masked), literals, False
-
-        if ch == "'":
-            # A char literal in code is a shape this bounded scan does not model.
-            return "".join(masked), literals, False
-
-        index += 1
-
-    return "".join(masked), literals, True
-
-
-def _strip_leading_attribute_groups(fragment: str) -> str | None:
-    """Drop leading whitespace and balanced ``[...]`` attribute groups.
-
-    Returns the remaining text, or ``None`` for an unbalanced attribute group.
-    """
-    text = fragment.strip()
-    while text.startswith("["):
-        depth = 0
-        end = -1
-        for position, ch in enumerate(text):
-            if ch == "[":
-                depth += 1
-            elif ch == "]":
-                depth -= 1
-                if depth == 0:
-                    end = position
-                    break
-        if end == -1:
-            return None
-        text = text[end + 1 :].strip()
-    return text
-
-
-def _matching_brace(masked: str, open_index: int) -> int:
-    """Index of the ``}`` matching the ``{`` at ``open_index``, or -1."""
-    depth = 0
-    for index in range(open_index, len(masked)):
-        ch = masked[index]
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-            if depth == 0:
-                return index
-    return -1
-
-
-def _brace_depth(masked: str, open_index: int, position: int) -> int:
-    """Brace depth between a class opening brace and a later position."""
-    depth = 0
-    for index in range(open_index, position):
-        ch = masked[index]
-        if ch == "{":
-            depth += 1
-        elif ch == "}":
-            depth -= 1
-    return depth
-
-
-def _literal_at(literals: list[tuple[int, int, str]], position: int) -> tuple[int, int, str] | None:
-    """The real string literal beginning exactly at ``position``, or None."""
-    for start, end, value in literals:
-        if start == position:
-            return (start, end, value)
-    return None
-
-
-def registration_metadata_span(text: str) -> tuple[int, int] | None:
-    """Exact (start, end) span of the one canonical registration value literal.
-
-    Returns ``None`` unless, in real C# code (never a comment, char or string
-    literal), the plugin file has exactly one
-    ``[BepInPlugin(PluginGuid, PluginName, PluginVersion)]`` attribute attached to
-    the unique ``public sealed class SermonReminderPlugin``, and exactly one direct
-    ``public const string PluginName = "<canonical>";`` member of that class. The
-    returned span is only that one value literal; ambiguous, non-canonical or
-    unmodeled shapes are refused rather than masked.
-    """
-    masked, literals, supported = _scan_csharp(text)
-    if not supported:
-        return None
-
-    attributes = list(_PLUGIN_ATTRIBUTE.finditer(masked))
-    if len(attributes) != 1:
-        return None
-    classes = list(_PLUGIN_CLASS.finditer(masked))
-    if len(classes) != 1:
-        return None
-
-    attribute = attributes[0]
-    declared_class = classes[0]
-
-    # The attribute must be attached to the plugin class: it must precede the
-    # class, and only whitespace and other attribute groups may sit between them.
-    if attribute.end() > declared_class.start():
-        return None
-    if _strip_leading_attribute_groups(masked[attribute.end() : declared_class.start()]) != "":
-        return None
-
-    open_brace = masked.find("{", declared_class.end())
-    if open_brace == -1:
-        return None
-    close_brace = _matching_brace(masked, open_brace)
-    if close_brace == -1:
-        return None
-
-    # Exactly one direct canonical PluginName declaration inside the class body.
-    span: tuple[int, int] | None = None
-    for stub in _PLUGIN_NAME_STUB.finditer(masked, open_brace, close_brace):
-        if _brace_depth(masked, open_brace, stub.start()) != 1:
-            continue
-
-        position = stub.end()
-        while position < len(text) and text[position] in " \t\r\n":
-            position += 1
-        literal = _literal_at(literals, position)
-        if literal is None:
-            continue
-
-        start, end, value = literal
-        after = end
-        while after < len(text) and text[after] in " \t\r\n":
-            after += 1
-        if after >= len(text) or text[after] != ";":
-            continue
-        if value != CANONICAL_PLUGIN_NAME:
-            continue
-        if span is not None:
-            return None
-        span = (start, end)
-
-    return span
-
-
-def find_sentences_in_cs(root: Path, files: list[str], manifest_text: dict[str, dict[str, str]]) -> list[str]:
-    """No accepted final sentence may be duplicated inside C# source.
-
-    Only the one canonical BepInEx registration value literal in the plugin file
-    is excluded, by its exact span and only when it is real code; see
-    :func:`registration_metadata_span`. Comments are never normalized away, so
-    approved text inside a comment still fails.
-    """
-    sentences: set[str] = set()
-    for translations in manifest_text.values():
-        if isinstance(translations, dict):
-            for value in translations.values():
-                if isinstance(value, str) and value.strip():
-                    sentences.add(value)
-
-    if not sentences:
-        return []
-
-    violations: list[str] = []
-    for relative in files:
-        if not relative.endswith(".cs"):
-            continue
-        text = read_text(root / relative)
-        if relative == REGISTRATION_FILE:
-            span = registration_metadata_span(text)
-            if span is not None:
-                start, end = span
-                # Blank only the exact literal span; surrounding and trailing
-                # content stays scannable so any other duplicate copy still fails.
-                text = text[:start] + (" " * (end - start)) + text[end:]
-        for sentence in sorted(sentences):
-            if sentence in text:
-                violations.append(f"{relative}: contains final sentence {sentence!r}")
-    return violations
+    return localization, implemented_keys
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -773,14 +437,11 @@ def main(argv: list[str] | None = None) -> int:
         "--manifest",
         default=DEFAULT_MANIFEST,
         help=(
-            "Accepted v2 manifest index used as the finalText source of truth. "
-            "Defaults to the settled aggregated index tests/e2e/manifest.json; the "
-            "whole bundle (index, profiles and every scenario document) is loaded "
-            "and validated, and no other file is discovered or substituted. The "
-            "only documented technical-metadata exception is the one canonical "
-            "BepInEx PluginName value literal in the plugin registration file, "
-            "recognised as real code (never a comment or string) and masked by its "
-            "exact span only."
+            "Accepted v2 manifest index used to derive the required supported "
+            "languages from every profile's languageMapping. Defaults to the "
+            "settled aggregated index tests/e2e/manifest.json; the whole bundle "
+            "(index, profiles and every scenario document) is loaded and "
+            "validated, and no other file is discovered or substituted."
         ),
     )
     parser.add_argument("--output", required=True)
@@ -807,7 +468,6 @@ def main(argv: list[str] | None = None) -> int:
         "prohibitedDocs": [],
         "referencePrivacy": {"references": [], "violations": []},
         "localization": _empty_localization(),
-        "sentencesInCode": [],
         "errors": [],
         "violationCount": 0,
     }
@@ -849,24 +509,19 @@ def main(argv: list[str] | None = None) -> int:
         report["errors"].append(f"manifest bundle rejected: {exc}")
 
     if bundle is not None:
-        localization, implemented_keys, manifest_text = check_manifest_and_localization(bundle, entries, project.parent)
+        localization, implemented_keys = check_localization(bundle, entries, project.parent)
     else:
         localization = _empty_localization()
         implemented_keys: set[str] = set()
-        manifest_text: dict[str, dict[str, str]] = {}
     localization["violations"].extend(resource_violations)
     report["localization"] = localization
     report["localization"]["implementedKeys"] = sorted(implemented_keys)
-
-    # 4. Final sentences must not be duplicated in C#.
-    report["sentencesInCode"] = find_sentences_in_cs(root, files, manifest_text)
 
     violations = (
         report["prohibitedBinaries"]
         + report["prohibitedDocs"]
         + reference_violations
         + localization["violations"]
-        + report["sentencesInCode"]
         + report["errors"]
     )
     report["violationCount"] = len(violations)

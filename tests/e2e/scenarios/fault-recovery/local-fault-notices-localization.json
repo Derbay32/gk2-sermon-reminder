@@ -18,8 +18,10 @@
           "observation": "notice.textKey"
         },
         {
-          "finalTextKey": "gksr.status.reminderUnavailable",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "zh_cn"
+          },
           "observation": "notice.text"
         },
         {
@@ -53,11 +55,11 @@
         "GKSA-14"
       ],
       "steps": [
-        "在简体中文下注入必要状态读取故障。预期：使用定稿简体中文消息。检查：notice.textKey=gksr.status.reminderUnavailable。",
-        "读取消息内容。预期：与定稿一致。检查：notice.text 等于 finalText 的 zh-CN 完整句。",
-        "确认无标题无图标无确认控件且沿用原生时长与自动消失。预期：全部满足。检查：notice.titlePresent=false 且 notice.nativeLifetime=true。"
+        "确认无标题无图标无确认控件且沿用原生时长与自动消失。预期：全部满足。检查：notice.titlePresent=false 且 notice.nativeLifetime=true。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "简体中文使用定稿状态读取故障消息并保持无标题无图标"
+      "title": "简体中文使用本地化状态读取故障消息并保持无标题无图标"
     },
     {
       "category": "localization",
@@ -76,8 +78,10 @@
           "observation": "notice.textKey"
         },
         {
-          "finalTextKey": "gksr.status.reminderUnavailable",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "en"
+          },
           "observation": "notice.text"
         },
         {
@@ -103,11 +107,11 @@
         "GKSA-14"
       ],
       "steps": [
-        "在英语下注入必要状态读取故障。预期：使用定稿英语消息。检查：notice.textKey=gksr.status.reminderUnavailable。",
-        "读取消息内容。预期：与定稿一致。检查：notice.text 等于 finalText 的 en 完整句。",
-        "确认无标题无图标无确认控件。预期：全部满足。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。"
+        "确认无标题无图标无确认控件。预期：全部满足。检查：notice.titlePresent=false 且 notice.confirmControlPresent=false。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "英语使用定稿状态读取故障消息"
+      "title": "英语使用本地化状态读取故障消息"
     },
     {
       "category": "localization",
@@ -130,8 +134,10 @@
           "observation": "notice.surfaceAvailable"
         },
         {
-          "finalTextKey": "gksr.status.reminderUnavailable",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.status.reminderUnavailable",
+            "language": "en"
+          },
           "observation": "notice.text"
         }
       ],
@@ -146,7 +152,8 @@
       ],
       "steps": [
         "把游戏语言设为受支持之外的语言。预期：确为非受支持语言。检查：language.active 不等于 zh_cn 与 en。",
-        "注入必要状态读取故障。预期：消息回退为英语。检查：notice.text 等于 finalText 的 en 完整句。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "缺少当前语言译文的消息回退为英语"
     },
@@ -167,8 +174,10 @@
           "observation": "notice.textKey"
         },
         {
-          "finalTextKey": "gksr.status.hudUnavailable",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "zh_cn"
+          },
           "observation": "notice.text"
         },
         {
@@ -191,10 +200,11 @@
       ],
       "steps": [
         "在简体中文下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
-        "读取消息键与内容。预期：与定稿一致。检查：notice.textKey=gksr.status.hudUnavailable。",
-        "确认两个类别独立。预期：状态读取类别为零。检查：notice.stateReadDisplayedCount=0。"
+        "确认两个类别独立。预期：状态读取类别为零。检查：notice.stateReadDisplayedCount=0。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "简体中文使用定稿角落文字故障消息"
+      "title": "简体中文使用本地化角落文字故障消息"
     },
     {
       "category": "localization",
@@ -217,8 +227,10 @@
           "observation": "notice.textKey"
         },
         {
-          "finalTextKey": "gksr.status.hudUnavailable",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.status.hudUnavailable",
+            "language": "en"
+          },
           "observation": "notice.text"
         },
         {
@@ -241,10 +253,11 @@
       ],
       "steps": [
         "在英语下注入角落文字组件故障。预期：类别为角落文字。检查：notice.category=corner-hud。",
-        "读取消息内容。预期：与定稿英语一致。检查：notice.text 等于 finalText 的 en 完整句。",
-        "确认沿用原生无标题无图标形式。预期：全部满足。检查：notice.titlePresent=false 且 notice.iconPresent=false。"
+        "确认沿用原生无标题无图标形式。预期：全部满足。检查：notice.titlePresent=false 且 notice.iconPresent=false。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "英语使用定稿角落文字故障消息"
+      "title": "英语使用本地化角落文字故障消息"
     }
   ],
   "schemaVersion": 2

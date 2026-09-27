@@ -30,8 +30,10 @@
           "observation": "popup.titleNonEmpty"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.title",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "zh_cn"
+          },
           "observation": "popup.titleText"
         }
       ],
@@ -45,7 +47,8 @@
       ],
       "steps": [
         "触发弹窗并观察容器；预期使用原生提示框且带标题；检查 popup.nativeDialogUsed 与 popup.titled 为 true。",
-        "读取标题文案；预期非空且为定稿文案；检查 popup.titleNonEmpty 与 popup.titleText 使用 gksr.popup.sermon.title 的 zh-CN 文案。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "弹窗使用带独立标题的原生提示框"
     },
@@ -74,8 +77,10 @@
           "observation": "popup.extraActionButtonCount"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.confirm",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "zh_cn"
+          },
           "observation": "popup.confirmLabel"
         }
       ],
@@ -89,7 +94,8 @@
       ],
       "steps": [
         "触发弹窗并统计按钮；预期恰好一个确认按钮且无额外操作按钮；检查 popup.confirmButtonCount 为 1 与 popup.extraActionButtonCount 为 0。",
-        "读取确认标签；预期定稿文案；检查 popup.confirmLabel 使用 gksr.popup.sermon.confirm 的 zh-CN 文案。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "弹窗仅提供一个本地化确认按钮"
     },

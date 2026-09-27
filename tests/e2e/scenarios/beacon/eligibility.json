@@ -214,7 +214,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "multi-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -267,7 +267,10 @@
         "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",
         "记录绝对日、星期编号与布道日星期编号 T；预期三者自洽；检查 dateCheck multi-day 通过。",
         "核对信标与倒计时文字；预期信标隐藏且显示多天倒计时文案；检查 beacon.enabled=false 且 hud.textKey=gksr.hud.sermonCountdown.other。",
-        "核对倒计时整数天数；预期等于 (T - 当前星期编号 + 6) % 6；检查 hud.countdownDays 与 helper 推导值相等。"
+        "核对倒计时整数天数；预期等于 (T - 当前星期编号 + 6) % 6；检查 hud.countdownDays 与 helper 推导值相等。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "非布道日（距布道日 2..5 天）不显示信标而保留多天倒计时文字"
     },
@@ -537,7 +540,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "single-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -585,7 +588,9 @@
       "steps": [
         "载入该存档并等待加载完成；预期进入可操作画面；检查 save.loaded 为 true。",
         "记录绝对日、星期编号与布道日星期编号 T；预期三者自洽；检查 dateCheck single-day 通过。",
-        "核对信标与倒计时文字；预期信标隐藏且显示单日文案；检查 beacon.enabled=false 且 hud.textKey=gksr.hud.sermonCountdown.one。"
+        "核对信标与倒计时文字；预期信标隐藏且显示单日文案；检查 beacon.enabled=false 且 hud.textKey=gksr.hud.sermonCountdown.one。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "非布道日距布道日 1 天时不显示信标而使用单日倒计时文案"
     },

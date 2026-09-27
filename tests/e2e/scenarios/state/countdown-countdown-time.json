@@ -17,7 +17,7 @@
             "countdownBefore": "countdown.beforeDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "same-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -45,7 +45,10 @@
       "steps": [
         "记录跨日前绝对日 save.absoluteDayBefore、星期编号 save.priorDayOfWeek 与整数天数 countdown.beforeDays。",
         "在游戏日期未变化的前提下推进游戏时间。",
-        "再次记录绝对日 save.absoluteDayAfter、星期编号 save.dayOfWeek 与整数天数 countdown.afterDays 及显示文字。"
+        "再次记录绝对日 save.absoluteDayAfter、星期编号 save.dayOfWeek 与整数天数 countdown.afterDays 及显示文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "游戏日期未变时倒计时保持不变"
     },
@@ -65,7 +68,7 @@
             "countdownBefore": "countdown.beforeDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "midnight",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -89,7 +92,10 @@
       "steps": [
         "记录跨日前绝对日 save.absoluteDayBefore、星期编号 save.priorDayOfWeek 与整数天数 countdown.beforeDays。",
         "在游戏中推进到下一游戏日。",
-        "记录跨日后绝对日 save.absoluteDayAfter、星期编号 save.dayOfWeek 与整数天数 hud.countdownDays 及显示文字。"
+        "记录跨日后绝对日 save.absoluteDayAfter、星期编号 save.dayOfWeek 与整数天数 hud.countdownDays 及显示文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "非布道日跨日后倒计时正确更新"
     },
@@ -149,7 +155,7 @@
             "countdown": "hud.countdownDays",
             "dayOfWeekAfter": "save.dayOfWeek",
             "dayOfWeekBefore": "save.priorDayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "cycle-wrap",
             "nonSermonCountdownShown": "hud.nonSermonCountdownShown",
             "text": "hud.text",
@@ -175,7 +181,10 @@
       "steps": [
         "记录跨日前绝对日 save.absoluteDayBefore 与星期编号 save.priorDayOfWeek（应为 6）。",
         "推进游戏时间跨越周期边界，记录跨日后绝对日 save.absoluteDayAfter 与星期编号 save.dayOfWeek（应为 1）。",
-        "读取倒计时可见性、整数天数、显示文字与实际选用的文案键。"
+        "读取倒计时可见性、整数天数、显示文字与实际选用的文案键。",
+        "在倒计时可见时记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "在倒计时可见时读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "跨越六日周期边界（星期 6 到星期 1）时倒计时按数学差值正确回到 1 天"
     }

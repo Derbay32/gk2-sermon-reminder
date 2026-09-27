@@ -58,8 +58,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         }
       ],
@@ -75,7 +77,9 @@
       "steps": [
         "在 Done 状态下重新载入布道日当天布道动作之前的存档。",
         "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
-        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
+        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "载入布道日当天、布道动作前的存档恢复 Ready"
     },
@@ -136,8 +140,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonDone",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonDone",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         }
       ],
@@ -153,7 +159,9 @@
       "steps": [
         "在 Ready 状态下重新载入布道日当天布道动作之后的存档。",
         "重载前记录起始状态：hud.textKeyBefore 与 state.sermonReadyValueBefore。",
-        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。"
+        "等待加载完成，记录载入后原生 ready 数值、当天绝对日/星期编号与角落文字。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "载入布道日当天、布道动作后的存档恢复 Done"
     }

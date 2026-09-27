@@ -64,18 +64,24 @@
           "observation": "popup.displayCountWithinLoad"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.title",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "zh_cn"
+          },
           "observation": "popup.titleText"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.body",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.popup.sermon.body",
+            "language": "zh_cn"
+          },
           "observation": "popup.bodyText"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.confirm",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "zh_cn"
+          },
           "observation": "popup.confirmLabel"
         },
         {
@@ -97,7 +103,9 @@
         "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
         "载入已就绪的布道日存档；预期进入可操作画面且资格满足；检查门槛、state.sermonReadyValue 与 settings.popupEnabled。",
         "读取语言与弹窗内容；预期显示一次简体中文弹窗；检查 popup.shown、popup.displayCountWithinLoad、popup.titleText/bodyText/confirmLabel。",
-        "不进行任何输入并观察；预期弹窗保持；检查 popup.stayedUntilConfirmed 为 true。"
+        "不进行任何输入并观察；预期弹窗保持；检查 popup.stayedUntilConfirmed 为 true。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "满足全部门槛且开关开启时在可操作画面显示一次简体中文弹窗"
     },
@@ -142,18 +150,24 @@
           "observation": "popup.displayCountWithinLoad"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.title",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.popup.sermon.title",
+            "language": "en"
+          },
           "observation": "popup.titleText"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.body",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.popup.sermon.body",
+            "language": "en"
+          },
           "observation": "popup.bodyText"
         },
         {
-          "finalTextKey": "gksr.popup.sermon.confirm",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.popup.sermon.confirm",
+            "language": "en"
+          },
           "observation": "popup.confirmLabel"
         }
       ],
@@ -170,7 +184,8 @@
       "steps": [
         "读取载入前的去重状态；预期该槽该日尚无记录；检查 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true。",
         "载入已就绪的布道日存档并进入可操作画面；预期弹窗按英文显示一次；检查 language.active 为 en 与 popup.displayCountWithinLoad 为 1。",
-        "读取弹窗文案；预期英文定稿文案；检查 popup.titleText/bodyText/confirmLabel 使用 en 文案。"
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "满足全部门槛且开关开启时显示一次英文弹窗"
     },

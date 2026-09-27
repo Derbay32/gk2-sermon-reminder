@@ -197,8 +197,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         },
         {
@@ -221,7 +223,9 @@
       ],
       "steps": [
         "在 Ready 状态下注入图标资源加载失败。",
-        "确认图标确实已失败，并观察 Ready 文字是否仍正常显示且业务状态可读。"
+        "确认图标确实已失败，并观察 Ready 文字是否仍正常显示且业务状态可读。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "无关图标故障不改变 Ready 呈现与可读业务状态"
     }

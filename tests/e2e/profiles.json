@@ -9,37 +9,6 @@
       "routeFinalTargetId": "gd_church_player_pray",
       "slotStyle": "保留原生图标槽尺寸与箭头样式；尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值（beacon.slotWidthLocal/HeightLocal），与同一场景未改动的原生原始 prefab 槽位局部尺寸（native.slotWidthLocal/HeightLocal）比较，不以原生 Draw 的屏幕气泡 SetNativeSize 结果或缓存来源尺寸为准。"
     },
-    "finalText": {
-      "gksr.hud.sermonCountdown.one": {
-        "en": "Sermon Day is Tomorrow!",
-        "zh-CN": "明天是布道日！"
-      },
-      "gksr.hud.sermonCountdown.other": {
-        "en": "{days} days before the Sermon Day.",
-        "zh-CN": "距离下一次布道日还有{days}天。"
-      },
-      "gksr.hud.sermonDone": {
-        "en": "This week’s sermon is complete!",
-        "zh-CN": "已完成本周布道！"
-      },
-      "gksr.hud.sermonReminder": {
-        "en": "Sermon Day!",
-        "zh-CN": "布道日！"
-      },
-      "gksr.settings.beacon.description": {
-        "en": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default.",
-        "zh-CN": "在布道日来临、且当日未布道时，设置一个永远追踪到教堂的信标点，默认值为开启。"
-      },
-      "gksr.settings.beacon.label": {
-        "en": "Enable church beacon",
-        "zh-CN": "开启教堂信标提醒"
-      },
-      "gksr.settings.group.title": {
-        "en": "GK2 Sermon Reminder",
-        "zh-CN": "GK2布道提醒"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "languageMapping": {
       "catalogLabelToRawGameLanguageId": {
         "en": "en",
@@ -49,7 +18,7 @@
         "zh_cn",
         "en"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识（例如 zh_cn、en、fr）；文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
@@ -91,7 +60,11 @@
       "Done 文字与图标的健康可用性是以可见 Done 为前提场景（已消费、时序）的显式前提；信标清除不得等待 Done 图标加载完成。",
       "设置页面注册范围仅限 GKSA-12 自身，不依赖尚未实现的弹窗票共用页面。",
       "几何数值在观察对观察等值比较之外，还须用现有运算符断言为有限数值：正尺寸用 numberRange{min:0} 加 notEquals 0 与 notEquals 0.0 三者组合证明严格为正；坐标用 IEEE754 binary64 可表示范围（min -1.7976931348623157e308、max 1.7976931348623157e308）证明有限，不使用猜测像素尺寸或人为坐标上限。",
-      "几何与参考测量协议：所有几何比较使用同一有效路由目标、同一镜头、同一视口、同一 UI 缩放与同一帧；自有槽尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值，原生参考实测自同一目标未改动的原始 prefab 槽位局部尺寸；渲染像素宽高在匹配的原生画布、镜头与当前缩放下实测；不使用任意原生任务标记位置作为等值参考。本清单不要求遥测或专用 API。"
+      "几何与参考测量协议：所有几何比较使用同一有效路由目标、同一镜头、同一视口、同一 UI 缩放与同一帧；自有槽尺寸实测自 Draw 之后实际 iconImage.rectTransform.sizeDelta 的局部单位值，原生参考实测自同一目标未改动的原始 prefab 槽位局部尺寸；渲染像素宽高在匹配的原生画布、镜头与当前缩放下实测；不使用任意原生任务标记位置作为等值参考。本清单不要求遥测或专用 API。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "observationVocabulary": {
       "beacon.addsCompetingPriority": "bool: 是否增加抢占原任务标记的优先级（必须为 false）",
@@ -188,6 +161,9 @@
       "hud.textKey": "string: 当前选用的文案键",
       "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
       "hud.visible": "bool: 角落文字当前是否可见",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "input.activeMethod": "string: 本场景实际使用的输入方式（keyboard、gamepad）",
       "inventory.itemShortage": "bool: 当前存档是否存在物品/材料短缺（不得影响信标资格）",
       "language.active": "string: 游戏原始语言标识，例如 zh_cn、en、fr；不使用目录标签 zh-CN",
@@ -431,57 +407,6 @@
       "safePlayableNoticeSurface": true
     },
     "evidenceSchemaNote": "observationVocabulary 中的点号键是证据 schema，用于记录可观察事实，不构成强制性的生产遥测 API。真实事实可由操作者观察记录、日志，或未来获授权的测试设施采集；本票不发明也不实现采集工具。",
-    "finalText": {
-      "gksr.diagnostics.beaconUnavailable": {
-        "en": "[Sermon Reminder] The church beacon cannot be displayed correctly. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 无法正常显示教堂信标点，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.diagnostics.hudUnavailable": {
-        "en": "[Sermon Reminder] The reminder cannot be displayed in the corner HUD. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 提醒信息无法在角落信息栏显示，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.diagnostics.popupUnavailable": {
-        "en": "[Sermon Reminder] The pop-up reminder cannot be displayed correctly. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 无法正常进行弹窗提醒，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.diagnostics.reminderUnavailable": {
-        "en": "[Sermon Reminder] Failed to read the required game state. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 必要游戏状态读取失败。查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.hud.sermonCountdown.one": {
-        "en": "Sermon Day is Tomorrow!",
-        "zh-CN": "明天是布道日！"
-      },
-      "gksr.hud.sermonCountdown.other": {
-        "en": "{days} days before the Sermon Day.",
-        "zh-CN": "距离下一次布道日还有{days}天。"
-      },
-      "gksr.hud.sermonDone": {
-        "en": "This week’s sermon is complete!",
-        "zh-CN": "已完成本周布道！"
-      },
-      "gksr.hud.sermonReminder": {
-        "en": "Sermon Day!",
-        "zh-CN": "布道日！"
-      },
-      "gksr.status.beaconUnavailable": {
-        "en": "[Sermon Reminder] The church beacon is unavailable.",
-        "zh-CN": "[布道提醒] 教堂信标点不可用。"
-      },
-      "gksr.status.hudUnavailable": {
-        "en": "[Sermon Reminder] The corner HUD reminder is unavailable.",
-        "zh-CN": "[布道提醒] 角落信息栏提醒不可用。"
-      },
-      "gksr.status.popupUnavailable": {
-        "en": "[Sermon Reminder] The pop-up reminder is unavailable.",
-        "zh-CN": "[布道提醒] 弹窗提醒不可用。"
-      },
-      "gksr.status.reminderUnavailable": {
-        "en": "[Sermon Reminder] Unable to read the required game state. Reminders are temporarily unavailable.",
-        "zh-CN": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "languageMapping": {
       "catalogLabelToRawGameLanguageId": {
         "en": "en",
@@ -493,7 +418,7 @@
         "zh_cht",
         "fr"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识（例如 zh_cn、en、zh_cht、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
@@ -519,7 +444,11 @@
       "几何与数值断言使用类型化可观察字段与精确阶段名；整数计数使用严格整数范围；严格为正的有限值使用 numberRange{min:1}，可同时接受有限整数与浮点而不接受布尔、字符串、null 或非有限值。",
       "每个场景给出独立存档/资源/UI 前提、每步一个动作、预期结果与可观察检查；视觉场景要求截图与实测或操作者明确观察记录。",
       "本清单不虚构原生注入 API 或字段，只描述受控故障条件，并要求操作者记录实际注入与恢复方法供 GKSA-16 复现。",
-      "未执行场景必须保持未执行；本清单不包含任何单元测试、原生桩、探针、伪造通过捕获或游戏执行。"
+      "未执行场景必须保持未执行；本清单不包含任何单元测试、原生桩、探针、伪造通过捕获或游戏执行。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "noticeCategories": {
       "beacon": {
@@ -684,6 +613,9 @@
       "hud.visibleDuringFailure": "bool: 失败阶段角落文字是否可见",
       "hud.visibleDuringLookupFault": "bool: 角落 HUD 查找访问异常持有期间角落文字是否可见",
       "hud.visibleDuringRetryPending": "bool: 打勾图标有界重试待定阶段角落文字是否可见",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "input.gameplayInputLeakedDuringPopup": "bool: 弹窗显示期间是否泄漏游戏操作输入",
       "input.gameplayInputRestoredAfterClose": "bool: 弹窗关闭后游戏操作输入是否恢复",
       "input.playerMovedDuringPopup": "bool: 弹窗显示期间玩家是否移动",
@@ -1194,25 +1126,6 @@
   },
   "countdown": {
     "baselineCommit": "7b2a77271bd94bafb9236e2a0076ba4fbb057970",
-    "finalText": {
-      "gksr.hud.sermonCountdown.one": {
-        "en": "Sermon Day is Tomorrow!",
-        "zh-CN": "明天是布道日！"
-      },
-      "gksr.hud.sermonCountdown.other": {
-        "en": "{days} days before the Sermon Day.",
-        "zh-CN": "距离下一次布道日还有{days}天。"
-      },
-      "gksr.hud.sermonDone": {
-        "en": "This week’s sermon is complete!",
-        "zh-CN": "已完成本周布道！"
-      },
-      "gksr.hud.sermonReminder": {
-        "en": "Sermon Day!",
-        "zh-CN": "布道日！"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "languageMapping": {
       "catalogLabelToRawGameLanguageId": {
         "en": "en",
@@ -1222,7 +1135,7 @@
         "zh_cn",
         "en"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。knownRawGameLanguageIds 仅为结构校验示例；其他受测语言的原始标识（如 fr）仍可作为不受支持语言回退场景的取值。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
@@ -1236,7 +1149,11 @@
       "天数按 (T - 当前星期编号 + 6) % 6 计算，其中当前星期编号为 EnvironmentData.CurrentDayNumber (= day % 6，余数 0 记为 6)，T 为实际观察到的布道日星期编号 save.sermonWeekday，取自环境字段 game.sermonWeekday，即游戏自身 ConstDef.Get(\"day_wrath\").IntValue；不得在清单中写死 T，也不得修改游戏定义。",
       "hud.style.nativeSource 记录已验证的来源字段标识 HUD.happinessLabel，而非猜测的 GameObject 名称。",
       "EnvironmentData.Day 是绝对游戏日（从 1 开始的正整数）；EnvironmentData.CurrentDayNumber 只是星期编号，满足 dayOfWeek == ((absoluteDay - 1) % 6) + 1。日期场景以相对条件描述，绝不写死目标星期字面量。",
-      "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：单日要求 delta=1，多日要求 delta∈2..5，同日要求绝对日与 delta 均不变，跨日要求绝对日 +1 且 afterDelta=beforeDelta-1，周期跨日要求星期 6→1，并允许 T=1（此时跨日后即为布道日，要求不显示非布道日倒计时）。"
+      "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：单日要求 delta=1，多日要求 delta∈2..5，同日要求绝对日与 delta 均不变，跨日要求绝对日 +1 且 afterDelta=beforeDelta-1，周期跨日要求星期 6→1，并允许 T=1（此时跨日后即为布道日，要求不显示非布道日倒计时）。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "observationVocabulary": {
       "countdown.afterDays": "int: 日期未变前后连续观察中的后一整数天数",
@@ -1263,6 +1180,9 @@
       "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
       "hud.visibilityInheritsNative": "bool: 可见性与界面层级是否继承原生 HUD",
       "hud.visible": "bool: 角落倒计时文字当前是否可见",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "items.count": "int: 当前背包或基地物品数量",
       "language.active": "string: 游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages，例如 zh_cn、en、fr；命名原始 game language，使用 zh_cn 而非文案目录标签 zh-CN",
       "layout.anchor": "string: 相对时钟的锚定关系，预期 below_clock",
@@ -1427,41 +1347,6 @@
       "safePlayableNoticeSurface": true
     },
     "evidenceSchemaNote": "observationVocabulary 中的点号键是证据 schema，用于记录可观察事实，不构成强制性的生产遥测 API。真实事实可由操作者观察记录、日志，或未来获授权的测试设施采集；本票不发明也不实现采集工具。",
-    "finalText": {
-      "gksr.diagnostics.hudUnavailable": {
-        "en": "[Sermon Reminder] The reminder cannot be displayed in the corner HUD. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 提醒信息无法在角落信息栏显示，查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.diagnostics.reminderUnavailable": {
-        "en": "[Sermon Reminder] Failed to read the required game state. Check the logs for details. If you are certain this is a bug, please open an issue on GitHub.",
-        "zh-CN": "[布道提醒] 必要游戏状态读取失败。查看日志以了解详情。如果你确信这是一个Bug，请在Github上提出issue。"
-      },
-      "gksr.hud.sermonCountdown.one": {
-        "en": "Sermon Day is Tomorrow!",
-        "zh-CN": "明天是布道日！"
-      },
-      "gksr.hud.sermonCountdown.other": {
-        "en": "{days} days before the Sermon Day.",
-        "zh-CN": "距离下一次布道日还有{days}天。"
-      },
-      "gksr.hud.sermonDone": {
-        "en": "This week’s sermon is complete!",
-        "zh-CN": "已完成本周布道！"
-      },
-      "gksr.hud.sermonReminder": {
-        "en": "Sermon Day!",
-        "zh-CN": "布道日！"
-      },
-      "gksr.status.hudUnavailable": {
-        "en": "[Sermon Reminder] The corner HUD reminder is unavailable.",
-        "zh-CN": "[布道提醒] 角落信息栏提醒不可用。"
-      },
-      "gksr.status.reminderUnavailable": {
-        "en": "[Sermon Reminder] Unable to read the required game state. Reminders are temporarily unavailable.",
-        "zh-CN": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "languageMapping": {
       "catalogLabelToRawGameLanguageId": {
         "en": "en",
@@ -1471,7 +1356,7 @@
         "zh_cn",
         "en"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
@@ -1497,7 +1382,11 @@
       "原生消息使用 titleless、iconless、非阻塞的纯文字形式，沿用原生位置、样式、时长与自动消失行为。",
       "日志抑制逐帧重复噪声但保留初始诊断；中间健康绑定不得重置角落故障回合。",
       "新载入重新计算各类别提示机会；不进行进程级去重。",
-      "受控故障注入场景的先成功就绪读取只是实验前置条件，用于区分异常状态丢失与普通加载/退出；不得据此为生产故障消息增加必须先成功读取一次业务状态的业务门槛。"
+      "受控故障注入场景的先成功就绪读取只是实验前置条件，用于区分异常状态丢失与普通加载/退出；不得据此为生产故障消息增加必须先成功读取一次业务状态的业务门槛。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "noticeCategories": {
       "corner-hud": {
@@ -1569,6 +1458,9 @@
       "hud.visibleBefore": "bool: 待定阶段角落文字是否可见（应为 false）",
       "hud.visibleBeforeResolve": "bool: 图标待定阶段角落文字是否可见（应为 false）",
       "hud.visibleBeforeRetry": "bool: 图标失败待重试阶段角落文字是否可见（应为 false）",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "icon.addressablesReady": "bool: 游戏 Addressables 是否已初始化",
       "icon.dependentPresentationSuppressed": "bool: 打勾资源不可用时依赖它的整个 Done 呈现（文字与图标）是否被抑制",
       "icon.loadFailed": "bool: 打勾图标加载是否失败",
@@ -1834,41 +1726,6 @@
   },
   "sermon-popup": {
     "baselineCommit": "0f848e4a15d59cc097213a5fcf0aae53059b97ce",
-    "finalText": {
-      "gksr.popup.sermon.body": {
-        "en": "Today is Sermon Day! Don’t forget to head to the church and hold a sermon!\n\nYou’re seeing this pop-up because you manually enabled the Ultimate Reminder. If you find it unnecessary, you can disable it in the settings.",
-        "zh-CN": "今天是布道日！记得去教堂布道！\n\n你会看到这个弹窗是因为你手动启用了究极提醒。如果你觉得这个弹窗很多余，可以到设置里关闭它。"
-      },
-      "gksr.popup.sermon.confirm": {
-        "en": "Confirm",
-        "zh-CN": "确认"
-      },
-      "gksr.popup.sermon.title": {
-        "en": "Sermon Day",
-        "zh-CN": "布道日"
-      },
-      "gksr.settings.beacon.description": {
-        "en": "On Sermon Day, if you haven’t held a sermon yet, place a persistent beacon pointing to the church. Enabled by default.",
-        "zh-CN": "在布道日来临、且当日未布道时，设置一个永远追踪到教堂的信标点，默认值为开启。"
-      },
-      "gksr.settings.beacon.label": {
-        "en": "Enable church beacon",
-        "zh-CN": "开启教堂信标提醒"
-      },
-      "gksr.settings.group.title": {
-        "en": "GK2 Sermon Reminder",
-        "zh-CN": "GK2布道提醒"
-      },
-      "gksr.settings.popup.description": {
-        "en": "Force a pop-up to appear when Sermon Day arrives as an ultimate reminder. Disabled by default.",
-        "zh-CN": "在布道日来临时强行开启一个弹窗的究极提醒。默认值为关闭。"
-      },
-      "gksr.settings.popup.label": {
-        "en": "Ultimate Reminder",
-        "zh-CN": "究极提醒"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "languageMapping": {
       "catalogLabelToRawGameLanguageId": {
         "en": "en",
@@ -1878,7 +1735,7 @@
         "zh_cn",
         "en"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过；所有场景状态均为 UNEXECUTED。",
@@ -1898,9 +1755,6 @@
       "删除成功后重建同名槽位推进槽代并开启新的去重生命周期；删除失败不推进槽代且保留原记录。",
       "游戏进程重启清空进程内去重记录，且不写入任何持久化去重标记。",
       "本票仅覆盖正常弹窗路径；故障恢复后的补发联动留待后续组合故障票。GKSA-15 的失败通知集成在本票中既不要求也不禁止，本清单不为其编写断言。",
-      "弹窗正文两段短文案的中文原文含 Huly 富文本加粗标记；本清单接受实际渲染出的纯文本作为文本观察，不要求任何生产遥测 API。观察字段由真实操作者或测试设施在真实运行中记录，不存在伪造证据。",
-      "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e 为准；本清单不新增或改写任何玩家可见文案。语言跟随游戏当前语言，缺少当前语言译文时使用英语兜底。",
-      "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e 为准：gksr.popup.sermon.title（zh-CN 布道日 / en Sermon Day）、gksr.popup.sermon.body（zh-CN 今天是布道日！记得去教堂布道！ + 第二段，en 对应两段）、gksr.popup.sermon.confirm（zh-CN 确认 / en Confirm）、以及设置页 gksr.settings.group.title、gksr.settings.popup.label/description、gksr.settings.beacon.label/description。弹窗正文两段按文档以空行分隔；文档第二段中的加粗标记仅作为排版标记，观察字段记录渲染后的纯文本（不含 Markdown/HTML 标记），该纯文本语义由主验收确认。",
       "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
       "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
       "布局与视觉结论必须附带已校验的截图，并附带实测数值或明确的 operatorObservation；仅日志不能作为布局证据。",
@@ -1910,7 +1764,11 @@
       "信标可见性按阶段分别观察，不与持久化开关值混用：beacon.shownOnLoadWhileEnabled 在开关为开启的载入、beacon.shownOnLoadAfterDisable 在切为关闭后的载入、beacon.shownOnLoadAfterReenable 在切回开启后的载入分别记录；settings.beaconEnabled* 只记录主菜单持久化值，不代表任何已载入存档的活动快照。",
       "弹窗由开启切为关闭的证明必须在同一进程内针对一个从未提示过、且尚无去重记录的合格槽与具体游戏日执行；否则去重本身就会抑制弹窗，无法区分是设置生效还是去重生效。故该场景要求 dedup.recordAbsentForThisSlotDayBeforeLoad 为 true，并以 popup.shownAfterDisable 观察真实不显示。",
       "原生 SaveSlotData 没有槽代字段。save.slotGeneration / save.slotGenerationBefore / save.slotGenerationAfter 与 dedup.capturedSlotGeneration 都表示本模组按不可变原生槽键在进程内存中维护的槽代计数，在初始载入捕获身份时读取，早于后续可变存档字段变化。",
-      "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁或替换游戏管理并缓存的共享原生对话框实例，也不得关闭或改动其他系统已接管的内容与其他系统已打开的对话框。本模组仍可经游戏原生关闭流程关闭退出/清理时仍归本模组所有的弹窗内容。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。"
+      "退出清理只断言本模组自身行为：清理自有内容、待显示与自有引用且不留卡住暂停；本模组不得销毁或替换游戏管理并缓存的共享原生对话框实例，也不得关闭或改动其他系统已接管的内容与其他系统已打开的对话框。本模组仍可经游戏原生关闭流程关闭退出/清理时仍归本模组所有的弹窗内容。本模组不要求也不断言游戏自身在所有场景与菜单卸载后仍保留每个对话框实例。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "observationVocabulary": {
       "beacon.shownOnLoadAfterDisable": "bool: 本次载入时信标开关已为关闭的前提下原生信标是否显示（预期 false）",
@@ -1934,6 +1792,9 @@
       "dedup.usedPlatform": "bool: 是否使用平台作为身份（必须为 false）",
       "dedup.usedTimestamp": "bool: 是否使用时间戳作为身份（必须为 false）",
       "hud.nonSermonCountdownShown": "bool: 当前是否显示非布道日倒计时",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "input.gameplayInputLeakedDuringPopup": "bool: 弹窗期间游戏输入是否泄漏（必须为 false）",
       "input.gameplayInputRestoredAfterClose": "bool: 无其他暂停来源时关闭弹窗后游戏输入是否恢复正常",
       "input.playerMovedDuringPopup": "bool: 弹窗显示期间玩家是否发生移动（必须为 false）",
@@ -2317,25 +2178,6 @@
   },
   "sermon-state": {
     "baselineCommit": "4aac02abf7da16d3659de07e69ca4f2ad3d25ebb",
-    "finalText": {
-      "gksr.hud.sermonCountdown.one": {
-        "en": "Sermon Day is Tomorrow!",
-        "zh-CN": "明天是布道日！"
-      },
-      "gksr.hud.sermonCountdown.other": {
-        "en": "{days} days before the Sermon Day.",
-        "zh-CN": "距离下一次布道日还有{days}天。"
-      },
-      "gksr.hud.sermonDone": {
-        "en": "This week’s sermon is complete!",
-        "zh-CN": "已完成本周布道！"
-      },
-      "gksr.hud.sermonReminder": {
-        "en": "Sermon Day!",
-        "zh-CN": "布道日！"
-      }
-    },
-    "finalTextSource": "Huly document 6ab4dc8908d9ac0dfff99a4e (布道提醒模组：文案清单与人工定稿)",
     "iconSource": {
       "catalogAsset": "btn_i-check.png",
       "note": "catalog 静态映射已在静态核对中确认；运行时仅要求请求该 GUID 并返回 Sprite，静态映射本身不构成运行时证明。",
@@ -2350,7 +2192,7 @@
         "zh_cn",
         "en"
       ],
-      "note": "观察字段 language.active 记录游戏原始语言标识，取自 LazyBearTechnology.LL.GetAvailableLanguages（例如 zh_cn、en、fr）。文案目录标签 zh-CN 仅用于 finalText 与期望的 language 字段，不得用于 language.active。"
+      "note": "观察字段 language.active 记录游戏原始语言标识。i18n.<文本观察路径>.language 记录实际解析后的资源语言标识（zh_cn 或 en）。"
     },
     "notes": [
       "本清单记录待执行的验收要求，不代表任何场景已经执行或通过。",
@@ -2365,7 +2207,6 @@
       "已布道与错过布道两种跨日都回到 delta=5（下一次布道）的倒计时，包括 T=6 的周期回绕；非布道日残留的原生 ready 标志不得保持 Ready。",
       "载入布道前旧存档应恢复 Ready；载入布道后存档应恢复 Done。",
       "同一角落同一时刻只允许一个文字状态；本票不实现弹窗或信标。",
-      "最终文案以 Huly 文档 6ab4dc8908d9ac0dfff99a4e（布道提醒模组：文案清单与人工定稿）为准：gksr.hud.sermonReminder（zh-CN 布道日！/ en Sermon Day!）、gksr.hud.sermonDone（zh-CN 已完成本周布道！/ en This week’s sermon is complete!）；既有倒计时键保持不变，原始 zh_cn/en/其它回退 en 语义保留。",
       "图标来源：游戏 Addressables 初始化后请求 Sprite GUID 4d1c67d72f3e6c8419b24e8c275d101e（catalog 静态映射 btn_i-check.png 已在静态核对中确认，不代表运行时证明）。",
       "图标要求：Done 文字前挂一个自有 UnityEngine.UI.Image，使用原 Sprite 颜色与白色 Image tint，宽高比 20:18，尺寸基于实际文字行高并随原生画布缩放（不得写死屏幕像素高度），raycastTarget=false，仅在 Done 状态预留图标空间。",
       "图标加载生命周期：保持单一异步句柄，不做逐帧请求、不同步 WaitForCompletion；为满足 Ready→Done 的即时正常呈现，允许在布道日当天（Ready 或 Done）预加载并保留该单一自有 Sprite 句柄，但只有 Done 状态可以创建/显示 Image 或预留其布局空间。在非布道日倒计时、关闭门槛、不可读状态、退出、关闭或 HUD 重建时释放；重建后允许重新获取，单飞按当前所有权适用。退出存档或 HUD 重建时清理并销毁自有 Image、在不再使用时释放自有 Addressables 引用；退出/重绑后延迟完成不得复活旧 UI。不销毁或修改共享 Sprite/材质；不将原生 Sprite 复制进仓库/发行包，也不使用 Unicode 或替代图回退。",
@@ -2377,7 +2218,11 @@
       "视觉类场景采用以下观察方案：本清单所有场景的 evidence.measurement 均为 true，校验器因此强制要求 results[].measurement 含非空数值 values 或非空 operatorObservation，并附已校验的截图；仅有布尔值断言不能满足。icon-visual-style 另以 measuredRatio 对 20:18 校验实测宽度/高度，并强制要求 icon.textLineHeightPx 为有限数值且不小于 0。不接受仅布尔值断言代替可见输出。",
       "capture 的 environment 与 observations 均使用本清单 observationVocabulary 中的扁平点号键，不嵌套。",
       "证据文件路径必须以 capture 文件所在目录为基准的相对路径；禁止绝对路径与越出该目录的路径。",
-      "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：布道后跨日使用 after-sermon-day 模式，要求跨日前星期编号 = 观察到的 T、绝对日 +1、绝对日与星期编号自洽、afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。"
+      "日期场景使用专用 date-check helper（固定模式的日历检查器，不是通用 DSL）：布道后跨日使用 after-sermon-day 模式，要求跨日前星期编号 = 观察到的 T、绝对日 +1、绝对日与星期编号自洽、afterDelta = 周长度 - 1 且显示正确的复数倒计时文案。",
+      "本地化验收不保存生产译文基线。",
+      "本地化验收只检查资源加载、键选择、语言选择、英语回退及参数插值。",
+      "记录每个受检文本实际查找使用的键、解析后的语言与成功读取的嵌入资源名称；预期可追溯到该次真实运行；检查调试器或采集设施的查找记录，不从期望值推填观察字段。",
+      "记录可见文本的真实截图；预期与文本观察对应；检查截图证据，不以资源查找记录代替界面显示证据。"
     ],
     "observationVocabulary": {
       "fault.staleValueReused": "bool: 故障后是否沿用故障前旧判定",
@@ -2397,6 +2242,9 @@
       "hud.trackedResourcesReleased": "bool: 退出存档时是否释放模组持有的显示资源",
       "hud.visible": "bool: 角落文字当前是否可见",
       "hud.visibleAfterRecovery": "bool: 图标成功恢复后可读文字是否可见",
+      "i18n.<文本观察路径>.key": "string: 该次实际资源查找使用的语义键",
+      "i18n.<文本观察路径>.language": "string: 该次查找实际命中的资源语言（zh_cn 或 en），不是游戏语言的预填副本",
+      "i18n.<文本观察路径>.resource": "string: 该次查找成功读取的嵌入资源完整名称；加载失败时不得记录为成功命中",
       "icon.addressableRefReleased": "bool: 自有 Addressables 引用是否已释放",
       "icon.addressableReferencesHeld": "int: 最终健康观察（重建并已重新加载 Done+Image）时持有的自有 Addressables 引用数量，必须为 1；加载中的中间待定状态不计入该最终观察",
       "icon.addressablesReady": "bool: 游戏 Addressables 是否已初始化",

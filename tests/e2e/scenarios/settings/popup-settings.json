@@ -64,28 +64,38 @@
           "observation": "settings.pageRegisteredOnce"
         },
         {
-          "finalTextKey": "gksr.settings.group.title",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.group.title",
+            "language": "zh_cn"
+          },
           "observation": "settings.groupTitle"
         },
         {
-          "finalTextKey": "gksr.settings.popup.label",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.popup.label",
+            "language": "zh_cn"
+          },
           "observation": "settings.popupLabel"
         },
         {
-          "finalTextKey": "gksr.settings.popup.description",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.popup.description",
+            "language": "zh_cn"
+          },
           "observation": "settings.popupDescription"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.label",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.beacon.label",
+            "language": "zh_cn"
+          },
           "observation": "settings.beaconLabel"
         },
         {
-          "finalTextKey": "gksr.settings.beacon.description",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.settings.beacon.description",
+            "language": "zh_cn"
+          },
           "observation": "settings.beaconDescription"
         },
         {
@@ -107,11 +117,11 @@
       ],
       "steps": [
         "在主菜单打开 GK2 Mod Framework 的 Mods 列表；预期只列出本模组一个设置页面；检查 settings.pageRegisteredOnce 为 true。",
-        "打开本模组设置页面并读取标题；预期显示定稿页面名；检查 settings.groupTitle 使用 gksr.settings.group.title 的 zh-CN 文案。",
-        "读取弹窗与信标开关的名称与说明；预期均显示定稿文案；检查 settings.popupLabel/description 与 settings.beaconLabel/description。",
-        "检查页面操作控件；预期没有应用或保存按钮；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。"
+        "检查页面操作控件；预期没有应用或保存按钮；检查 settings.applyButtonUsed 与 settings.saveButtonUsed 均为 false。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
-      "title": "Mods 的模组设置页面暴露弹窗与信标开关并使用定稿文案"
+      "title": "Mods 的模组设置页面暴露弹窗与信标开关并使用本地化文案"
     },
     {
       "category": "settings",

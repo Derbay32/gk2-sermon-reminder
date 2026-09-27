@@ -212,8 +212,10 @@
           "observation": "hud.textKey"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.text"
         },
         {
@@ -234,7 +236,9 @@
       "steps": [
         "关闭信标开关后载入满足角落文字条件的存档；预期信标停用；检查 settings.beacon.enabled=false 与 beacon.enabled=false。",
         "核对角落文字；预期仍可见且为 Ready 文案；检查 hud.visible=true 与 hud.textKey=gksr.hud.sermonReminder。",
-        "核对资格状态；预期可读且机会未消费；检查 state.readable=true 与 state.sermonReadyValue>=1。"
+        "核对资格状态；预期可读且机会未消费；检查 state.readable=true 与 state.sermonReadyValue>=1。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "关闭信标只停用信标并保留角落文字"
     },

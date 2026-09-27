@@ -14,7 +14,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "single-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -52,7 +52,9 @@
       ],
       "steps": [
         "记录绝对日、星期编号与布道日星期编号 T。",
-        "读取角落倒计时文字与已显示天数。"
+        "读取角落倒计时文字与已显示天数。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "非布道日剩余 1 天沿用 GKSA-10 倒计时"
     },
@@ -69,7 +71,7 @@
             "absoluteDay": "save.absoluteDay",
             "countdown": "hud.countdownDays",
             "dayOfWeek": "save.dayOfWeek",
-            "language": "zh-CN",
+            "language": "zh_cn",
             "mode": "multi-day",
             "text": "hud.text",
             "textKey": "hud.textKey"
@@ -107,7 +109,10 @@
       ],
       "steps": [
         "记录绝对日、星期编号与布道日星期编号 T。",
-        "读取角落倒计时文字与实际选用文案键。"
+        "读取角落倒计时文字与实际选用文案键。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。",
+        "读取可见多日倒计时的整数；预期使用实际剩余天数完成插值；检查数值与日期计算结果一致。"
       ],
       "title": "非布道日多天倒计时沿用 GKSA-10 文案"
     }

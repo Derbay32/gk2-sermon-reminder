@@ -18,8 +18,10 @@
           "observation": "hud.textKeyBefore"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "zh-CN",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "zh_cn"
+          },
           "observation": "hud.textBefore"
         },
         {
@@ -31,8 +33,10 @@
           "observation": "hud.textKeyAfter"
         },
         {
-          "finalTextKey": "gksr.hud.sermonReminder",
-          "language": "en",
+          "localizedText": {
+            "key": "gksr.hud.sermonReminder",
+            "language": "en"
+          },
           "observation": "hud.textAfter"
         },
         {
@@ -57,7 +61,9 @@
       "steps": [
         "以简体中文观察 Ready 文字。",
         "切换游戏语言为英语。",
-        "再次观察 Ready 文字是否在未重载存档的情况下刷新。"
+        "再次观察 Ready 文字是否在未重载存档的情况下刷新。",
+        "记录受检文本对应的实际资源查找；预期命中该场景指定的键与语言；检查 i18n.<文本观察路径>.key、language 与成功读取的 resource。",
+        "读取受检文本；预期本地化输出有效；检查非空且没有资源键或未替换的占位符，不比较完整译文。"
       ],
       "title": "原生语言切换后刷新文字而不重载存档"
     }

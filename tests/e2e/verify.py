@@ -9,7 +9,7 @@ passed, and never treats logs alone as proof of a visual/layout outcome.
 The manifest bundle (index + profiles + every scenario document) is loaded and
 validated by the shared :mod:`e2e_manifest` loader, so its schema, containment,
 identity and fingerprint rules never diverge from the source guard's. Each
-scenario is evaluated against its own profile's ``finalText``, ``validation`` and
+scenario is evaluated against its own profile's ``validation`` and
 ``languageMapping``; policies are never merged into a weaker combined context.
 
 Fail-closed: any missing file, hash mismatch, unsupported protocol, unexecuted
@@ -446,15 +446,6 @@ def _manifest_string(spec: JsonObject, key: str, default: str) -> str:
     return value if isinstance(value, str) and value else default
 
 
-def _final_sentence(final_text: JsonObject, key: str, language: str) -> str | None:
-    """Return the validated final sentence for ``(key, language)``, else None."""
-    entry = final_text.get(key)
-    if not isinstance(entry, dict):
-        return None
-    value = entry.get(language)
-    return value if isinstance(value, str) else None
-
-
 def weekday_from_absolute_day(absolute_day: int, week: int) -> int:
     """EnvironmentData.CurrentDayNumber == ((absoluteDay - 1) % week) + 1."""
     return ((absolute_day - 1) % week) + 1
@@ -522,42 +513,52 @@ def _date_check_countdown_equals(
         )
 
 
-def _date_check_text(
-    observations: JsonObject, final_text: JsonObject, spec: JsonObject, delta: int, failures: list[str]
-) -> None:
-    """The displayed sentence must correspond to the delta derived from observed T.
+def check_localized_output(
+    observations: JsonObject, text_path: str, key: str, language: str, days: int | None = None
+) -> list[str]:
+    """Check lookup provenance and interpolation, without grading translation copy.
 
-    delta == 1 uses the parameterless one-day sentence; any other shown delta uses
-    the {days} sentence rendered with that delta. Only zh-CN is asserted here.
+    Lookup observations must come from the same real run as the rendered text.
+    They are captured by the operator/debugger, not inferred from expected text.
+    Visual scenarios still require their existing screenshot evidence.
     """
+    failures: list[str] = []
+    lookup = {
+        "key": key,
+        "language": language,
+        "resource": f"gk2.sermonreminder.localization.{language}.json",
+    }
+    for field, expected in lookup.items():
+        path = f"i18n.{text_path}.{field}"
+        if not has_path(observations, path):
+            failures.append(f"lookup observation {path!r} was not captured")
+        elif get_path(observations, path) != expected:
+            failures.append(f"{path} = {get_path(observations, path)!r}, expected {expected!r}")
+    if not has_path(observations, text_path):
+        return failures + [f"text observation {text_path!r} was not captured"]
+    text = get_path(observations, text_path)
+    if not isinstance(text, str) or not text.strip():
+        return failures + [f"{text_path} must be a non-empty rendered string"]
+    if "gksr." in text or re.search(r"\{[^{}]*\}", text):
+        failures.append(f"{text_path} contains a resource key or unresolved placeholder")
+    if days is not None and days > 1:
+        if not re.search(rf"(?<![\d.]){days}(?!\d|[.,]\d)", text):
+            failures.append(f"{text_path} does not contain the interpolated integer {days}")
+    return failures
+
+
+def _date_check_text(observations: JsonObject, spec: JsonObject, delta: int, failures: list[str]) -> None:
+    """Check the countdown key and integer interpolation, not its sentence."""
     text_path = _manifest_string(spec, "text", "hud.text")
     key_path = _manifest_string(spec, "textKey", "hud.textKey")
-    language = _manifest_string(spec, "language", "zh-CN")
-    if not has_path(observations, text_path):
-        failures.append(f"countdown text observation {text_path!r} was not captured")
-        return
-    text = get_path(observations, text_path)
-    if delta == 1:
-        expected_key = "gksr.hud.sermonCountdown.one"
-        expected = _final_sentence(final_text, expected_key, language)
-    else:
-        expected_key = "gksr.hud.sermonCountdown.other"
-        template = _final_sentence(final_text, expected_key, language)
-        expected = None if template is None else template.replace("{days}", str(delta))
-    if expected is None:
-        failures.append(f"manifest finalText has no {language} sentence for {expected_key!r}")
-        return
-    if has_path(observations, key_path):
-        key = get_path(observations, key_path)
-        if key != expected_key:
-            failures.append(f"{key_path} = {key!r} must be {expected_key!r} for a shown delta of {delta}")
-    if text != expected:
-        failures.append(
-            f"{text_path} = {text!r}, expected the complete {language} sentence {expected!r} for delta {delta}"
-        )
+    language = _manifest_string(spec, "language", "zh_cn")
+    expected_key = "gksr.hud.sermonCountdown.one" if delta == 1 else "gksr.hud.sermonCountdown.other"
+    if has_path(observations, key_path) and get_path(observations, key_path) != expected_key:
+        failures.append(f"{key_path} must be {expected_key!r} for a shown delta of {delta}")
+    failures.extend(check_localized_output(observations, text_path, expected_key, language, delta))
 
 
-def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_text: JsonObject) -> list[str]:
+def evaluate_date_check(condition: JsonObject, observations: JsonObject) -> list[str]:
     """Evaluate one dedicated dateCheck helper condition.
 
     Returns a list of failure messages (empty when the check passes). Every
@@ -635,6 +636,8 @@ def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_t
         _date_check_countdown_equals(
             observations, _manifest_string(spec, "countdown", ""), "countdownDays", delta, failures
         )
+        if "text" in spec:
+            _date_check_text(observations, spec, delta, failures)
         return failures
 
     # same-day / midnight / cycle-wrap all compare a before/after pair.
@@ -683,7 +686,7 @@ def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_t
         _date_check_countdown_equals(
             observations, _manifest_string(spec, "countdownAfter", ""), "countdown.afterDays", after_delta, failures
         )
-        _date_check_text(observations, final_text, spec, after_delta, failures)
+        _date_check_text(observations, spec, after_delta, failures)
         return failures
 
     if after_abs != before_abs + 1:
@@ -712,7 +715,7 @@ def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_t
         _date_check_countdown_equals(
             observations, _manifest_string(spec, "countdownAfter", ""), "countdown.afterDays", after_delta, failures
         )
-        _date_check_text(observations, final_text, spec, after_delta, failures)
+        _date_check_text(observations, spec, after_delta, failures)
         return failures
 
     if mode == "midnight":
@@ -736,7 +739,7 @@ def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_t
         _date_check_countdown_equals(
             observations, _manifest_string(spec, "countdownAfter", ""), "countdown.afterDays", after_delta, failures
         )
-        _date_check_text(observations, final_text, spec, after_delta, failures)
+        _date_check_text(observations, spec, after_delta, failures)
         return failures
 
     # cycle-wrap
@@ -780,15 +783,13 @@ def evaluate_date_check(condition: JsonObject, observations: JsonObject, final_t
         after_delta,
         failures,
     )
-    _date_check_text(observations, final_text, spec, after_delta, failures)
+    _date_check_text(observations, spec, after_delta, failures)
     return failures
 
 
-def evaluate_expectation(
-    condition: JsonObject, observations: JsonObject, final_text: JsonObject, environment: JsonObject
-) -> tuple[bool, str]:
+def evaluate_expectation(condition: JsonObject, observations: JsonObject, environment: JsonObject) -> tuple[bool, str]:
     if "dateCheck" in condition:
-        failures = evaluate_date_check(condition, observations, final_text)
+        failures = evaluate_date_check(condition, observations)
         if failures:
             return False, "; ".join(failures)
         return True, ""
@@ -946,66 +947,43 @@ def evaluate_expectation(
         if want and not is_present:
             return False, f"{obs_path} is absent but must be present"
 
-    if "finalTextKey" in condition or "finalTextKeyFromObservation" in condition:
-        key_observation = condition.get("finalTextKeyFromObservation")
-        key_value: JsonValue
-        if isinstance(key_observation, str) and key_observation:
-            if not has_path(observations, key_observation):
-                return False, f"final text key observation {key_observation!r} was not captured"
-            key_value = get_path(observations, key_observation)
+    if "localizedText" in condition:
+        spec = condition["localizedText"]
+        if not isinstance(spec, dict):
+            return False, "localizedText must be an object"
+        key_path = spec.get("keyObservation")
+        if isinstance(key_path, str):
+            if not has_path(observations, key_path):
+                return False, f"localization key observation {key_path!r} was not captured"
+            key = get_path(observations, key_path)
+            allowed = spec.get("keysAnyOf")
+            if not isinstance(allowed, list) or key not in allowed:
+                return False, f"{key_path} = {key!r}, expected one of {allowed!r}"
         else:
-            key_value = condition.get("finalTextKey")
-        if not isinstance(key_value, str) or not key_value:
-            return False, f"final text key {key_value!r} must be a non-empty string"
-        allowed = condition.get("finalTextKeysAnyOf")
-        if allowed:
-            if not isinstance(allowed, list):
-                return False, f"finalTextKeysAnyOf must be an array: {allowed!r}"
-            if key_value not in allowed:
-                return False, f"{obs_path} used key {key_value!r}, not in {allowed}"
-        elif key_value != condition.get("finalTextKey"):
-            return False, f"{obs_path} used key {key_value!r}, expected {condition.get('finalTextKey')!r}"
-        if key_value not in final_text:
-            return False, f"unknown final text key {key_value!r}"
-
-        language_value = condition.get("language")
-        language = language_value if isinstance(language_value, str) else ""
-        entry = final_text.get(key_value)
-        if not isinstance(entry, dict):
-            return False, f"unknown final text key {key_value!r}"
-        if language and language not in entry:
-            return False, f"language {language!r} has no final text for {key_value!r}"
-        expected_text = entry.get(language)
-        if not isinstance(expected_text, str):
-            return False, f"no expected text for {key_value!r} in language {language!r}"
-
-        if "{days}" not in expected_text:
-            if value != expected_text:
-                return False, f"{obs_path} = {value!r}, expected exact {expected_text!r} (no interpolation permitted)"
-        else:
-            days_path_value = condition.get("daysObservation")
-            if (
-                not isinstance(days_path_value, str)
-                or not days_path_value
-                or not has_path(observations, days_path_value)
-            ):
-                return False, f"multi-day text requires {days_path_value!r} to interpolate {{days}}"
-            days = get_path(observations, days_path_value)
-            if not is_int(days) or days <= 1:
-                return False, (
-                    f"{days_path_value} = {days!r} must be a strict integer greater than 1; "
-                    "floats and booleans do not qualify"
-                )
-            rendered = expected_text.replace("{days}", str(days))
-            if value != rendered:
-                return False, f"{obs_path} = {value!r}, expected rendered {rendered!r}"
+            key = spec.get("key")
+        if not isinstance(key, str) or not key:
+            return False, "localizedText requires a non-empty resource key"
+        days = None
+        days_path = spec.get("daysObservation")
+        if isinstance(days_path, str):
+            if not has_path(observations, days_path):
+                return False, f"interpolation observation {days_path!r} was not captured"
+            days = get_path(observations, days_path)
+            if not is_int(days) or days < 1:
+                return False, f"{days_path} = {days!r} must be a positive integer"
+            expected_key = "gksr.hud.sermonCountdown.one" if days == 1 else "gksr.hud.sermonCountdown.other"
+            if key != expected_key:
+                return False, f"{key!r} must be {expected_key!r} for a shown countdown of {days}"
+        elif key == "gksr.hud.sermonCountdown.other":
+            return False, "multi-day localization requires daysObservation"
+        failures = check_localized_output(observations, obs_path, key, _manifest_string(spec, "language", ""), days)
+        if failures:
+            return False, "; ".join(failures)
 
     return True, ""
 
 
-def evaluate_scenario(
-    scenario: JsonObject, observations: JsonObject, final_text: JsonObject, environment: JsonObject
-) -> list[str]:
+def evaluate_scenario(scenario: JsonObject, observations: JsonObject, environment: JsonObject) -> list[str]:
     scenario_id = scenario.get("id")
     expect = scenario.get("expect")
     if not isinstance(expect, list):
@@ -1015,7 +993,7 @@ def evaluate_scenario(
         if not isinstance(condition, dict):
             failures.append(f"scenario {scenario_id!r} has a malformed expectation: {condition!r}")
             continue
-        ok, message = evaluate_expectation(condition, observations, final_text, environment)
+        ok, message = evaluate_expectation(condition, observations, environment)
         if not ok:
             failures.append(message)
     return failures
@@ -1189,8 +1167,6 @@ def check_capture(manifest_path: Path, capture_path: Path, output_path: Path, al
         sid = scenario["id"]
         if not isinstance(sid, str):
             continue
-        final_text_value = bundle.profile_of(scenario).get("finalText")
-        final_text = final_text_value if isinstance(final_text_value, dict) else {}
         record = executed.get(sid)
         entry: dict[str, object] = {
             "scenarioId": sid,
@@ -1253,7 +1229,7 @@ def check_capture(manifest_path: Path, capture_path: Path, output_path: Path, al
             _entry_failures(entry).append(f"no observations recorded for scenario {sid}")
         else:
             entry["observations"] = scenario_observations
-            for failure in evaluate_scenario(scenario, scenario_observations, final_text, env):
+            for failure in evaluate_scenario(scenario, scenario_observations, env):
                 _entry_failures(entry).append(failure)
 
         if entry.get("failures"):

@@ -37,7 +37,7 @@
   },
   "kind": "gksr-e2e-capture",
   "manifestId": "gksr-full-mod",
-  "manifestSha256": "06b1123bd831eda833eaf37ff6c550eeedb38524a9c46a7099a2bfec7374726c",
+  "manifestSha256": "84c0767dc6aea1803448137bd4a22f8e769b11701e6186d211c5f42c4f27d257",
   "note": "Example-only capture preserved from the legacy ticket example. It is never executed, is not accepted by the verifier (capturePurpose example is always rejected) and asserts no game result.",
   "observations": {
     "cancelled-queue-preserves-budget-for-refailure": {
@@ -86,13 +86,16 @@
       "notice.totalDisplayedCount": 0
     },
     "notice-copy-zh": {
+      "i18n.notice.text.key": "REPLACE_WITH_OBSERVED_LOOKUP_KEY",
+      "i18n.notice.text.language": "REPLACE_WITH_OBSERVED_LOOKUP_LANGUAGE",
+      "i18n.notice.text.resource": "REPLACE_WITH_OBSERVED_LOOKUP_RESOURCE",
       "language.active": "zh_cn",
       "notice.autoDismiss": true,
       "notice.category": "state-read",
       "notice.confirmControlPresent": false,
       "notice.iconPresent": false,
       "notice.nativeLifetime": true,
-      "notice.text": "[布道提醒] 无法读取必要的游戏状态。提醒暂时不可用。",
+      "notice.text": "REPLACE_WITH_OBSERVED_RENDERED_TEXT",
       "notice.textKey": "gksr.status.reminderUnavailable",
       "notice.titlePresent": false
     },
